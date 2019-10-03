@@ -1,4 +1,4 @@
-function  [plotHandles] = ngfmPlotUpdate( plotHandles, dataPacket, magData, hkData, spectra )
+function  [plotHandles] = ngfmPlotUpdate( plotHandles, dataPacket, magData, hkData, spectra, M )
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -9,6 +9,8 @@ index = linspace(0,secondsToDisplay,numSamplesToDisplay);
 
 ngfmPlotMagData;
 
+
+% update hk data
 set(plotHandles.xavg,'String',sprintf('%5.3f',mean(magData(1,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore))));
 set(plotHandles.yavg,'String',sprintf('%5.3f',mean(magData(2,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore))));
 set(plotHandles.zavg,'String',sprintf('%5.3f',mean(magData(3,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore))));

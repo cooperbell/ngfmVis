@@ -3,8 +3,12 @@ p = inputParser;
 p.addRequired('device',  @(x)any(strcmpi(x,{'serial', 'file'})));
 p.addRequired('devicePath', @ischar);
 p.addRequired('saveFile', @ischar);
-p.addParameter('spectra','psd', @(x) any(validatestring(x,{'psd', 'amplitude'})));
+p.addParameter('spectra','amplitude', @(x) any(validatestring(x,{'psd', 'amplitude'})));
 p.parse(script,varargin{:});
+
+keySet = {'psd', 'amplitude'};
+valueSet = {'PlotPSD.m', 'PlotAmplitude.m'};
+M = containers.Map(keySet,valueSet);
 
 ngfmLoadConstants;
 
@@ -58,7 +62,7 @@ plotHandles = struct('figure', [], 'px', [], 'py', [], 'pz', [], 'pid', [], 'pac
     'xamp', [], 'xfreq', [], 'yamp', [], 'yfreq', [], 'zamp', [], 'zfreq', [] );
 
 
-[FigHandle, magData, plotHandles] = ngfmPlotInit(plotHandles, p.Results.spectra);
+[FigHandle, magData, plotHandles] = ngfmPlotInit(plotHandles, p.Results.spectra, M);
 
 serialBuffer = zeros(serialBufferLen);
 serialCounter = 1;
@@ -157,7 +161,7 @@ while (~done)
         
         [dataPacket, magData, hkData] = interpretData( dataPacket, magData, hkData );
         
-        [plotHandles] = ngfmPlotUpdate(plotHandles, dataPacket, magData, hkData, p.Results.spectra);
+        [plotHandles] = ngfmPlotUpdate(plotHandles, dataPacket, magData, hkData, p.Results.spectra, M);
         
         if (loggingEnabled)
             if (~debugData)

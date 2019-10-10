@@ -3,15 +3,14 @@ p = inputParser;
 p.addRequired('device',  @(x)any(strcmpi(x,{'serial', 'file'})));
 p.addRequired('devicePath', @ischar);
 p.addRequired('saveFile', @ischar);
-p.addParameter('spectra','PlotAmplitude.m', @(x) any(validatestring(x,{'PlotPSD.m', 'PlotAmplitude.m'}))); % slated 4 deletion
 p.parse(script,varargin{:});
 
 % modular plot attributes
-global current_plot;
+global spectra;
 global plots;
 global next_index;
 
-current_plot = p.Results.spectra;
+spectra = 'PlotPSD.m';
 plots = {'PlotPSD.m', 'PlotAmplitude.m'};
 next_index = 3;
 

@@ -1,8 +1,8 @@
 % Spectra plot setup
 subplot('position', [0.55 0.10 0.39 0.85]);
-global current_plot;
+global spectra;
 % graph plot
-run(current_plot)
+run(spectra)
 
 
 % % open file

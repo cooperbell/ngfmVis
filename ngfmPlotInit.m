@@ -25,8 +25,8 @@ end
 % callback function handles when a dropdown menu item is selected.
 % Changes what the modular plot will show
 function current_plot_callback(src,event)
-        global current_plot
-        current_plot = src.String{src.Value};
+        global spectra
+        spectra = src.String{src.Value};
 end
 
 % idea for later when I import in scripts from other places

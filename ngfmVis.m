@@ -3,19 +3,14 @@ p = inputParser;
 p.addRequired('device',  @(x)any(strcmpi(x,{'serial', 'file'})));
 p.addRequired('devicePath', @ischar);
 p.addRequired('saveFile', @ischar);
-p.addParameter('spectra','amplitude', @(x) any(validatestring(x,{'psd', 'amplitude'})));
+p.addParameter('spectra','psd', @(x) any(validatestring(x,{'psd', 'amplitude'})));
 p.parse(script,varargin{:});
-
-keySet = {'psd', 'amplitude'};
-valueSet = {'PlotPSD.m', 'PlotAmplitude.m'};
-M = containers.Map(keySet,valueSet);
 
 ngfmLoadConstants;
 
 global debugData;
 debugData = 0;
 
-%cwb% open serial port or open file path
 if strcmp(p.Results.device, 'serial')
     disp(sprintf('Running is SERIAL mode on %s.', p.Results.devicePath));
     baudRate = 57600;
@@ -33,7 +28,6 @@ else
     end
 end
 
-%cwb% enable logging to a specified file or don't
 if (strcmp(p.Results.saveFile, 'null'))
     loggingEnabled = 0;
 else
@@ -55,14 +49,13 @@ dataPacket = struct('dle', uint8(0), 'stx', uint8(0), 'pid', uint8(0), 'packetty
     'boardid', uint16(0), 'sensorid', uint16(0), 'reservedA', uint8(0), 'reservedB', uint8(0), 'reservedC', uint8(0), 'reservedD', uint8(0), ...
     'etx', uint8(0), 'crc', uint16(0) );
 
-
 plotHandles = struct('figure', [], 'px', [], 'py', [], 'pz', [], 'pid', [], 'packetlength', [], 'fs', [], 'ppsoffset', [], ... 
     'hk0', [], 'hk1', [], 'hk2', [], 'hk3', [], 'hk4', [], 'hk5', [], 'hk6', [], 'hk7', [], 'hk8', [], 'hk9', [], 'hk10', [], 'hk11', [], ...
     'boardid', [], 'sensorid', [], 'crc', [], 'xavg', [], 'xstddev', [], 'yavg', [], 'ystddev', [], 'zavg', [], 'zstddev', [], ...
     'xamp', [], 'xfreq', [], 'yamp', [], 'yfreq', [], 'zamp', [], 'zfreq', [] );
 
 
-[FigHandle, magData, plotHandles] = ngfmPlotInit(plotHandles, p.Results.spectra, M);
+[FigHandle, magData, plotHandles] = ngfmPlotInit(plotHandles, p.Results.spectra);
 
 serialBuffer = zeros(serialBufferLen);
 serialCounter = 1;
@@ -161,7 +154,7 @@ while (~done)
         
         [dataPacket, magData, hkData] = interpretData( dataPacket, magData, hkData );
         
-        [plotHandles] = ngfmPlotUpdate(plotHandles, dataPacket, magData, hkData, p.Results.spectra, M);
+        [plotHandles] = ngfmPlotUpdate(plotHandles, dataPacket, magData, hkData, p.Results.spectra);
         
         if (loggingEnabled)
             if (~debugData)

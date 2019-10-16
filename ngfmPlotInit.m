@@ -11,6 +11,10 @@ function [FigHandle, magData, plotHandles] = ngfmPlotInit(plotHandles, plots)
     
     % Plot selection drop down menu
     current_plot_menu = uicontrol('Style','popupmenu','String', plots, 'Position', [1000 870 120 20], 'Callback', @current_plot_callback);
+    
+    % TODO: Put a button here that seraches for file, callback fucntion
+    % with call uigetfile and then copy that file into directory. We need
+    % to delete that file on program exit probably
 
     index = linspace(0,secondsToDisplay,numSamplesToDisplay);
     magData = zeros(3,numSamplesToStore);                       % I CHNAGED THIS FROM NaN TO zeros

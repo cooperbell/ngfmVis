@@ -1,12 +1,16 @@
 % Spectra plot setup
 subplot('position', [0.55 0.10 0.39 0.85]);
 global spectra;
+
 % graph plot
 run(spectra)
 
 
+% move file
+copyfile('/Users/cooperbell/Misc/external_script/PlotPSD1.m', '/Users/cooperbell/Repositories/ngfmVis');
+
 % % open file
-% read_fid = fopen('/Users/cooperbell/Misc/external_script/PlotPSD1.m');
+read_fid = fopen('/Users/cooperbell/Misc/external_script/PlotPSD1.m');
 % 
 % % make temp folder
 % tmp = tempname;
@@ -28,10 +32,10 @@ run(spectra)
 % %Run the script.
 % 
 % run(newFile)
-% 
-% % if (strcmp(spectra,'psd'))
-% %     PlotPSD;
-% % else
-% %     run('PlotAmplitude.m')
-% %     %PlotAmplitude;
-% % end
+
+% if (strcmp(spectra,'psd'))
+%     PlotPSD;
+% else
+%     run('PlotAmplitude.m')
+%     %PlotAmplitude;
+% end

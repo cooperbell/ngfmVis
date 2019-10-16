@@ -1,14 +1,14 @@
-function [test, magData, plotHandles] = ngfmPlotInit(plotHandles, plots)
+function [figHandle, magData, plotHandles] = ngfmPlotInit(plotHandles, plots)
     %NGFMPLOTINIT Summary of this function goes here
     %   Detailed explanation goes here
 
     ngfmLoadConstants;
     global debugData;
 
-    S.FigHandle = figure;
-    set(S.FigHandle, 'Position', [10, 50, 1900, 900]);
-    plotHandles.figure = S.FigHandle;
-    test = S.FigHandle;
+    S.fig = figure;
+    set(S.fig, 'Position', [10, 50, 1900, 900]);
+    plotHandles.figure = S.fig;
+    figHandle = S.fig;
     
     % Plot selection drop down menu
     S.current_plot_menu = uicontrol('Style','popupmenu', ...
@@ -22,7 +22,9 @@ function [test, magData, plotHandles] = ngfmPlotInit(plotHandles, plots)
                                         'Position', [1480 865 100 22], ...
                                         'Callback', @pushedBrowseFile);
                                     
-    guidata(S.FigHandle,S);
+    S.x_plot = subplot('position', [0.11 0.70 0.39 0.25]);
+                                    
+    guidata(S.fig,S);
 
     index = linspace(0,secondsToDisplay,numSamplesToDisplay);
     magData = zeros(3,numSamplesToStore);                       % I CHNAGED THIS FROM NaN TO zeros
@@ -42,7 +44,6 @@ function current_plot_callback(src,event)
 end
 
 % Callback function: Browse Button
-% 
 function pushedBrowseFile(hObject, eventdata)
     global spectra
     global plots

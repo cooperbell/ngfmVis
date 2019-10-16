@@ -146,7 +146,6 @@ function CheckValue(src, event)
         BrowseButton.Visible = false;
         serialPorts = seriallist;
         DropDown.Items = serialPorts;
-
     end
 
     if(strcmp(value, 'File'))

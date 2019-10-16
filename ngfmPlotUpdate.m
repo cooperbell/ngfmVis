@@ -1,4 +1,4 @@
-function  [plotHandles] = ngfmPlotUpdate( plotHandles, dataPacket, magData, hkData, spectra, M )
+function  [plotHandles] = ngfmPlotUpdate( plotHandles, dataPacket, magData, hkData)
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 

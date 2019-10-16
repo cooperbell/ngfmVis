@@ -23,19 +23,6 @@ function [test, magData, plotHandles] = ngfmPlotInit(plotHandles, plots)
                                         'Callback', @pushedBrowseFile);
                                     
     guidata(S.FigHandle,S);
-    
-    
-%     FigHandle.browseButton.Callback = @pushedBrowseFile;
-%     set(FigHandle.browseButton, 'String', 'Browse');
-%     set(FigHandle.browseButton, 'Position', [1480 865 100 22]);
-    
-%     % Create Edit Field
-%     configEditField = uicontrol('style', 'edit');
-%     set(configEditField, 'Position', [1320 865 150 22]);
-    
-    % TODO: Put a button here that seraches for file, callback fucntion
-    % with call uigetfile and then copy that file into directory. We need
-    % to delete that file on program exit probably
 
     index = linspace(0,secondsToDisplay,numSamplesToDisplay);
     magData = zeros(3,numSamplesToStore);                       % I CHNAGED THIS FROM NaN TO zeros
@@ -55,15 +42,17 @@ function current_plot_callback(src,event)
 end
 
 % Callback function: Browse Button
+% 
 function pushedBrowseFile(hObject, eventdata)
     global spectra
     global plots
     global next_index
+    
     [FileName,FilePath ]= uigetfile('*.m');
     sourceFilePath = fullfile(FilePath, FileName);
     
     if FileName ~= ""
-        % find a temp directory
+        % find a temp directory that has write access
         temp = tempdir;
 
         % add that temp directory to MATLAB's search path for this session
@@ -77,7 +66,6 @@ function pushedBrowseFile(hObject, eventdata)
 
         % add it plots array 
         plots = {FileName, plots{1:end}};
-%         plots{next_index} = FileName;
         next_index = next_index + 1;
         
         % update the dropdown menu

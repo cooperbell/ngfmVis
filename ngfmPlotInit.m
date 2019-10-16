@@ -50,8 +50,8 @@ end
 % callback function handles when a dropdown menu item is selected.
 % Changes what the modular plot will show
 function current_plot_callback(src,event)
-        global spectra
-        spectra = src.String{src.Value};
+    global spectra
+    spectra = src.String{src.Value};
 end
 
 % Callback function: Browse Button
@@ -66,7 +66,7 @@ function pushedBrowseFile(hObject, eventdata)
         % find a temp directory
         temp = tempdir;
 
-        % add that to MATLAB's search path for this session
+        % add that temp directory to MATLAB's search path for this session
         addpath(temp);
 
         % copy the selected file to temp directory
@@ -75,16 +75,15 @@ function pushedBrowseFile(hObject, eventdata)
         % update spectra
         spectra = FileName;
 
-        %add it plots array 
-        plots{next_index} = FileName;
+        % add it plots array 
+        plots = {FileName, plots{1:end}};
+%         plots{next_index} = FileName;
         next_index = next_index + 1;
+        
+        % update the dropdown menu
+        handles = guidata(hObject);
+        handles.current_plot_menu.String = plots;
     else
         disp('error or no plot selected')
     end
-    
-    % handles.configEditField.String = sourceFilePath;
-    % get the handles and user-defined data 
-    handles = guidata(hObject);
-    handles.current_plot_menu.String = plots;
-%     handles.current_plot_menu = get(hObject, 'String');
 end

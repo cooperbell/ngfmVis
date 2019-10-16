@@ -1,22 +1,33 @@
-function [FigHandle, magData, plotHandles] = ngfmPlotInit(plotHandles, plots)
+function [test, magData, plotHandles] = ngfmPlotInit(plotHandles, plots)
     %NGFMPLOTINIT Summary of this function goes here
     %   Detailed explanation goes here
 
     ngfmLoadConstants;
     global debugData;
 
-    FigHandle = figure;
-    set(FigHandle, 'Position', [10, 50, 1900, 900]);
-    plotHandles.figure = FigHandle;
+    S.FigHandle = figure;
+    set(S.FigHandle, 'Position', [10, 50, 1900, 900]);
+    plotHandles.figure = S.FigHandle;
+    test = S.FigHandle;
     
     % Plot selection drop down menu
-    current_plot_menu = uicontrol('Style','popupmenu','String', plots, 'Position', [1000 870 120 20], 'Callback', @current_plot_callback);
+    S.current_plot_menu = uicontrol('Style','popupmenu', ...
+                                            'String', plots, ...
+                                            'Position', [1000 870 120 20], ...
+                                            'Callback', @current_plot_callback);
     
     % Create BrowseButton
-    browseButton = uicontrol('style', 'pushbutton');
-    browseButton.Callback = @pushedBrowseFile;
-    set(browseButton, 'String', 'Browse');
-    set(browseButton, 'Position', [1480 865 100 22]);
+    S.browseButton = uicontrol('style', 'pushbutton', ...
+                                        'String', 'Browse', ...
+                                        'Position', [1480 865 100 22], ...
+                                        'Callback', @pushedBrowseFile);
+                                    
+    guidata(S.FigHandle,S);
+    
+    
+%     FigHandle.browseButton.Callback = @pushedBrowseFile;
+%     set(FigHandle.browseButton, 'String', 'Browse');
+%     set(FigHandle.browseButton, 'Position', [1480 865 100 22]);
     
 %     % Create Edit Field
 %     configEditField = uicontrol('style', 'edit');
@@ -44,29 +55,36 @@ function current_plot_callback(src,event)
 end
 
 % Callback function: Browse Button
-function pushedBrowseFile(hObject, eventdata, handles)
+function pushedBrowseFile(hObject, eventdata)
     global spectra
     global plots
     global next_index
     [FileName,FilePath ]= uigetfile('*.m');
     sourceFilePath = fullfile(FilePath, FileName);
+    
+    if FileName ~= ""
+        % find a temp directory
+        temp = tempdir;
 
-    % find a temp directory
-    temp = tempdir;
-    
-    % add that to MATLAB's search path for this session
-    addpath(temp);
-    
-    % copy the selected file to temp directory
-    status = copyfile(FilePath, temp);
-    
-    % update spectra
-    spectra = FileName;
-    
-    %add it plots array 
-    plots{next_index} = FileName;
-    next_index = next_index + 1;
+        % add that to MATLAB's search path for this session
+        addpath(temp);
+
+        % copy the selected file to temp directory
+        status = copyfile(FilePath, temp);
+        
+        % update spectra
+        spectra = FileName;
+
+        %add it plots array 
+        plots{next_index} = FileName;
+        next_index = next_index + 1;
+    else
+        disp('error or no plot selected')
+    end
     
     % handles.configEditField.String = sourceFilePath;
-    guidata(hObject, handles);
+    % get the handles and user-defined data 
+    handles = guidata(hObject);
+    handles.current_plot_menu.String = plots;
+%     handles.current_plot_menu = get(hObject, 'String');
 end

@@ -43,17 +43,30 @@ function current_plot_callback(src,event)
         spectra = src.String{src.Value};
 end
 
-% Callback function: BrowseButton, SourceEditField
+% Callback function: Browse Button
 function pushedBrowseFile(hObject, eventdata, handles)
-    [FileName,FilePath ]= uigetfile('*.txt*');
+    global spectra
+    global plots
+    global next_index
+    [FileName,FilePath ]= uigetfile('*.m');
     sourceFilePath = fullfile(FilePath, FileName);
+
+    % find a temp directory
+    temp = tempdir;
+    
+    % add that to MATLAB's search path for this session
+    addpath(temp);
+    
+    % copy the selected file to temp directory
+    status = copyfile(FilePath, temp);
+    
+    % update spectra
+    spectra = FileName;
+    
+    %add it plots array 
+    plots{next_index} = FileName;
+    next_index = next_index + 1;
+    
     % handles.configEditField.String = sourceFilePath;
     guidata(hObject, handles);
 end
-
-% idea for later when I import in scripts from other places
-% function add_plot(src, event)
-%     % src.value should have the path
-%     % read that m file, write into our m file
-%     % add to plots array, increment next_index
-% end

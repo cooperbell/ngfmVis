@@ -12,6 +12,16 @@ function [FigHandle, magData, plotHandles] = ngfmPlotInit(plotHandles, plots)
     % Plot selection drop down menu
     current_plot_menu = uicontrol('Style','popupmenu','String', plots, 'Position', [1000 870 120 20], 'Callback', @current_plot_callback);
     
+    % Create BrowseButton
+    browseButton = uicontrol('style', 'pushbutton');
+    browseButton.Callback = @pushedBrowseFile;
+    set(browseButton, 'String', 'Browse');
+    set(browseButton, 'Position', [1480 865 100 22]);
+    
+%     % Create Edit Field
+%     configEditField = uicontrol('style', 'edit');
+%     set(configEditField, 'Position', [1320 865 150 22]);
+    
     % TODO: Put a button here that seraches for file, callback fucntion
     % with call uigetfile and then copy that file into directory. We need
     % to delete that file on program exit probably
@@ -31,6 +41,14 @@ end
 function current_plot_callback(src,event)
         global spectra
         spectra = src.String{src.Value};
+end
+
+% Callback function: BrowseButton, SourceEditField
+function pushedBrowseFile(hObject, eventdata, handles)
+    [FileName,FilePath ]= uigetfile('*.txt*');
+    sourceFilePath = fullfile(FilePath, FileName);
+    % handles.configEditField.String = sourceFilePath;
+    guidata(hObject, handles);
 end
 
 % idea for later when I import in scripts from other places

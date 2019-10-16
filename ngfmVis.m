@@ -10,8 +10,8 @@ global spectra;
 global plots;
 global next_index;
 
-spectra = 'PlotPSD.m';
-plots = {'PlotPSD.m', 'PlotAmplitude.m'};
+plots = {'PlotAmplitude.m', 'PlotPSD.m'};
+spectra = string(plots(1));
 next_index = 3;
 
 

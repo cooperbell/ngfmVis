@@ -22,7 +22,6 @@ function [figHandle, magData, plotHandles] = ngfmPlotInit(plotHandles, plots)
                                         'Position', [1480 865 100 22], ...
                                         'Callback', @pushedBrowseFile);
                                     
-    S.x_plot = subplot('position', [0.11 0.70 0.39 0.25]);
                                     
     guidata(S.fig,S);
 

@@ -14,8 +14,7 @@ plots = {'PlotAmplitude.m', 'PlotPSD.m'};
 spectra = string(plots(1));
 next_index = 3;
 
-
-
+loadconfig;
 ngfmLoadConstants;
 
 global debugData;
@@ -139,7 +138,7 @@ while (~done)
         dataPacket.hk(11) =     swapbytes(typecast(tempPacket(33:34), 'uint16'));
         dataPacket.hk(12) =     swapbytes(typecast(tempPacket(35:36), 'uint16'));
         
-        dataOffset = 36;
+        dataOffset = inputOffset;
         for n = 1:100
             dataPacket.xdac(n) =    typecast( swapbytes( typecast( tempPacket(dataOffset + (n-1)*12 + 1:dataOffset + (n-1)*12 + 2), 'uint16') ), 'int16' );
             dataPacket.ydac(n) =    typecast( swapbytes( typecast( tempPacket(dataOffset + (n-1)*12 + 5:dataOffset + (n-1)*12 + 6), 'uint16') ), 'int16' );
@@ -165,7 +164,7 @@ while (~done)
         
         disp(sprintf('Packet parser PID = %d.', dataPacket.pid));
         
-        [dataPacket, magData, hkData] = interpretData( dataPacket, magData, hkData );
+        [dataPacket, magData, hkData] = interpretData( dataPacket, magData, hkData, hk);
         
         [plotHandles] = ngfmPlotUpdate(plotHandles, dataPacket, magData, hkData);
         

@@ -5,14 +5,6 @@ p.addRequired('devicePath', @ischar);
 p.addRequired('saveFile', @ischar);
 p.parse(script,varargin{:});
 
-% modular plot attributes
-global spectra;
-global plots;
-global next_index;
-
-plots = {'PlotAmplitude.m', 'PlotPSD.m'};
-spectra = string(plots(1));
-next_index = 3;
 
 loadconfig;
 ngfmLoadConstants;
@@ -66,8 +58,7 @@ plotHandles = struct('figure', [], 'px', [], 'py', [], 'pz', [], 'pid', [], 'pac
     'boardid', [], 'sensorid', [], 'crc', [], 'xavg', [], 'xstddev', [], 'yavg', [], 'ystddev', [], 'zavg', [], 'zstddev', [], ...
     'xamp', [], 'xfreq', [], 'yamp', [], 'yfreq', [], 'zamp', [], 'zfreq', [] );
 
-
-[FigHandle, magData, plotHandles] = ngfmPlotInit(plotHandles, plots);
+[FigHandle, magData, plotHandles] = ngfmPlotInit(plotHandles);
 
 serialBuffer = zeros(serialBufferLen);
 serialCounter = 1;

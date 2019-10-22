@@ -1,3 +1,5 @@
+global debugData;
+
 mTextBoxPidLabel = uicontrol('style','text');
 %set(mTextBoxPidLabel,'HorizontalAlignment', 'left');
 set(mTextBoxPidLabel,'String','PID');

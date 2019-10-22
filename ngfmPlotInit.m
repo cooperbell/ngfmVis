@@ -1,9 +1,11 @@
-function [FigHandle, magData, plotHandles] = ngfmPlotInit(plotHandles, plots)
+function [FigHandle, magData, plotHandles] = ngfmPlotInit(plotHandles)
     %NGFMPLOTINIT Summary of this function goes here
     %   Detailed explanation goes here
 
     ngfmLoadConstants;
-    global debugData;
+
+    plots1 = {'PlotAmplitude.m', 'PlotPSD.m'};
+    spectra1 = string(plots1(1)); % NOTE: do I need this? Or can I use the current_plots_menu.Value?
 
     FigHandle = figure;
     set(FigHandle, 'Position', [10, 50, 1900, 900]);
@@ -11,7 +13,7 @@ function [FigHandle, magData, plotHandles] = ngfmPlotInit(plotHandles, plots)
     
     % Plot selection drop down menu
     plotHandles.current_plot_menu = uicontrol('Style','popupmenu', ...
-                                            'String', plots, ...
+                                            'String', plots1, ...
                                             'Position', [1000 870 120 20], ...
                                             'Callback', @current_plot_callback);
     
@@ -21,8 +23,10 @@ function [FigHandle, magData, plotHandles] = ngfmPlotInit(plotHandles, plots)
                                         'Position', [1480 865 100 22], ...
                                         'Callback', @pushedBrowseFile);
                                     
-                                    
-    guidata(plotHandles.figure,plotHandles);
+    setappdata(FigHandle, 'spectra', spectra1);
+    setappdata(FigHandle, 'plots', plots1);
+    
+    guidata(plotHandles.figure,plotHandles); % do I need this anymore?
 
     index = linspace(0,secondsToDisplay,numSamplesToDisplay);
     magData = zeros(3,numSamplesToStore);                       % I CHNAGED THIS FROM NaN TO zeros
@@ -36,16 +40,12 @@ end
 
 % callback function handles when a dropdown menu item is selected.
 % Changes what the modular plot will show
-function current_plot_callback(src,event)
-    global spectra
-    spectra = src.String{src.Value};
+function current_plot_callback(hObject,event)
+    setappdata(hObject.Parent, 'spectra', hObject.String{hObject.Value})
 end
 
 % Callback function: Browse Button
 function pushedBrowseFile(hObject, eventdata)
-    global spectra
-    global plots
-    global next_index
     
     [FileName,FilePath ]= uigetfile('*.m');
     sourceFilePath = fullfile(FilePath, FileName);
@@ -58,18 +58,18 @@ function pushedBrowseFile(hObject, eventdata)
             addpath(temp);
 
             % copy the selected file to temp directory
-            status = copyfile(FilePath, temp);
+            status = copyfile(FilePath, temp); % do something with status
 
             % update spectra
-            spectra = FileName;
+            setappdata(hObject.Parent, 'spectra', FileName)
 
-            % add it plots array 
-            plots = {FileName, plots{1:end}};
-            next_index = next_index + 1;
+            % add it plots array
+            plots_temp = getappdata(hObject.Parent, 'plots');
+            setappdata(hObject.Parent, 'plots', {FileName, plots_temp{1:end}});
 
             % update the dropdown menu
             handles = guidata(hObject);
-            handles.current_plot_menu.String = plots;
+            handles.current_plot_menu.String = getappdata(hObject.Parent, 'plots')
         else
             disp('error or no plot selected')
         end

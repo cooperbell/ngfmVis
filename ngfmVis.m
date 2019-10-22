@@ -5,14 +5,6 @@ p.addRequired('devicePath', @ischar);
 p.addRequired('saveFile', @ischar);
 p.parse(script,varargin{:});
 
-% modular plot attributes
-global spectra;
-global plots;
-global next_index;
-
-plots = {'PlotAmplitude.m', 'PlotPSD.m'};
-spectra = string(plots(1));
-next_index = 3;
 
 loadconfig;
 ngfmLoadConstants;
@@ -54,11 +46,11 @@ end
 
 pause(2);
 
-dataPacket = struct('dle', uint8(0), 'stx', uint8(0), 'pid', uint8(0), 'packettype', uint8(0), 'packetlength', uint16(0), 'fs', uint16(0), 'ppsoffset', uint32(0), ...
-    'hk', zeros(1,12,'int16'), 'xdac', zeros(1,100,'int16'), 'ydac', zeros(1,100,'int16'), 'zdac', zeros(1,100,'int16'), ...
-    'xadc', zeros(1,100,'int16'), 'yadc', zeros(1,100,'int16'), 'zadc', zeros(1,100,'int16'), ...
-    'boardid', uint16(0), 'sensorid', uint16(0), 'reservedA', uint8(0), 'reservedB', uint8(0), 'reservedC', uint8(0), 'reservedD', uint8(0), ...
-    'etx', uint8(0), 'crc', uint16(0) );
+% dataPacket = struct('dle', uint8(0), 'stx', uint8(0), 'pid', uint8(0), 'packettype', uint8(0), 'packetlength', uint16(0), 'fs', uint16(0), 'ppsoffset', uint32(0), ...
+%     'hk', zeros(1,12,'int16'), 'xdac', zeros(1,100,'int16'), 'ydac', zeros(1,100,'int16'), 'zdac', zeros(1,100,'int16'), ...
+%     'xadc', zeros(1,100,'int16'), 'yadc', zeros(1,100,'int16'), 'zadc', zeros(1,100,'int16'), ...
+%     'boardid', uint16(0), 'sensorid', uint16(0), 'reservedA', uint8(0), 'reservedB', uint8(0), 'reservedC', uint8(0), 'reservedD', uint8(0), ...
+%     'etx', uint8(0), 'crc', uint16(0) );
 
 
 plotHandles = struct('figure', [], 'px', [], 'py', [], 'pz', [], 'pid', [], 'packetlength', [], 'fs', [], 'ppsoffset', [], ... 
@@ -66,8 +58,7 @@ plotHandles = struct('figure', [], 'px', [], 'py', [], 'pz', [], 'pid', [], 'pac
     'boardid', [], 'sensorid', [], 'crc', [], 'xavg', [], 'xstddev', [], 'yavg', [], 'ystddev', [], 'zavg', [], 'zstddev', [], ...
     'xamp', [], 'xfreq', [], 'yamp', [], 'yfreq', [], 'zamp', [], 'zfreq', [] );
 
-
-[FigHandle, magData, plotHandles] = ngfmPlotInit(plotHandles, plots);
+[FigHandle, magData, plotHandles] = ngfmPlotInit(plotHandles);
 
 serialBuffer = zeros(serialBufferLen);
 serialCounter = 1;

@@ -165,11 +165,11 @@ end
 function StartButtonPushed(app, event)
     global SourceEditField
     global UIFigure;
+    source = SourceEditField.Value;
 
-    UIFigure.Visible = 'off';
-    ngfmVis('file', SourceEditField.Value,'null');
-    delete(UIFigure);
-
+%     UIFigure.Visible = 'off';
+    close(UIFigure);
+    ngfmVis('file', source,'null');
 end
 
 % Changes arrangement of the app based on UIFigure width

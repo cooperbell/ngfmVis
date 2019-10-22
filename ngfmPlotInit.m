@@ -1,29 +1,28 @@
-function [figHandle, magData, plotHandles] = ngfmPlotInit(plotHandles, plots)
+function [FigHandle, magData, plotHandles] = ngfmPlotInit(plotHandles, plots)
     %NGFMPLOTINIT Summary of this function goes here
     %   Detailed explanation goes here
 
     ngfmLoadConstants;
     global debugData;
 
-    S.fig = figure;
-    set(S.fig, 'Position', [10, 50, 1900, 900]);
-    plotHandles.figure = S.fig;
-    figHandle = S.fig;
+    FigHandle = figure;
+    set(FigHandle, 'Position', [10, 50, 1900, 900]);
+    plotHandles.figure = FigHandle;
     
     % Plot selection drop down menu
-    S.current_plot_menu = uicontrol('Style','popupmenu', ...
+    plotHandles.current_plot_menu = uicontrol('Style','popupmenu', ...
                                             'String', plots, ...
                                             'Position', [1000 870 120 20], ...
                                             'Callback', @current_plot_callback);
     
     % Create BrowseButton
-    S.browseButton = uicontrol('style', 'pushbutton', ...
+    plotHandles.browseButton = uicontrol('style', 'pushbutton', ...
                                         'String', 'Browse', ...
                                         'Position', [1480 865 100 22], ...
                                         'Callback', @pushedBrowseFile);
                                     
                                     
-    guidata(S.fig,S);
+    guidata(plotHandles.figure,plotHandles);
 
     index = linspace(0,secondsToDisplay,numSamplesToDisplay);
     magData = zeros(3,numSamplesToStore);                       % I CHNAGED THIS FROM NaN TO zeros
@@ -50,28 +49,29 @@ function pushedBrowseFile(hObject, eventdata)
     
     [FileName,FilePath ]= uigetfile('*.m');
     sourceFilePath = fullfile(FilePath, FileName);
-    
-    if FileName ~= ""
-        % find a temp directory that has write access
-        temp = tempdir;
+    if FileName ~= 0
+        if FileName ~= ""
+            % find a temp directory that has write access
+            temp = tempdir;
 
-        % add that temp directory to MATLAB's search path for this session
-        addpath(temp);
+            % add that temp directory to MATLAB's search path for this session
+            addpath(temp);
 
-        % copy the selected file to temp directory
-        status = copyfile(FilePath, temp);
-        
-        % update spectra
-        spectra = FileName;
+            % copy the selected file to temp directory
+            status = copyfile(FilePath, temp);
 
-        % add it plots array 
-        plots = {FileName, plots{1:end}};
-        next_index = next_index + 1;
-        
-        % update the dropdown menu
-        handles = guidata(hObject);
-        handles.current_plot_menu.String = plots;
-    else
-        disp('error or no plot selected')
-    end
+            % update spectra
+            spectra = FileName;
+
+            % add it plots array 
+            plots = {FileName, plots{1:end}};
+            next_index = next_index + 1;
+
+            % update the dropdown menu
+            handles = guidata(hObject);
+            handles.current_plot_menu.String = plots;
+        else
+            disp('error or no plot selected')
+        end
+    end 
 end

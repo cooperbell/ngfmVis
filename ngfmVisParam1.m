@@ -185,9 +185,16 @@ function ngfmVisParam1(S)
 %         global UIFigure;
         handles = guidata(hObject);
         source = handles.SourceEditField.Value;
-
-    %     UIFigure.Visible = 'off';
-        VAR = {'file', source,'null'};
+        inputSelect = handles.InputDropDown.Value;
+        logTo = handles.LogtoEditField.Value;
+        if(strcmp(logTo, ''))
+            logTo = 'null';
+        end
+        if(strcmp(inputSelect, 'File'))
+            VAR = {'file', source,logTo};
+        else
+            VAR = {'serial', source, logTo};
+        end
 %         close(handles.figure);
         uiresume(handles.figure);
     end

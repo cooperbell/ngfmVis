@@ -6,7 +6,7 @@ function ngfmVis(varargin)
     VAR = varargin;
     
     if nargin == 0
-        ngfmVisParam;
+        ngfmVisParam1;
     end
 
     p = inputParser;

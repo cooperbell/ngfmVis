@@ -1,5 +1,0 @@
-ngfmPlotXYZ;
-
-ngfmPlotSpectra;
-
-grid on;

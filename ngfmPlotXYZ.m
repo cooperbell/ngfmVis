@@ -1,3 +1,4 @@
+index = linspace(0,secondsToDisplay,numSamplesToDisplay);
 subplot('position', [0.11 0.70 0.39 0.25]);
 plotHandles.px = plot(index, magData(1,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore), 'red');
 % set(gca,'YTickLabel',num2str(get(gca,'YTick').'));

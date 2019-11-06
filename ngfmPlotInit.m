@@ -29,11 +29,15 @@ function [FigHandle, magData, plotHandles] = ngfmPlotInit(plotHandles)
     % save GUI data
     guidata(plotHandles.figure,plotHandles); % do I need this anymore?
 
-    index = linspace(0,secondsToDisplay,numSamplesToDisplay);
+    %index = linspace(0,secondsToDisplay,numSamplesToDisplay);
     magData = zeros(3,numSamplesToStore);                       % I CHNAGED THIS FROM NaN TO zeros
 
     % plot XYZ and PSD/Amp graphs
-    ngfmPlotMagData;
+%     ngfmPlotMagData;
+    ngfmPlotSpectra;
+
+    ngfmPlotXYZ;
+
 
     % display hk data for right now (future will be plotting)
     ngfmPlotHKData;

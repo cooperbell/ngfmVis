@@ -19,6 +19,9 @@ function ngfmVis(varargin)
 
     loadconfig;
     ngfmLoadConstants;
+    
+    %add the /lib folder to path
+    addpath('lib');
 
     global debugData;
     debugData = 0;
@@ -26,18 +29,18 @@ function ngfmVis(varargin)
 
     %open serial port or open file path
     if strcmp(p.Results.device, 'serial')
-        disp(sprintf('Running is SERIAL mode on %s.', p.Results.devicePath));
+        fprintf('Running is SERIAL mode on %s.\n', p.Results.devicePath);
         baudRate = 57600;
         delete(instrfindall);
         s = serial(p.Results.devicePath,'BaudRate',baudRate);
         fopen(s);
         flushinput(s);
     else
-        disp(sprintf('Running in FILE replay mode from %s.', p.Results.devicePath));
+        fprintf('Running in FILE replay mode from %s.\n', p.Results.devicePath);
         if (exist(p.Results.devicePath, 'file') == 2)
             s = fopen(p.Results.devicePath);
         else
-            disp(sprintf('File %s not found. Terminating.', p.Results.devicePath));
+            fprintf('File %s not found. Terminating.\n', p.Results.devicePath);
             return;
         end
     end
@@ -51,9 +54,9 @@ function ngfmVis(varargin)
     end
 
     if (loggingEnabled == 1)
-        disp(sprintf('Logging data to: %s\n', p.Results.saveFile));
+        fprintf('Logging data to: %s\n', p.Results.saveFile);
     else
-        disp(sprintf('Logging data DISABLED.\n'));
+        fprintf('Logging data DISABLED.\n');
     end
 
     pause(2);
@@ -92,7 +95,9 @@ function ngfmVis(varargin)
                return;
             end
         end
-
+        
+%         [serialBuffer, serialCounter, newPacket, tempPacket] = serialMonitor(s,serialBuffer, serialCounter, serialBufferLen, dle, stx, etx);
+        
         [A,count] = fread(s,32,'uint8');
 
         if (count == 0)
@@ -169,7 +174,7 @@ function ngfmVis(varargin)
             dataPacket.etx =            typecast(tempPacket(dataOffset+10), 'uint8');
             dataPacket.crc =            swapbytes(typecast(tempPacket(dataOffset+11:dataOffset+12), 'uint16'));
 
-            disp(sprintf('Packet parser PID = %d.', dataPacket.pid));
+            fprintf('Packet parser PID = %d.\n', dataPacket.pid);
 
             [dataPacket, magData, hkData] = interpretData( dataPacket, magData, hkData, hk);
             
@@ -194,7 +199,6 @@ function ngfmVis(varargin)
 
 
 
-
           if ~isempty(k)
             if strcmp(k,'q')
                 done = 1;
@@ -208,7 +212,6 @@ function ngfmVis(varargin)
 
 
         pause(0.0001);
-
     end
 
     close(FigHandle);

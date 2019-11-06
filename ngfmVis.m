@@ -29,7 +29,7 @@ function ngfmVis(varargin)
 
     %open serial port or open file path
     if strcmp(p.Results.device, 'serial')
-        fprintf('Running is SERIAL mode on %s.', p.Results.devicePath);
+        fprintf('Running is SERIAL mode on %s.\n', p.Results.devicePath);
         baudRate = 57600;
         delete(instrfindall);
         s = serial(p.Results.devicePath,'BaudRate',baudRate);
@@ -40,7 +40,7 @@ function ngfmVis(varargin)
         if (exist(p.Results.devicePath, 'file') == 2)
             s = fopen(p.Results.devicePath);
         else
-            fprintf('File %s not found. Terminating.', p.Results.devicePath);
+            fprintf('File %s not found. Terminating.\n', p.Results.devicePath);
             return;
         end
     end
@@ -95,6 +95,8 @@ function ngfmVis(varargin)
                return;
             end
         end
+        
+%         [serialBuffer, serialCounter, newPacket, tempPacket] = serialMonitor(s,serialBuffer, serialCounter, serialBufferLen, dle, stx, etx);
         
         [A,count] = fread(s,32,'uint8');
 
@@ -172,7 +174,7 @@ function ngfmVis(varargin)
             dataPacket.etx =            typecast(tempPacket(dataOffset+10), 'uint8');
             dataPacket.crc =            swapbytes(typecast(tempPacket(dataOffset+11:dataOffset+12), 'uint16'));
 
-            disp(sprintf('Packet parser PID = %d.', dataPacket.pid));
+            fprintf('Packet parser PID = %d.\n', dataPacket.pid);
 
             [dataPacket, magData, hkData] = interpretData( dataPacket, magData, hkData, hk);
             

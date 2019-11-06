@@ -5,11 +5,8 @@ function ngfmPlotUpdate( plotHandles, dataPacket, magData, hkData)
 ngfmLoadConstants;
 global debugData;
 
-index = linspace(0,secondsToDisplay,numSamplesToDisplay);
-
-
-%ngfmPlotMagData;
 ngfmPlotSpectra;
+
 
 ngfmPlotXYZ;
 

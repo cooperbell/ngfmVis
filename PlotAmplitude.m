@@ -1,4 +1,3 @@
-tic
 %Execute functions asynchronously on parallel pool workers
 F_Amp1 = parfeval(@welchAmpSpectrum, 3, magData(1,:), assumedSamplingRate, nfft);
 F_Amp2 = parfeval(@welchAmpSpectrum, 3, magData(2,:), assumedSamplingRate, nfft);
@@ -11,7 +10,6 @@ F_Amp3 = parfeval(@welchAmpSpectrum, 3, magData(3,:), assumedSamplingRate, nfft)
 [Ax, f, ENBW] = fetchOutputs(F_Amp1);
 [Ay, f, ENBW] = fetchOutputs(F_Amp2);
 [Az, f, ENBW] = fetchOutputs(F_Amp3);
-toc
 
 [maxValy, maxIndexy] = max(Ay(3:nfft/2,:));
 [maxValx, maxIndexx] = max(Ax(3:nfft/2,:));

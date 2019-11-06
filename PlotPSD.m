@@ -1,4 +1,3 @@
-tic
 %Execute functions asynchronously on parallel pool workers
 F_PSD1 = parfeval(@welchPSDSpectrum, 3, magData(1,:), assumedSamplingRate, nfft);
 F_PSD2 = parfeval(@welchPSDSpectrum, 3, magData(2,:), assumedSamplingRate, nfft);
@@ -10,7 +9,6 @@ F_PSD3 = parfeval(@welchPSDSpectrum, 3, magData(3,:), assumedSamplingRate, nfft)
 [Px, f, ENBW] = fetchOutputs(F_PSD1);
 [Py, f, ENBW] = fetchOutputs(F_PSD2);
 [Pz, f, ENBW] = fetchOutputs(F_PSD3);
-toc
 
 ref500pt = ((0.500)^2)./f;
 ref300pt = ((0.300)^2)./f;

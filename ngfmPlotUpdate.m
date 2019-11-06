@@ -1,4 +1,4 @@
-function  [plotHandles] = ngfmPlotUpdate( plotHandles, dataPacket, magData, hkData)
+function ngfmPlotUpdate( plotHandles, dataPacket, magData, hkData)
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -7,7 +7,11 @@ global debugData;
 
 index = linspace(0,secondsToDisplay,numSamplesToDisplay);
 
-ngfmPlotMagData;
+
+%ngfmPlotMagData;
+ngfmPlotSpectra;
+
+ngfmPlotXYZ;
 
 
 % update hk data

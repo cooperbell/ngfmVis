@@ -169,7 +169,7 @@ function StartButtonPushed(app, event)
 
 %     UIFigure.Visible = 'off';
     close(UIFigure);
-    ngfmVis('file', source,'null');
+    ngfmVis('serial', source,'null');
 end
 
 % Changes arrangement of the app based on UIFigure width

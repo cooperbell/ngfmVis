@@ -26,6 +26,7 @@ function [FigHandle, magData, plotHandles] = ngfmPlotInit(plotHandles)
     setappdata(FigHandle, 'spectra', spectra1);
     setappdata(FigHandle, 'plots', plots1);
     
+    % save GUI data
     guidata(plotHandles.figure,plotHandles); % do I need this anymore?
 
     index = linspace(0,secondsToDisplay,numSamplesToDisplay);

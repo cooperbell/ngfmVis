@@ -27,25 +27,14 @@ function ngfmVis(varargin)
     debugData = 0;
     
 
-    %open serial port or open file path
+    % Print whether the mode is serial or file
     if strcmp(p.Results.device, 'serial')
         fprintf('Running is SERIAL mode on %s.\n', p.Results.devicePath);
-        baudRate = 57600;
-        delete(instrfindall);
-        s = serial(p.Results.devicePath,'BaudRate',baudRate);
-        fopen(s);
-        flushinput(s);
     else
         fprintf('Running in FILE replay mode from %s.\n', p.Results.devicePath);
-        if (exist(p.Results.devicePath, 'file') == 2)
-            s = fopen(p.Results.devicePath);
-        else
-            fprintf('File %s not found. Terminating.\n', p.Results.devicePath);
-            return;
-        end
     end
 
-    %cwb% enable logging to a specified file or don't
+    % enable logging to a specified file or don't
     if (strcmp(p.Results.saveFile, 'null'))
         loggingEnabled = 0;
     else
@@ -61,13 +50,6 @@ function ngfmVis(varargin)
 
     pause(2);
 
-    % dataPacket = struct('dle', uint8(0), 'stx', uint8(0), 'pid', uint8(0), 'packettype', uint8(0), 'packetlength', uint16(0), 'fs', uint16(0), 'ppsoffset', uint32(0), ...
-    %     'hk', zeros(1,12,'int16'), 'xdac', zeros(1,100,'int16'), 'ydac', zeros(1,100,'int16'), 'zdac', zeros(1,100,'int16'), ...
-    %     'xadc', zeros(1,100,'int16'), 'yadc', zeros(1,100,'int16'), 'zadc', zeros(1,100,'int16'), ...
-    %     'boardid', uint16(0), 'sensorid', uint16(0), 'reservedA', uint8(0), 'reservedB', uint8(0), 'reservedC', uint8(0), 'reservedD', uint8(0), ...
-    %     'etx', uint8(0), 'crc', uint16(0) );
-
-
     plotHandles = struct('figure', [], 'px', [], 'py', [], 'pz', [], 'pid', [], 'packetlength', [], 'fs', [], 'ppsoffset', [], ... 
         'hk0', [], 'hk1', [], 'hk2', [], 'hk3', [], 'hk4', [], 'hk5', [], 'hk6', [], 'hk7', [], 'hk8', [], 'hk9', [], 'hk10', [], 'hk11', [], ...
         'boardid', [], 'sensorid', [], 'crc', [], 'xavg', [], 'xstddev', [], 'yavg', [], 'ystddev', [], 'zavg', [], 'zstddev', [], ...
@@ -75,80 +57,99 @@ function ngfmVis(varargin)
 
     [FigHandle, magData, plotHandles] = ngfmPlotInit(plotHandles);
 
-    serialBuffer = zeros(serialBufferLen);
-    serialCounter = 1;
-
     hkData = zeros(1,12);
 
 
+    % Create a parallel pool if necessary
+    if isempty(gcp())
+        parpool(1);
+    end
+
+    % Get the worker to construct a data queue on which it can receive
+    % messages from the main thread
+    workerQueueConstant = parallel.pool.Constant(@parallel.pool.PollableDataQueue);
+
+    % Get the worker to send the queue object back to the main thread
+    workerQueueClient = fetchOutputs(parfeval(@(x) x.Value, 1, workerQueueConstant));
+
+    % create a pollable data queue. The worker will send raw data to this
+    % for the main thread to use
+    data_queue = parallel.pool.PollableDataQueue;
+    
+    % create a queue for killing the program. The worker will send a value
+    % to this that the main thread will see instantly instead of it being
+    % pushed to the back of the data queue
+    kill_queue = parallel.pool.PollableDataQueue;
+    
+    % call sourceMonitor asynchronously
+    F = parfeval(@sourceMonitor, 0, workerQueueConstant, data_queue, kill_queue, p.Results.device, p.Results.devicePath, serialBufferLen, dle, stx, etx);
+    
+    
+    % main loop vars
+    newPacket = 0;
+    tempPacket = zeros(1,1248);
     done=0;
     global k;
     k = [];
     
-    %have GUI record keypresses
+    % have GUI record keypresses
     set(FigHandle,'keypress','global k; k=get(gcf,''currentchar'');');
     
     % main loop
     while (~done)
-        if (strcmp(p.Results.device, 'file'))
-            if feof(s)
-               return;
+        % check if the worker said it's done
+        [data, kill_msg] = poll(kill_queue);
+        if(kill_msg)
+            if(data == 0)
+                fprintf('Serial Port or File closed\n');
+                done = 1;
+                continue;
             end
         end
         
-%         [serialBuffer, serialCounter, newPacket, tempPacket] = serialMonitor(s,serialBuffer, serialCounter, serialBufferLen, dle, stx, etx);
-        
-        [A,count] = fread(s,32,'uint8');
-
-        if (count == 0)
-            pause(0.01);
-            disp( 'Fread returned zero' );
-            continue;
-        elseif (serialCounter+count > serialBufferLen)
-            disp('Serial buffer overfilled');
-        else
-            if (count == 1)
-                serialBuffer(serialCounter) = A;
-            else
-                serialBuffer(serialCounter:serialCounter+count-1) = A;
+        % check if there's data to read
+        [data, data_available] = poll(data_queue); 
+        if(data_available)
+            if(isa(data,'cell'))
+                fprintf('%s\n', char(data));
+                done = 1;
+                continue;
             end
-            serialCounter = serialCounter + count;
-        end
-
-        newPacket = 0;
-        tempPacket = zeros(1,1248);
-        while ( (newPacket ==0 ) && (serialCounter > 1248) )
-            if ((serialBuffer(1) == dle) && (serialBuffer(2) == stx) && (serialBuffer(1246) == etx) )
-                tempPacket = uint8(serialBuffer(1:1248));
-                newPacket = 1;
-                serialBuffer(1:serialCounter-1248) = serialBuffer(1249:serialCounter);
-                serialCounter = serialCounter - 1248;
-            else
-                serialBuffer(1:serialBufferLen-1)=serialBuffer(2:serialBufferLen);
-                serialCounter = serialCounter - 1;
+            if(data == 2)
+                fprintf('Error: File not found\n');
+                done = 1;
+                continue;
             end
-        end
+            if(data == 3)
+                fprintf('Fread returned zero\n');
+                done = 1;
+                continue;
+            end
+            newPacket = 1;
+            tempPacket = data;
+        end 
 
+        % parse packet
         if (newPacket)
-            dataPacket.dle =        tempPacket(1);
-            dataPacket.stx =        tempPacket(2);
-            dataPacket.pid =        tempPacket(3);
-            dataPacket.packettype = tempPacket(4);
-            dataPacket.packetlength = swapbytes(typecast(tempPacket(5:6), 'uint16'));
-            dataPacket.fs =         swapbytes(typecast(tempPacket(7:8), 'uint16'));
-            dataPacket.ppsoffset =  swapbytes(typecast(tempPacket(9:12), 'uint32'));
-            dataPacket.hk(1) =      swapbytes(typecast(tempPacket(13:14), 'uint16'));
-            dataPacket.hk(2) =      swapbytes(typecast(tempPacket(15:16), 'uint16'));
-            dataPacket.hk(3) =      swapbytes(typecast(tempPacket(17:18), 'uint16'));
-            dataPacket.hk(4) =      swapbytes(typecast(tempPacket(19:20), 'uint16'));
-            dataPacket.hk(5) =      swapbytes(typecast(tempPacket(21:22), 'uint16'));
-            dataPacket.hk(6) =      swapbytes(typecast(tempPacket(23:24), 'uint16'));
-            dataPacket.hk(7) =      swapbytes(typecast(tempPacket(25:26), 'uint16'));
-            dataPacket.hk(8) =      swapbytes(typecast(tempPacket(27:28), 'uint16'));
-            dataPacket.hk(9) =      swapbytes(typecast(tempPacket(29:30), 'uint16'));
-            dataPacket.hk(10) =     swapbytes(typecast(tempPacket(31:32), 'uint16'));
-            dataPacket.hk(11) =     swapbytes(typecast(tempPacket(33:34), 'uint16'));
-            dataPacket.hk(12) =     swapbytes(typecast(tempPacket(35:36), 'uint16'));
+            dataPacket.dle =            tempPacket(1);
+            dataPacket.stx =            tempPacket(2);
+            dataPacket.pid =            tempPacket(3);
+            dataPacket.packettype =     tempPacket(4);
+            dataPacket.packetlength =   swapbytes(typecast(tempPacket(5:6), 'uint16'));
+            dataPacket.fs =             swapbytes(typecast(tempPacket(7:8), 'uint16'));
+            dataPacket.ppsoffset =      swapbytes(typecast(tempPacket(9:12), 'uint32'));
+            dataPacket.hk(1) =          swapbytes(typecast(tempPacket(13:14), 'uint16'));
+            dataPacket.hk(2) =          swapbytes(typecast(tempPacket(15:16), 'uint16'));
+            dataPacket.hk(3) =          swapbytes(typecast(tempPacket(17:18), 'uint16'));
+            dataPacket.hk(4) =          swapbytes(typecast(tempPacket(19:20), 'uint16'));
+            dataPacket.hk(5) =          swapbytes(typecast(tempPacket(21:22), 'uint16'));
+            dataPacket.hk(6) =          swapbytes(typecast(tempPacket(23:24), 'uint16'));
+            dataPacket.hk(7) =          swapbytes(typecast(tempPacket(25:26), 'uint16'));
+            dataPacket.hk(8) =          swapbytes(typecast(tempPacket(27:28), 'uint16'));
+            dataPacket.hk(9) =          swapbytes(typecast(tempPacket(29:30), 'uint16'));
+            dataPacket.hk(10) =         swapbytes(typecast(tempPacket(31:32), 'uint16'));
+            dataPacket.hk(11) =         swapbytes(typecast(tempPacket(33:34), 'uint16'));
+            dataPacket.hk(12) =         swapbytes(typecast(tempPacket(35:36), 'uint16'));
 
             dataOffset = inputOffset;
             for n = 1:100
@@ -178,9 +179,15 @@ function ngfmVis(varargin)
 
             [dataPacket, magData, hkData] = interpretData( dataPacket, magData, hkData, hk);
             
-            ngfmPlotUpdate(plotHandles, dataPacket, magData, hkData);
+            % put a try catch in for now to handle the window being closed
+            % until we can put in a proper close request callback
+            try
+                [plotHandles] = ngfmPlotUpdate(plotHandles, dataPacket, magData, hkData);
+            catch exception
+                k = 'q';
+                fprintf('Plot error: %s\n', exception.message)
+            end
             
-            % see if we can offload this to another thread
             if (loggingEnabled)
                 if (~debugData)
                     logData( logFileHandle, magData, hkData );
@@ -188,39 +195,38 @@ function ngfmVis(varargin)
                     logDebugData( logFileHandle, dataPacket );
                 end
             end
-
-
-            if (strcmp(p.Results.device, 'file'))
-                pause(0.001);
-            else
-                pause(0.001);
-            end
+            
         end
+        pause(0.001);
 
-
-
-          if ~isempty(k)
+        drawnow;
+        if ~isempty(k)
             if strcmp(k,'q')
-                done = 1;
+                % Send [] as a "poison pill" to the worker to get it to stop
+                send(workerQueueClient, []);
+                if strcmp(p.Results.device, 'file')
+                    % most likely the file has been read and the worker is
+                    % terminated, so just close whole program
+                    pause(0.1);
+                    done = 1;
+                    continue;
+                end
             elseif strcmp(k,'`')
                 debugData = ~debugData;
             elseif strcmp(p.Results.device, 'serial')
                 fwrite(s,k);
             end
             k = [];
-          end
-
-
-        pause(0.0001);
+        end
     end
-
-    close(FigHandle);
-
-    fclose(s);
+    
+    disp('Terminating program')
+    
+    if(isvalid(FigHandle))
+        close(FigHandle);
+    end
 
     if (loggingEnabled)
         fclose(logFileHandle);
     end
-
-
 end

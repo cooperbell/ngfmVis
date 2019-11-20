@@ -15,6 +15,7 @@ function [FigHandle, magData, plotHandles] = ngfmPlotInit(plotHandles)
     plotHandles.current_plot_menu = uicontrol('Style','popupmenu', ...
                                             'String', plots1, ...
                                             'Position', [1000 870 120 20], ...
+                                            'Interruptible', 'off', ...
                                             'Callback', @current_plot_callback);
     
     % Create BrowseButton
@@ -26,16 +27,15 @@ function [FigHandle, magData, plotHandles] = ngfmPlotInit(plotHandles)
     setappdata(FigHandle, 'spectra', spectra1);
     setappdata(FigHandle, 'plots', plots1);
     
-    % save GUI data
-    guidata(plotHandles.figure,plotHandles); % do I need this anymore?
 
-    %index = linspace(0,secondsToDisplay,numSamplesToDisplay);
-    magData = zeros(3,numSamplesToStore);                       % I CHNAGED THIS FROM NaN TO zeros
+    magData = zeros(3,numSamplesToStore);
 
     % plot XYZ and PSD/Amp graphs
-%     ngfmPlotMagData;
     ngfmPlotSpectra;
-
+    
+    % save GUI data
+    guidata(plotHandles.figure,plotHandles); % do I need this anymore?
+    
     ngfmPlotXYZ;
 
 
@@ -51,7 +51,6 @@ end
 
 % Callback function: Browse Button
 function pushedBrowseFile(hObject, eventdata)
-    
     [FileName,FilePath ]= uigetfile('*.m');
     sourceFilePath = fullfile(FilePath, FileName);
     if FileName ~= 0
@@ -74,7 +73,7 @@ function pushedBrowseFile(hObject, eventdata)
 
             % update the dropdown menu
             handles = guidata(hObject);
-            handles.current_plot_menu.String = getappdata(hObject.Parent, 'plots')
+            handles.current_plot_menu.String = getappdata(hObject.Parent, 'plots');
         else
             disp('error or no plot selected')
         end

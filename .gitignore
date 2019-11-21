@@ -29,6 +29,7 @@
 # Logs and data captures #
 ######################
 *.log
+log.txt
 
 # Autosave files #
 ######################

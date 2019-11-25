@@ -84,3 +84,4 @@ etx = hex2dec('03');
 % Calculated values before here
 numSamplesToDisplay = assumedSamplingRate*secondsToDisplay;
 numSamplesToStore = assumedSamplingRate*secondsToWelch;
+x = linspace(0,secondsToDisplay,numSamplesToDisplay);

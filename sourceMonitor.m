@@ -1,6 +1,8 @@
-% This function runs as an async worker called from ngfmVis(). It's main
-% purpose is to capture data from the source (port mostly) unencumbered from the
-% rest of the program and send that data back to the main thread.
+% Author: Cooper Bell
+% This function runs as an async worker called from ngfmVis(). 
+% It's purpose is to capture data from the source (port mostly)
+% unencumbered from the rest of the program and send that data back to the
+% main thread.
 function sourceMonitor(qConstant, data_queue, kill_queue, device, devicePath, serialBufferLen, dle, stx, etx)
     q = qConstant.Value;
     finished = 0;
@@ -72,13 +74,13 @@ function sourceMonitor(qConstant, data_queue, kill_queue, device, devicePath, se
                     serialBuffer(1:serialCounter-1248) = serialBuffer(1249:serialCounter);
                     serialCounter = serialCounter - 1248;
                     % send to data queue
-                    send(data_queue, tempPacket);
+                    send(data_queue, tempPacket); 
                 else
                     serialBuffer(1:serialBufferLen-1)=serialBuffer(2:serialBufferLen);
                     serialCounter = serialCounter - 1;
                 end
             end
-            pause(0.001); % give my computer a break so it doesn't explode
+            pause(0.005); % This sets fread to ~175hz on my machine
         end
     end
 end

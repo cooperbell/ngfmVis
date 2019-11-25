@@ -178,7 +178,7 @@ function ngfmVis(varargin)
             try
                 plotHandles = ngfmPlotUpdate(plotHandles, dataPacket, magData, hkData, debugData);
             catch exception
-                k = 'q';
+                plotHandles.closereq = 1;
                 fprintf('Plot error: %s\n', exception.message)
             end
             
@@ -192,9 +192,9 @@ function ngfmVis(varargin)
             
         end
         pause(0.001);
-
-        if ~isempty(k)
-            if strcmp(k,'q')
+        
+        % check if the user closed the main window
+        if (plotHandles.closereq == 1)
                 % Send [] as a "poison pill" to the worker to get it to stop.
                 % This properly closes up the serial port, preventing the
                 % worker from terminating while still holding onto it and 
@@ -207,12 +207,16 @@ function ngfmVis(varargin)
                     done = 1;
                     continue;
                 end
-            elseif strcmp(k,'`')
+        end
+
+        if (~isempty(plotHandles.key))
+            if strcmp(plotHandles.key,'`')
                 debugData = ~debugData;
             elseif strcmp(p.Results.device, 'serial')
+                %have this sent over serial worker
                 fwrite(s,k);
             end
-            k = [];
+            plotHandles.key = [];
         end
     end
     

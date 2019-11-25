@@ -3,10 +3,14 @@ function [plotHandles] = ngfmPlotInit(debugData)
     global menuCallbackInvoked;
     menuCallbackInvoked = 0;
     
+    %create plotHandles struct
+    plotHandles = struct('closereq', 0, 'key', []);
+    
     % create figure
     % add 'CloseRequestFcn', @my_closereq when done with everything
     plotHandles.figure = figure('Name', 'ngfmVis', 'NumberTitle','off', ...
-                                'WindowState', 'fullscreen');                       
+                                'WindowState', 'fullscreen', ...
+                                'KeyPressFcn', @keyPressCallback);                       
                             
     % create axes
     plotHandles.ax = axes('Parent', plotHandles.figure, 'Position', ...
@@ -49,6 +53,14 @@ function [plotHandles] = ngfmPlotInit(debugData)
                                             'FontSize', 12, 'Visible', 'off', ...
                                             'Position', [1220 969 133 22]);
                                         
+    % create program quit button
+    plotHandles.quitButton = uicontrol('Parent', plotHandles.figure, ...
+                                       'style', 'pushbutton', ...
+                                       'String', 'Quit Program', ...
+                                       'Units', 'Normalized', ...
+                                       'Callback', @quitButtonCallback, ...
+                                       'Position', [0.01 0.965 0.047 0.022]);
+                                        
     % plot spectra first so it'll look normal
     spectra = string(plotHandles.currentPlotMenu.String(plotHandles.currentPlotMenu.Value));
     plotHandles = setupSpectraPlot(spectra,plotHandles);
@@ -65,7 +77,6 @@ function [plotHandles] = ngfmPlotInit(debugData)
     plotHandles.az.YLabel.String = 'Bz (nT)';
     plotHandles.az.XLabel.String = 'Time (s)';
 
-
     % add XYZ line properties
     plotHandles.lnx.Color = 'red';
     plotHandles.lny.Color = 'green';
@@ -74,7 +85,6 @@ function [plotHandles] = ngfmPlotInit(debugData)
     plotHandles.lny.Tag = 'lny';
     plotHandles.lnz.Tag = 'lnz';
                                  
-    
     % Other Data Fields
     plotHandles.closereq = 0;
     plotHandles = setupMiscdata(plotHandles, debugData);
@@ -127,6 +137,29 @@ function browseFileCallback(hObject, ~)
     else
         disp('error or no plot selected');
     end
+end
+
+% Callback for when the quit button is pressed
+function quitButtonCallback(hObject,~)
+    global menuCallbackInvoked
+    menuCallbackInvoked = 1;
+    plotHandles = guidata(hObject);
+    plotHandles.closereq = 1;
+    guidata(hObject,plotHandles);
+end
+
+% Callback for when a key is pressed on the figure
+function keyPressCallback(hObject, event)
+    global menuCallbackInvoked
+    menuCallbackInvoked = 1;
+    plotHandles = guidata(hObject);
+    key = event.Character;
+    if(key == 'q')
+        plotHandles.closereq = 1;
+    else
+        plotHandles.key = key;
+    end
+    guidata(hObject,plotHandles);
 end
 
 function [plotHandles] = setupMiscdata(plotHandles, debugData)

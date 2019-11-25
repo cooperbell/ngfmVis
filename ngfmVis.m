@@ -5,26 +5,29 @@ function ngfmVis(varargin)
     global VAR;
     VAR = varargin;
     
+    % if no args, run input params GUI
     if nargin == 0
         ngfmVisParam1;
     end
 
+    % parse input args
     p = inputParser;
     addRequired(p,'device',  @(x)any(strcmpi(x,{'serial', 'file'})));
     addRequired(p,'devicePath', @ischar);
     addRequired(p,'saveFile', @ischar);
     parse(p,VAR{:});
     
+    % clear global used with the input params GUI
     clear global VAR;
 
+    % load vars
     loadconfig;
     ngfmLoadConstants;
+    debugData = 0;
+    magData = zeros(3,numSamplesToStore);
     
     %add the /lib folder to path
     addpath('lib');
-
-    global debugData;
-    debugData = 0;
     
 
     % Print whether the mode is serial or file
@@ -50,12 +53,7 @@ function ngfmVis(varargin)
 
     pause(2);
 
-    plotHandles = struct('figure', [], 'px', [], 'py', [], 'pz', [], 'pid', [], 'packetlength', [], 'fs', [], 'ppsoffset', [], ... 
-        'hk0', [], 'hk1', [], 'hk2', [], 'hk3', [], 'hk4', [], 'hk5', [], 'hk6', [], 'hk7', [], 'hk8', [], 'hk9', [], 'hk10', [], 'hk11', [], ...
-        'boardid', [], 'sensorid', [], 'crc', [], 'xavg', [], 'xstddev', [], 'yavg', [], 'ystddev', [], 'zavg', [], 'zstddev', [], ...
-        'xamp', [], 'xfreq', [], 'yamp', [], 'yfreq', [], 'zamp', [], 'zfreq', [] );
-
-    [FigHandle, magData, plotHandles] = ngfmPlotInit(plotHandles);
+    plotHandles = ngfmPlotInit(debugData);
 
     hkData = zeros(1,12);
 
@@ -89,12 +87,8 @@ function ngfmVis(varargin)
     newPacket = 0;
     tempPacket = zeros(1,1248);
     done=0;
-    global k;
     k = [];
-    
-    % have GUI record keypresses
-    set(FigHandle,'keypress','global k; k=get(gcf,''currentchar'');');
-    
+        
     % main loop
     while (~done)
         % check if the worker said it's done
@@ -182,7 +176,7 @@ function ngfmVis(varargin)
             % put a try catch in for now to handle the window being closed
             % until we can put in a proper close request callback
             try
-                [plotHandles] = ngfmPlotUpdate(plotHandles, dataPacket, magData, hkData);
+                plotHandles = ngfmPlotUpdate(plotHandles, dataPacket, magData, hkData, debugData);
             catch exception
                 k = 'q';
                 fprintf('Plot error: %s\n', exception.message)
@@ -199,10 +193,12 @@ function ngfmVis(varargin)
         end
         pause(0.001);
 
-        drawnow;
         if ~isempty(k)
             if strcmp(k,'q')
-                % Send [] as a "poison pill" to the worker to get it to stop
+                % Send [] as a "poison pill" to the worker to get it to stop.
+                % This properly closes up the serial port, preventing the
+                % worker from terminating while still holding onto it and 
+                % causing the port to be unconnectable to new workers
                 send(workerQueueClient, []);
                 if strcmp(p.Results.device, 'file')
                     % most likely the file has been read and the worker is
@@ -222,8 +218,8 @@ function ngfmVis(varargin)
     
     disp('Terminating program')
     
-    if(isvalid(FigHandle))
-        close(FigHandle);
+    if(isvalid(plotHandles.figure))
+        close(plotHandles.figure);
     end
 
     if (loggingEnabled)

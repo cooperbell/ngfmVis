@@ -220,19 +220,21 @@ function ManagePlotsButtonCallback(hObject, event)
           
     % add plots to plotsToDelete's array
     % delete those GUI elements
-    function deleteCallback(hObject, event)
+    function deleteCallback(~, event)
         plotName = event.Source.UserData;
         if((length(plots)-length(plotHandles.plotsToDelete)) > 1)
             answer = questdlg('Confirm delete?', 'Confirm deletion', ...
                          'No','Yes', 'No');
             if(strcmp(answer, 'Yes'))
-                plotHandles.plotsToDelete = [plotHandles.plotsToDelete, plotName];
+                plotHandles.plotsToDelete = [plotHandles.plotsToDelete, ...
+                    plotName];
 
                 % overwrite plot name & delete button with confirmation text
                 delete(event.Source);
                 selectionLabel = findobj('Tag', string(plotName));
                 selectionLabel.Position(3) = 1;
-                selectionLabel.String = strcat('Deleted', {' '}, selectionLabel.String);
+                selectionLabel.String = strcat('Deleted', {' '}, ...
+                    selectionLabel.String);
                 selectionLabel.FontAngle = 'italic';
                 selectionLabel.HorizontalAlignment = 'center';
 
@@ -241,10 +243,11 @@ function ManagePlotsButtonCallback(hObject, event)
 
                 % Add message instructing how to save or discard changes
                 h = findobj('Tag', 'deleteMsg');
+                str = 'Press OK to save changes. Cancel to discard.';
                 if(isempty(h))
                     uicontrol('Parent', popUpFig, ...
                           'Style', 'Text', ...
-                          'String', 'Press OK to save changes. Cancel to discard.', ...
+                          'String', str, ...
                           'Units', 'normalized', ...
                           'FontSize', 12, ...
                           'HorizontalAlignment', 'left', ...
@@ -253,7 +256,8 @@ function ManagePlotsButtonCallback(hObject, event)
                 end
             end
         else
-            warndlg('ngfmVis must have at least one plot', 'Warning', 'modal');
+            warndlg('ngfmVis must have at least one plot', 'Warning', ...
+                'modal');
         end
     end
  

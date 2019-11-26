@@ -27,7 +27,7 @@ function ngfmVis(varargin)
     magData = zeros(3,numSamplesToStore);
     
     %add the /lib folder to path
-    addpath('lib');
+    addpath('lib', 'spectraPlots');
     
 
     % Print whether the mode is serial or file

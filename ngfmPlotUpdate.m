@@ -8,26 +8,16 @@ function [plotHandles] = ngfmPlotUpdate(plotHandles, dataPacket, magData, hkData
     set(plotHandles.lnz,'XData',x,'YData',magData(3,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore));
     
     % update spectra graph (or call custom script)
+    spectra = plotHandles.currentPlotMenu.String(plotHandles.currentPlotMenu.Value);
     try
-        spectra = plotHandles.currentPlotMenu.String(plotHandles.currentPlotMenu.Value);
         run(string(spectra));
     catch exception
-        
-        % MOVE INTO ITS OWN FUNCTION
         % display error
         plotHandles.browseLoadError.String = 'Unable to load plot';
         plotHandles.browseLoadError.Visible = 'on';
         
-        % remove spectra from list
-        idx = find(strcmp(plotHandles.currentPlotMenu.String, spectra));
-        plotHandles.currentPlotMenu.String(idx) = [];
-        
-        % reset spectra to the first option
-        plotHandles.currentPlotMenu.Value = 1;
-        spectra = string(plotHandles.currentPlotMenu.String(plotHandles.currentPlotMenu.Value));
-        
-        % setup plot for new spectra
-        plotHandles = setupSpectraPlot(spectra,plotHandles);
+        % see if this works later on
+        plotHandles = deletePlots(plotHandles, spectra);
         
         % so you can see the error message be printed. Change this
         pause(1);
@@ -50,7 +40,8 @@ function [plotHandles] = ngfmPlotUpdate(plotHandles, dataPacket, magData, hkData
     if(menuCallbackInvoked)
         menuCallbackInvoked = 0;
         plotHandles = guidata(plotHandles.figure);
-        if(plotHandles.okButton.Value == 1)
+        if(plotHandles.okButton == 1)
+            plotHandles.okButton = 0;
             if(~isempty(plotHandles.plotsToDelete))
                 plotHandles = deletePlots(plotHandles, plotHandles.plotsToDelete);
             end
@@ -115,8 +106,16 @@ end
 
 function [plotHandles] = deletePlots(plotHandles, plots)
      for idx = 1:length(plots)
-        delete(string(plots(idx)));
+        plotFilePath = strcat('spectraPlots/', string(plots(idx)));
+        delete(plotFilePath);
         plotsIdx = find(strcmp(plotHandles.currentPlotMenu.String, plots(idx)));
         plotHandles.currentPlotMenu.String(plotsIdx) = [];
      end
+     
+    % reset spectra to the first option
+    plotHandles.currentPlotMenu.Value = 1;
+    spectra = string(plotHandles.currentPlotMenu.String(plotHandles.currentPlotMenu.Value));
+
+    % setup plot for new spectra
+    plotHandles = setupSpectraPlot(spectra,plotHandles);
  end

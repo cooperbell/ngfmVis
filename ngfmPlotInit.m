@@ -4,7 +4,7 @@ function [plotHandles] = ngfmPlotInit(debugData)
     menuCallbackInvoked = 0;
     
     %create plotHandles struct
-    plotHandles = struct('closereq', 0, 'key', []);
+    plotHandles = struct('closereq', 0, 'key', [], 'okButton', 0);
     
     % create figure
     % add 'CloseRequestFcn', @my_closereq when done with everything
@@ -264,8 +264,10 @@ function ManagePlotsButtonCallback(hObject, event)
     % save changes, delete figure
     function okButtonCallback(~, ~)
         global menuCallbackInvoked
-        menuCallbackInvoked = 1;
-        plotHandles.okButton.Value = 1;
+        if(~isempty(plotHandles.plotsToDelete))
+            menuCallbackInvoked = 1;
+        end
+        plotHandles.okButton = 1;
         delete(popUpFig);
         guidata(plotHandles.figure, plotHandles);
     end

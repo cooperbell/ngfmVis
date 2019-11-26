@@ -12,6 +12,8 @@ function [plotHandles] = ngfmPlotUpdate(plotHandles, dataPacket, magData, hkData
         spectra = plotHandles.currentPlotMenu.String(plotHandles.currentPlotMenu.Value);
         run(string(spectra));
     catch exception
+        
+        % MOVE INTO ITS OWN FUNCTION
         % display error
         plotHandles.browseLoadError.String = 'Unable to load plot';
         plotHandles.browseLoadError.Visible = 'on';
@@ -48,6 +50,11 @@ function [plotHandles] = ngfmPlotUpdate(plotHandles, dataPacket, magData, hkData
     if(menuCallbackInvoked)
         menuCallbackInvoked = 0;
         plotHandles = guidata(plotHandles.figure);
+        if(plotHandles.okButton.Value == 1)
+            if(~isempty(plotHandles.plotsToDelete))
+                plotHandles = deletePlots(plotHandles, plotHandles.plotsToDelete);
+            end
+        end
     end
 end
 
@@ -105,3 +112,11 @@ function [plotHandles] = updateMiscData(plotHandles,magData,dataPacket,hkData,de
         set(plotHandles.crc,'String',sprintf('%04X',dataPacket.crc));
     end
 end
+
+function [plotHandles] = deletePlots(plotHandles, plots)
+     for idx = 1:length(plots)
+        delete(string(plots(idx)));
+        plotsIdx = find(strcmp(plotHandles.currentPlotMenu.String, plots(idx)));
+        plotHandles.currentPlotMenu.String(plotsIdx) = [];
+     end
+ end

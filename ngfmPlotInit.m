@@ -253,7 +253,7 @@ function ManagePlotsButtonCallback(hObject, event)
                 end
             end
         else
-            warndlg('ngfmVis must have at least one plot');
+            warndlg('ngfmVis must have at least one plot', 'Warning', 'modal');
         end
     end
  

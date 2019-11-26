@@ -181,7 +181,7 @@ function ManagePlotsButtonCallback(hObject, event)
                                'Title', 'Current Plots', ...
                                'FontSize', 18, ...
                                'BackgroundColor', 'white', ...
-                               'Position', [.05 0.05 .45 .9]);
+                               'Position', [.05 0.05 .45 .85]);
 
     uicontrol('Parent', popUpFig, ...
                          'String', 'Ok', ...
@@ -218,14 +218,27 @@ function ManagePlotsButtonCallback(hObject, event)
         bottom_align = bottom_align - 0.1;
     end
           
+    % add plots to plotsToDelete's array
+    % delete those GUI elements
     function deleteCallback(~, event)
         plotName = event.Source.UserData;
-        plotHandles.plotsToDelete = [plotHandles.plotsToDelete, plotName];
-        delete(findobj('Tag', string(plotName)));
-        delete(event.Source);
-        guidata(plotHandles.figure, plotHandles);
+        answer = questdlg('Confirm delete?', 'Confirm deletion', ...
+                         'No','Yes', 'No');
+        if(strcmp(answer, 'Yes'))
+            plotHandles.plotsToDelete = [plotHandles.plotsToDelete, plotName];
+            delete(event.Source);
+            selectionLabel = findobj('Tag', string(plotName));
+            selectionLabel.Position(3) = 1;
+            selectionLabel.String = strcat('Deleted', {' '}, selectionLabel.String);
+            selectionLabel.FontAngle = 'italic';
+            selectionLabel.HorizontalAlignment = 'center';
+%             delete(findobj('Tag', string(plotName)));
+            
+            guidata(plotHandles.figure, plotHandles);
+        end
     end
  
+    % save changes, delete figure
     function okButtonCallback(~, ~)
         global menuCallbackInvoked
         menuCallbackInvoked = 1;
@@ -234,6 +247,7 @@ function ManagePlotsButtonCallback(hObject, event)
         guidata(plotHandles.figure, plotHandles);
     end
 
+    % don't save changes, just delete figure
     function cancelButtonCallback(~, ~)
          delete(popUpFig);
     end

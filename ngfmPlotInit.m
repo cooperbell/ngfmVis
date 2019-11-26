@@ -220,34 +220,41 @@ function ManagePlotsButtonCallback(hObject, event)
           
     % add plots to plotsToDelete's array
     % delete those GUI elements
-    function deleteCallback(~, event)
+    function deleteCallback(hObject, event)
         plotName = event.Source.UserData;
-        answer = questdlg('Confirm delete?', 'Confirm deletion', ...
+        if((length(plots)-length(plotHandles.plotsToDelete)) > 1)
+            answer = questdlg('Confirm delete?', 'Confirm deletion', ...
                          'No','Yes', 'No');
-        if(strcmp(answer, 'Yes'))
-            plotHandles.plotsToDelete = [plotHandles.plotsToDelete, plotName];
-            delete(event.Source);
-            selectionLabel = findobj('Tag', string(plotName));
-            selectionLabel.Position(3) = 1;
-            selectionLabel.String = strcat('Deleted', {' '}, selectionLabel.String);
-            selectionLabel.FontAngle = 'italic';
-            selectionLabel.HorizontalAlignment = 'center';
-%             delete(findobj('Tag', string(plotName)));
-            
-            guidata(plotHandles.figure, plotHandles);
-            h = findobj('Tag', 'deleteMsg');
-            if(isempty(h))
-                uicontrol('Parent', popUpFig, ...
-                      'Style', 'Text', ...
-                      'String', 'Press OK to save changes. Cancel to discard.', ...
-                      'Units', 'normalized', ...
-                      'FontSize', 12, ...
-                      'HorizontalAlignment', 'left', ...
-                      'Tag', 'deleteMsg', ...
-                      'Position', [.05 0.025 0.45 0.05]);
+            if(strcmp(answer, 'Yes'))
+                plotHandles.plotsToDelete = [plotHandles.plotsToDelete, plotName];
+
+                % overwrite plot name & delete button with confirmation text
+                delete(event.Source);
+                selectionLabel = findobj('Tag', string(plotName));
+                selectionLabel.Position(3) = 1;
+                selectionLabel.String = strcat('Deleted', {' '}, selectionLabel.String);
+                selectionLabel.FontAngle = 'italic';
+                selectionLabel.HorizontalAlignment = 'center';
+
+                % save
+                guidata(plotHandles.figure, plotHandles);
+
+                % Add message instructing how to save or discard changes
+                h = findobj('Tag', 'deleteMsg');
+                if(isempty(h))
+                    uicontrol('Parent', popUpFig, ...
+                          'Style', 'Text', ...
+                          'String', 'Press OK to save changes. Cancel to discard.', ...
+                          'Units', 'normalized', ...
+                          'FontSize', 12, ...
+                          'HorizontalAlignment', 'left', ...
+                          'Tag', 'deleteMsg', ...
+                          'Position', [.05 0.025 0.45 0.05]);
+                end
             end
+        else
+            warndlg('ngfmVis must have at least one plot');
         end
-        
     end
  
     % save changes, delete figure

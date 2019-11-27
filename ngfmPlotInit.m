@@ -28,24 +28,38 @@ function [plotHandles] = ngfmPlotInit(debugData)
     plotHandles.aw = axes('Parent', plotHandles.figure, 'Position', ...
                           [0.55 0.10 0.39 0.85]);
                       
+    
+    % load in current scripts
+    if(isfolder('spectraPlots'))
+        listing = dir('spectraPlots');
+        numScripts = size(listing);
+        plots = {};
+        for i = 1:numScripts(1)
+            if(~listing(i).isdir)
+                plots = [plots, listing(i).name];
+            end
+        end
+    end
+    
     % create dropdown
-    plots = {'PlotPSD.m','PlotAmplitude.m'};
     plotHandles.currentPlotMenu = uicontrol('Parent', plotHandles.figure, ...
                                             'Style','popupmenu', ...
                                             'String', plots, ...
-                                            'Position', [950 970 140 20], ...
+                                            'Units', 'Normalized', ...
+                                            'Position', [0.55 0.965 0.075 0.02], ...
                                             'Interruptible', 'off', ...
                                             'Tag', 'currentPlotMenu', ...
                                             'Callback', @dropdownCallback);
     
-    % create browse button
+    % create Manage Plots button
     plotHandles.managePlotsButton = uicontrol('Parent', plotHandles.figure, ...
                                          'style', 'pushbutton', ...
                                          'String', 'Manage Plots', ...
-                                         'Position', [1120 970 100 22], ...
+                                         'Units', 'Normalized', ...
+                                         'Position', [0.635 0.965 0.05 0.02], ...
                                          'Callback', @ManagePlotsButtonCallback);
     
-    % create browse button's error text
+    % create modular script error text
     plotHandles.browseLoadError = uicontrol('Parent', plotHandles.figure, ...
                                             'style','text', ...
                                             'String','', ...
@@ -262,14 +276,15 @@ function ManagePlotsButtonCallback(hObject, event)
     end
  
     % save changes, delete figure
+    % If there are no changes, then treat it like the cancel button
     function okButtonCallback(~, ~)
         global menuCallbackInvoked
         if(~isempty(plotHandles.plotsToDelete))
             menuCallbackInvoked = 1;
+            plotHandles.okButton = 1;
+            guidata(plotHandles.figure, plotHandles);
         end
-        plotHandles.okButton = 1;
         delete(popUpFig);
-        guidata(plotHandles.figure, plotHandles);
     end
 
     % don't save changes, just delete figure

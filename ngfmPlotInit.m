@@ -7,11 +7,12 @@ function [plotHandles] = ngfmPlotInit(debugData)
     menuCallbackInvoked = 0;
     
     % initialize plotHandles struct
-    plotHandles = struct('closereq', 0, 'key', [], 'managePlots', []);
-    plotHandles.managePlots.okButton = 0;
-    plotHandles.managePlots.plotsToDelete = {};
-    plotHandles.managePlots.plotToAdd = [];
-    plotHandles.managePlots.permanenceFlag = 0;
+    plotHandles = struct('closereq', 0, 'key', []);
+%     plotHandles = struct('closereq', 0, 'key', [], 'managePlots', []);
+%     plotHandles.managePlots.okButton = 0;
+%     plotHandles.managePlots.plotsToDelete = {};
+%     plotHandles.managePlots.plotToAdd = [];
+%     plotHandles.managePlots.permanenceFlag = 0;
     
     % create figure
     % add 'CloseRequestFcn', @my_closereq when done with everything
@@ -60,13 +61,13 @@ function [plotHandles] = ngfmPlotInit(debugData)
                                             'Tag', 'currentPlotMenu', ...
                                             'Callback', @dropdownCallback);
     
-%     % create Manage Plots button
-%     plotHandles.managePlotsButton = uicontrol('Parent', plotHandles.figure, ...
-%                                          'style', 'pushbutton', ...
-%                                          'String', 'Manage Plots', ...
-%                                          'Units', 'Normalized', ...
-%                                          'Position', [0.635 0.965 0.05 0.02], ...
-%                                          'Callback', @ManagePlotsButtonCallback);
+    % create browse button
+    plotHandles.browseButton = uicontrol('Parent', plotHandles.figure, ...
+                                         'style', 'pushbutton', ...
+                                         'String', 'Add Plot', ...
+                                         'Units', 'Normalized', ...
+                                         'Position', [0.635 0.965 0.05 0.02], ...
+                                         'Callback', @browseButtonCallback);
 %     
 %     % create modular script error text
 %     plotHandles.browseLoadError = uicontrol('Parent', plotHandles.figure, ...
@@ -148,6 +149,39 @@ function keyPressCallback(hObject, event)
         plotHandles.key = key;
     end
     guidata(hObject,plotHandles);
+end
+
+% Browse button callback
+% Retrieves file, copies it to a temp directory,
+% adds that to path, updates dropdown and graph
+function browseButtonCallback(hObject, ~)
+    [FileName,FilePath ]= uigetfile('*.m');
+    if (FileName ~= 0 & FileName ~= "")
+        plotHandles = guidata(hObject);
+        
+        % find a temp directory that has write access
+        temp = tempdir;
+        % add that temp directory to MATLAB's search path for this session
+        addpath(temp);
+        % copy the selected file to temp directory
+        [status,msg] = copyfile(FilePath, temp);
+        if (~status)
+            fprintf('Copy error: %s',msg);
+        end
+        
+        % Add option to the dropdown, first in list
+        plotHandles.currentPlotMenu.String = {FileName, ...
+            plotHandles.currentPlotMenu.String{1:end}};
+        
+        % Have dropdown show it as the selected option
+        plotHandles.currentPlotMenu.Value = 1;
+        
+        plotHandles = setupSpectraPlot(FileName,plotHandles);
+        
+        guidata(hObject,plotHandles)
+    else
+        disp('error or no plot selected');
+    end
 end
 
 % % Callback for when the manage plots button is pressed

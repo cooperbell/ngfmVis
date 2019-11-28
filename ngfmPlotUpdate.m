@@ -16,7 +16,7 @@ function [plotHandles] = ngfmPlotUpdate(plotHandles, dataPacket, magData, hkData
 %         warning(exception.identifier, 'Unable to load plot, %s', exception.message)
         
         % display error
-        warndlg(sprintf('Unable to load plot, %s', exception.message), 'Warning');
+        warndlg(sprintf('Unable to load plot, %s', exception.message), 'Warning', 'modal');
         
         % don't delete, just remove from dropdown
         plotsIdx = find(strcmp(plotHandles.currentPlotMenu.String, spectra));

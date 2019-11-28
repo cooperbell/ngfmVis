@@ -200,6 +200,16 @@ function ManagePlotsButtonCallback(hObject, ~)
                    'Units', 'normalized', ...
                    'FontSize', 12, ...
                    'Position', [.02 0.72 0.6 0.06]);
+               
+    browseError = uicontrol('Parent', addPlotPanel, ...
+                   'Visible', 'off', ...
+                   'Style', 'Text', ...
+                   'String', 'Error: This script name already exists', ...
+                   'FontAngle', 'italic', ...
+                   'ForegroundColor', 'red', ...
+                   'Units', 'normalized', ...
+                   'FontSize', 12, ...
+                   'Position', [.02 0.62 0.9 0.06]);
 
     % ok button
     uicontrol('Parent', popUpFig, ...
@@ -289,9 +299,16 @@ function ManagePlotsButtonCallback(hObject, ~)
         global menuCallbackInvoked
         [FileName,FilePath ]= uigetfile('*.m');
         if (FileName ~= 0 & FileName ~= "")
-            menuCallbackInvoked = 1;
-            plotHandles.managePlots.plotToAdd = fullfile(FilePath, FileName);
-            selectedPlot.String = FileName;
+            % check to make sure it's not a duplicate
+            if(~ismember(FileName, plotHandles.currentPlotMenu.String))
+                menuCallbackInvoked = 1;
+                plotHandles.managePlots.plotToAdd = fullfile(FilePath, FileName);
+                selectedPlot.String = FileName;
+                browseError.Visible = 'off';
+            else
+                selectedPlot.String = '';
+                browseError.Visible = 'on';
+            end
         end
     end
  

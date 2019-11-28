@@ -12,23 +12,20 @@ function [plotHandles] = ngfmPlotUpdate(plotHandles, dataPacket, magData, hkData
     try
         run(string(spectra));
     catch exception
-        % display error
-        plotHandles.browseLoadError.String = 'Unable to load plot';
-        plotHandles.browseLoadError.Visible = 'on';
-        
-        % don't delete, just remove from dropdown
-        plotsIdx = find(strcmp(plotHandles.currentPlotMenu.String, spectra);
-        plotHandles.currentPlotMenu.String(plotsIdx) = [];
-        
-        % so you can see the error message be printed. Change this
-        pause(1);
-        
-        % print thrown error to console
+       % print thrown error to console
         warning(exception.identifier, 'Unable to load plot, %s', exception.message)
         
-        % hide error text
-        plotHandles.browseLoadError.Visible = 'off';
-        plotHandles.browseLoadError.String = '';
+        % display error
+        warndlg(sprintf('Unable to load plot, %s', exception.message), 'Warning');
+        
+        % don't delete, just remove from dropdown
+        plotsIdx = find(strcmp(plotHandles.currentPlotMenu.String, spectra));
+        plotHandles.currentPlotMenu.String(plotsIdx) = [];
+        
+        % reset spectra to the first option
+        plotHandles.currentPlotMenu.Value = 1;
+        spectra = string(plotHandles.currentPlotMenu.String(plotHandles.currentPlotMenu.Value));
+        plotHandles = setupSpectraPlot(spectra,plotHandles);
     end
     
     % update misc data
@@ -44,11 +41,14 @@ function [plotHandles] = ngfmPlotUpdate(plotHandles, dataPacket, magData, hkData
         if(plotHandles.managePlots.okButton == 1)
             plotHandles.managePlots.okButton = 0;
             
-            % check if we need to delete or add plots
+            % check if we need to delete plots
             if(~isempty(plotHandles.managePlots.plotsToDelete))
                 plotHandles = deletePlots(plotHandles,  ...
                     plotHandles.managePlots.plotsToDelete);
-            elseif(~isempty(plotHandles.managePlots.plotToAdd))
+            end
+            
+            % check if we need to add a plot
+            if(~isempty(plotHandles.managePlots.plotToAdd))
                 plotHandles = addPlot(plotHandles, ...
                     plotHandles.managePlots.plotToAdd, ...
                     plotHandles.managePlots.permanenceFlag);

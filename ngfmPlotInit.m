@@ -1,10 +1,17 @@
+% Author: David Miles
+% Modified by: Cooper Bell 11/27/2019
+% Sets up GUI. Contains all callbacks
 function [plotHandles] = ngfmPlotInit(debugData)
     ngfmLoadConstants;
     global menuCallbackInvoked;
     menuCallbackInvoked = 0;
     
-    %create plotHandles struct
-    plotHandles = struct('closereq', 0, 'key', [], 'okButton', 0);
+    % initialize plotHandles struct
+    plotHandles = struct('closereq', 0, 'key', [], 'managePlots', []);
+    plotHandles.managePlots.okButton = 0;
+    plotHandles.managePlots.plotsToDelete = {};
+    plotHandles.managePlots.plotToAdd = [];
+    plotHandles.managePlots.permanenceFlag = 0;
     
     % create figure
     % add 'CloseRequestFcn', @my_closereq when done with everything
@@ -31,14 +38,16 @@ function [plotHandles] = ngfmPlotInit(debugData)
     
     % load in current scripts
     if(isfolder('spectraPlots'))
-        listing = dir('spectraPlots');
-        numScripts = size(listing);
+        filePattern = fullfile('spectraPlots', '*.m');
+        allFiles = dir(filePattern);
+        numScripts = size(allFiles);
         plots = {};
         for i = 1:numScripts(1)
-            if(~listing(i).isdir)
-                plots = [plots, listing(i).name];
-            end
+            plots = [plots, allFiles(i).name];
         end
+    else
+        errorMessage = 'Unable to locate folder: \spectraPlots';
+        warndlg(errorMessage);
     end
     
     % create dropdown
@@ -118,41 +127,6 @@ function dropdownCallback(hObject, ~)
     guidata(hObject,plotHandles)
 end
 
-% Browse button callback
-% Retrieves file, copies it to a temp directory,
-% adds that to path, updates dropdown and graph
-function browseFileCallback(hObject, ~)
-    [FileName,FilePath ]= uigetfile('*.m');
-    if (FileName ~= 0 & FileName ~= "")
-        plotHandles = guidata(hObject);
-        
-        % find a temp directory that has write access
-        temp = tempdir;
-
-        % add that temp directory to MATLAB's search path for this session
-        addpath(temp);
-
-        % copy the selected file to temp directory
-        [status,msg] = copyfile(FilePath, temp);
-        if (~status)
-            fprintf('Copy error: %s',msg);
-        end
-        
-        % Add option to the dropdown, first in list
-        plotHandles.currentPlotMenu.String = {FileName, ...
-            plotHandles.currentPlotMenu.String{1:end}};
-        
-        % Have dropdown show it as the selected option
-        plotHandles.currentPlotMenu.Value = 1;
-        
-        plotHandles = setupSpectraPlot(FileName,plotHandles);
-        
-        guidata(hObject,plotHandles)
-    else
-        disp('error or no plot selected');
-    end
-end
-
 % Callback for when the quit button is pressed
 function quitButtonCallback(hObject,~)
     global menuCallbackInvoked
@@ -180,10 +154,9 @@ end
 % Creates a modal figure to delete and add plots
 % Changes are enacted upon clicking OK
 % No changes on Cancel
-function ManagePlotsButtonCallback(hObject, event)
+function ManagePlotsButtonCallback(hObject, ~)
     plotHandles = guidata(hObject);
-    plotHandles.plotsToDelete = {};
-    
+    plotHandles.managePlots.plotsToDelete = {};
 %     % modal
 %     popUpFig = dialog('Name','Manage Spectra Plots');
     popUpFig = figure('Name','Manage Spectra Plots', ...
@@ -196,13 +169,46 @@ function ManagePlotsButtonCallback(hObject, event)
                                'FontSize', 18, ...
                                'BackgroundColor', 'white', ...
                                'Position', [.05 0.1 .45 .85]);
+                           
+    % right-hand panel that allows user to add a script                       
+    addPlotPanel = uipanel('Parent', popUpFig, ...
+                               'Title', 'Add a Plot', ...
+                               'FontSize', 18, ...
+                               'BorderType', 'none', ...
+                               'TitlePosition', 'lefttop', ...
+                               'Position', [.55 0.1 .4 .85]);
+    
+    % browse button
+    uicontrol('Parent', addPlotPanel, ...
+                            'String', 'Browse', ...
+                            'Units', 'normalized', ...
+                            'Callback', @browseFileCallback, ...
+                            'Position', [.02 0.88 0.3 0.05]);
+                        
+               
+    selectedPlot = uicontrol('Parent', addPlotPanel, ...
+                   'Style', 'edit', ...
+                   'String', '', ...
+                   'Enable', 'inactive', ...
+                   'Units', 'normalized', ...
+                   'FontSize', 10, ...
+                   'Position', [.42 0.88 0.42 0.052]);
+               
+    permanenceToggle = uicontrol('Parent', addPlotPanel, ...
+                   'Style', 'radiobutton', ...
+                   'String', 'Add permanently', ...
+                   'Units', 'normalized', ...
+                   'FontSize', 12, ...
+                   'Position', [.02 0.72 0.6 0.06]);
 
+    % ok button
     uicontrol('Parent', popUpFig, ...
                          'String', 'Ok', ...
                          'Units', 'normalized', ...
                          'Callback', @okButtonCallback, ...
                          'Position', [.85 0.05 0.12 0.05]);
 
+    % cancel button
     uicontrol('Parent', popUpFig, ...
                              'String', 'Cancel', ...
                              'Units', 'normalized', ...
@@ -236,11 +242,12 @@ function ManagePlotsButtonCallback(hObject, event)
     % delete those GUI elements
     function deleteCallback(~, event)
         plotName = event.Source.UserData;
-        if((length(plots)-length(plotHandles.plotsToDelete)) > 1)
+        if((length(plots)-length(plotHandles.managePlots.plotsToDelete)) > 1)
             answer = questdlg('Confirm delete?', 'Confirm deletion', ...
                          'No','Yes', 'No');
             if(strcmp(answer, 'Yes'))
-                plotHandles.plotsToDelete = [plotHandles.plotsToDelete, ...
+                plotHandles.managePlots.plotsToDelete = ...
+                    [plotHandles.managePlots.plotsToDelete, ...
                     plotName];
 
                 % overwrite plot name & delete button with confirmation text
@@ -274,14 +281,33 @@ function ManagePlotsButtonCallback(hObject, event)
                 'modal');
         end
     end
+
+    % Browse button callback
+    % Retrieves file, copies it to a temp directory,
+    % adds that to path, updates dropdown and graph
+    function browseFileCallback(~, ~)
+        global menuCallbackInvoked
+        [FileName,FilePath ]= uigetfile('*.m');
+        if (FileName ~= 0 & FileName ~= "")
+            menuCallbackInvoked = 1;
+            plotHandles.managePlots.plotToAdd = fullfile(FilePath, FileName);
+            selectedPlot.String = FileName;
+        end
+    end
  
     % save changes, delete figure
     % If there are no changes, then treat it like the cancel button
     function okButtonCallback(~, ~)
         global menuCallbackInvoked
-        if(~isempty(plotHandles.plotsToDelete))
+        
+        % check if there are changes
+        if(~isempty(plotHandles.managePlots.plotsToDelete) || ...
+           ~isempty(plotHandles.managePlots.plotToAdd))
             menuCallbackInvoked = 1;
-            plotHandles.okButton = 1;
+            if (permanenceToggle.Value == 1)
+                plotHandles.managePlots.permanenceFlag = 1;
+            end
+            plotHandles.managePlots.okButton = 1;
             guidata(plotHandles.figure, plotHandles);
         end
         delete(popUpFig);
@@ -291,7 +317,6 @@ function ManagePlotsButtonCallback(hObject, event)
     function cancelButtonCallback(~, ~)
          delete(popUpFig);
     end
-         
  end
 
 function [plotHandles] = setupMiscdata(plotHandles, debugData)

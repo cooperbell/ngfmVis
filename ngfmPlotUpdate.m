@@ -13,7 +13,7 @@ function [plotHandles] = ngfmPlotUpdate(plotHandles, dataPacket, magData, hkData
         run(string(spectra));
     catch exception
        % print thrown error to console
-        warning(exception.identifier, 'Unable to load plot, %s', exception.message)
+%         warning(exception.identifier, 'Unable to load plot, %s', exception.message)
         
         % display error
         warndlg(sprintf('Unable to load plot, %s', exception.message), 'Warning');
@@ -22,7 +22,7 @@ function [plotHandles] = ngfmPlotUpdate(plotHandles, dataPacket, magData, hkData
         plotsIdx = find(strcmp(plotHandles.currentPlotMenu.String, spectra));
         plotHandles.currentPlotMenu.String(plotsIdx) = [];
         
-        % reset spectra to the first option
+        
         plotHandles.currentPlotMenu.Value = 1;
         spectra = string(plotHandles.currentPlotMenu.String(plotHandles.currentPlotMenu.Value));
         plotHandles = setupSpectraPlot(spectra,plotHandles);
@@ -38,24 +38,24 @@ function [plotHandles] = ngfmPlotUpdate(plotHandles, dataPacket, magData, hkData
     if(menuCallbackInvoked)
         menuCallbackInvoked = 0;
         plotHandles = guidata(plotHandles.figure);
-        if(plotHandles.managePlots.okButton == 1)
-            plotHandles.managePlots.okButton = 0;
-            
-            % check if we need to delete plots
-            if(~isempty(plotHandles.managePlots.plotsToDelete))
-                plotHandles = deletePlots(plotHandles,  ...
-                    plotHandles.managePlots.plotsToDelete);
-            end
-            
-            % check if we need to add a plot
-            if(~isempty(plotHandles.managePlots.plotToAdd))
-                plotHandles = addPlot(plotHandles, ...
-                    plotHandles.managePlots.plotToAdd, ...
-                    plotHandles.managePlots.permanenceFlag);
-            end
-            % save back to gui struct
-            guidata(plotHandles.figure, plotHandles)
-        end
+%         if(plotHandles.managePlots.okButton == 1)
+%             plotHandles.managePlots.okButton = 0;
+%             
+%             % check if we need to delete plots
+%             if(~isempty(plotHandles.managePlots.plotsToDelete))
+%                 plotHandles = deletePlots(plotHandles,  ...
+%                     plotHandles.managePlots.plotsToDelete);
+%             end
+%             
+%             % check if we need to add a plot
+%             if(~isempty(plotHandles.managePlots.plotToAdd))
+%                 plotHandles = addPlot(plotHandles, ...
+%                     plotHandles.managePlots.plotToAdd, ...
+%                     plotHandles.managePlots.permanenceFlag);
+%             end
+%             % save back to gui struct
+%             guidata(plotHandles.figure, plotHandles)
+%         end
     end
 end
 
@@ -114,59 +114,60 @@ function [plotHandles] = updateMiscData(plotHandles,magData,dataPacket,hkData,de
     end
 end
 
-function [plotHandles] = deletePlots(plotHandles, plots)
-     for idx = 1:length(plots)
-        plotFilePath = fullfile('spectraPlots', string(plots(idx)));
-        delete(plotFilePath);
-        
-        % remove from dropdown
-        plotsIdx = find(strcmp(plotHandles.currentPlotMenu.String, plots(idx)));
-        plotHandles.currentPlotMenu.String(plotsIdx) = [];
-        
-        % remove from plotsToDelete list
-        plotsIdx = find(strcmp(plotHandles.managePlots.plotsToDelete, plots(idx)));
-        plotHandles.managePlots.plotsToDelete(plotsIdx) = [];
-     end
-     
-    % reset spectra to the first option
-    plotHandles.currentPlotMenu.Value = 1;
-    spectra = string(plotHandles.currentPlotMenu.String(plotHandles.currentPlotMenu.Value));
-
-    % setup plot for new spectra
-    plotHandles = setupSpectraPlot(spectra,plotHandles);
-end
+% function [plotHandles] = deletePlots(plotHandles, plots)
+%      for idx = 1:length(plots)
+%         plotFilePath = fullfile('spectraPlots', string(plots(idx)));
+%         delete(plotFilePath);
+%         
+%         % remove from dropdown
+%         plotsIdx = find(strcmp(plotHandles.currentPlotMenu.String, plots(idx)));
+%         plotHandles.currentPlotMenu.String(plotsIdx) = [];
+%         
+%         % remove from plotsToDelete list
+%         plotsIdx = find(strcmp(plotHandles.managePlots.plotsToDelete, plots(idx)));
+%         plotHandles.managePlots.plotsToDelete(plotsIdx) = [];
+%      end
+%      
+%     % reset spectra to the first option
+%     plotHandles = resetSpectra(plotHandles);
+% end
  
 % TODO: add permanence flag arg
-function [plotHandles] = addPlot(plotHandles, file, permanenceFlag)
-        % break up file into componenets to use
-        [FilePath,name,ext] = fileparts(file);
-        FileName = strcat(name,ext);
-        dir = 'spectraPlots';
-        
-        % put file in temp dir if user didn't click permanence
-        % 
-        if (~permanenceFlag)
-            % find a temp directory that has write access
-            dir = tempdir;
+% function [plotHandles] = addPlot(plotHandles, file, permanenceFlag)
+%         % break up file into componenets to use
+%         [FilePath,name,ext] = fileparts(file);
+%         FileName = strcat(name,ext);
+%         dir = 'spectraPlots';
+%         
+%         % put file in temp dir if user didn't click permanence
+%         % 
+%         if (~permanenceFlag)
+%             % find a temp directory that has write access
+%             dir = tempdir;
+% 
+%             % add that temp directory to MATLAB's search path for this session
+%             addpath(dir);
+%         end
+%         
+% 
+%         % copy the selected file to temp directory
+%         [status,msg] = copyfile(file, dir);
+%         if (~status)
+%             fprintf('Copy error: %s',msg);
+%         end
+% 
+%         % Add option to the dropdown, first in list
+%         plotHandles.currentPlotMenu.String = {FileName, ...
+%             plotHandles.currentPlotMenu.String{1:end}};
+%         
+%         plotHandles = resetSpectra(plotHandles);
+% end
 
-            % add that temp directory to MATLAB's search path for this session
-            addpath(dir);
-        end
-        
-
-        % copy the selected file to temp directory
-        [status,msg] = copyfile(file, dir);
-        if (~status)
-            fprintf('Copy error: %s',msg);
-        end
-
-        % Add option to the dropdown, first in list
-        plotHandles.currentPlotMenu.String = {FileName, ...
-            plotHandles.currentPlotMenu.String{1:end}};
-
-        % Have dropdown show it as the selected option
-        plotHandles.currentPlotMenu.Value = 1;
-
-        % redraw plot
-        plotHandles = setupSpectraPlot(FileName,plotHandles);
-end
+% When a plot is added, deleted, or kicked, the modular plot needs
+% to be re-initalized
+% function [plotHandles] = resetSpectra(plotHandles)
+%     % reset spectra to the first option
+%     plotHandles.currentPlotMenu.Value = 1;
+%     spectra = string(plotHandles.currentPlotMenu.String(plotHandles.currentPlotMenu.Value));
+%     plotHandles = setupSpectraPlot(spectra,plotHandles);
+% end

@@ -7,9 +7,10 @@ function [plotHandles] = ngfmPlotInit(debugData)
     menuCallbackInvoked = 0;
     
     % initialize plotHandles struct
-    plotHandles = struct('closereq', 0, 'key', [], 'addPlot', []);
+    plotHandles = struct('closereq', 0, 'key', [], 'addPlot', [], 'deletePlots', []);
     plotHandles.addPlot.plot = [];
     plotHandles.addPlot.permanenceFlag = 0;
+    plotHandles.deletePlots.plots = {};
     
     % create figure
     % add 'CloseRequestFcn', @my_closereq when done with everything
@@ -65,6 +66,14 @@ function [plotHandles] = ngfmPlotInit(debugData)
                                          'Units', 'Normalized', ...
                                          'Position', [0.635 0.965 0.05 0.02], ...
                                          'Callback', @AddPlotButtonCallback);
+                                     
+     % create delete plot button
+    plotHandles.deletePlotButton = uicontrol('Parent', plotHandles.figure, ...
+                                         'style', 'pushbutton', ...
+                                         'String', 'Delete Plot', ...
+                                         'Units', 'Normalized', ...
+                                         'Position', [0.695 0.965 0.05 0.02], ...
+                                         'Callback', @DeletePlotButtonCallback);
                                         
     % create program quit button
     plotHandles.quitButton = uicontrol('Parent', plotHandles.figure, ...
@@ -192,6 +201,83 @@ function AddPlotButtonCallback(hObject, ~)
     end
 
     function cancelButtonCallback(~, ~)
+        delete(popUpFig);
+    end
+end
+
+function DeletePlotButtonCallback(hObject, ~)
+    plotHandles = guidata(hObject);
+    plotsToDeleteList = {};
+    popUpFig = figure('Name','Manage Spectra Plots', ...
+                      'NumberTitle', 'off', ...
+                      'MenuBar', 'none');
+    
+    % dispaly all current plots with a delete button
+    plots = plotHandles.currentPlotMenu.String;
+    bottom_align = 0.92;
+    for idx = 1:length(plots)
+        uicontrol('Parent', popUpFig, ...
+                  'Style', 'Text', ...
+                  'String', string(plots(idx)), ...
+                  'Units', 'normalized', ...
+                  'FontSize', 12, ...
+                  'BackgroundColor','white',...
+                  'HorizontalAlignment', 'left', ...
+                  'Tag', string(plots(idx)), ...
+                  'Position', [.05 bottom_align 0.4 0.05]);
+
+        uicontrol('Parent', popUpFig, ...
+                   'String', 'Delete',...
+                   'Units', 'normalized', ...
+                   'UserData', string(plots(idx)), ...
+                   'Position', [.6 bottom_align 0.3 0.05], ...
+                   'Callback', @deleteCallback);
+
+        bottom_align = bottom_align - 0.1;
+    end              
+                  
+    % ok button
+    uicontrol('Parent', popUpFig, ...
+                         'String', 'Ok', ...
+                         'Units', 'normalized', ...
+                         'Callback', @OkButtonCallback, ...
+                         'Position', [.85 0.05 0.12 0.05]);
+
+    % cancel button
+    uicontrol('Parent', popUpFig, ...
+                             'String', 'Cancel', ...
+                             'Units', 'normalized', ...
+                             'Callback', @CancelButtonCallback, ...
+                             'Position', [.7 0.05 0.12 0.05]);
+                         
+    function deleteCallback(~, event)
+        plotName = event.Source.UserData;
+        answer = questdlg('Confirm delete?', 'Confirm deletion', ...
+                         'No','Yes', 'No');
+        if(strcmp(answer, 'Yes'))
+            % add to delete queue
+            plotsToDeleteList = [plotsToDeleteList, plotName];
+
+            % overwrite plot name & delete button with confirmation text
+            delete(event.Source);
+            selectionLabel = findobj('Tag', string(plotName));
+            selectionLabel.Position(3) = 1;
+            selectionLabel.String = strcat('Deleted', {' '}, ...
+                selectionLabel.String);
+            selectionLabel.FontAngle = 'italic';
+            selectionLabel.HorizontalAlignment = 'center';
+        end
+    end
+
+    function OkButtonCallback(~, ~)
+        global menuCallbackInvoked
+        menuCallbackInvoked = 1;
+        plotHandles.deletePlots.plots = plotsToDeleteList;
+        guidata(plotHandles.figure,plotHandles)
+        delete(popUpFig);
+    end
+
+    function CancelButtonCallback(~, ~)
         delete(popUpFig);
     end
 end

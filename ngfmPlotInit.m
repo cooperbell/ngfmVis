@@ -7,12 +7,9 @@ function [plotHandles] = ngfmPlotInit(debugData)
     menuCallbackInvoked = 0;
     
     % initialize plotHandles struct
-    plotHandles = struct('closereq', 0, 'key', []);
-%     plotHandles = struct('closereq', 0, 'key', [], 'managePlots', []);
-%     plotHandles.managePlots.okButton = 0;
-%     plotHandles.managePlots.plotsToDelete = {};
-%     plotHandles.managePlots.plotToAdd = [];
-%     plotHandles.managePlots.permanenceFlag = 0;
+    plotHandles = struct('closereq', 0, 'key', [], 'addPlot', []);
+    plotHandles.addPlot.plot = [];
+    plotHandles.addPlot.permanenceFlag = 0;
     
     % create figure
     % add 'CloseRequestFcn', @my_closereq when done with everything
@@ -61,21 +58,13 @@ function [plotHandles] = ngfmPlotInit(debugData)
                                             'Tag', 'currentPlotMenu', ...
                                             'Callback', @dropdownCallback);
     
-    % create browse button
-    plotHandles.browseButton = uicontrol('Parent', plotHandles.figure, ...
+    % create add plot button
+    plotHandles.addPlotButton = uicontrol('Parent', plotHandles.figure, ...
                                          'style', 'pushbutton', ...
                                          'String', 'Add Plot', ...
                                          'Units', 'Normalized', ...
                                          'Position', [0.635 0.965 0.05 0.02], ...
-                                         'Callback', @browseButtonCallback);
-%     
-%     % create modular script error text
-%     plotHandles.browseLoadError = uicontrol('Parent', plotHandles.figure, ...
-%                                             'style','text', ...
-%                                             'String','', ...
-%                                             'ForegroundColor', 'red', ...
-%                                             'FontSize', 12, 'Visible', 'off', ...
-%                                             'Position', [1220 969 133 22]);
+                                         'Callback', @AddPlotButtonCallback);
                                         
     % create program quit button
     plotHandles.quitButton = uicontrol('Parent', plotHandles.figure, ...
@@ -154,33 +143,56 @@ end
 % Browse button callback
 % Retrieves file, copies it to a temp directory,
 % adds that to path, updates dropdown and graph
-function browseButtonCallback(hObject, ~)
+function AddPlotButtonCallback(hObject, ~)
     [FileName,FilePath ]= uigetfile('*.m');
     if (FileName ~= 0 & FileName ~= "")
         plotHandles = guidata(hObject);
+        popUpFig = figure('Name','Add a plot', ...
+                          'NumberTitle', 'off', ...
+                          'Resize', 'off', ...
+                          'MenuBar', 'none');
         
-        % find a temp directory that has write access
-        temp = tempdir;
-        % add that temp directory to MATLAB's search path for this session
-        addpath(temp);
-        % copy the selected file to temp directory
-        [status,msg] = copyfile(FilePath, temp);
-        if (~status)
-            fprintf('Copy error: %s',msg);
-        end
-        
-        % Add option to the dropdown, first in list
-        plotHandles.currentPlotMenu.String = {FileName, ...
-            plotHandles.currentPlotMenu.String{1:end}};
-        
-        % Have dropdown show it as the selected option
-        plotHandles.currentPlotMenu.Value = 1;
-        
-        plotHandles = setupSpectraPlot(FileName,plotHandles);
-        
-        guidata(hObject,plotHandles)
-    else
-        disp('error or no plot selected');
+        uicontrol('Parent', popUpFig, ...
+                       'Style', 'edit', ...
+                       'String', FileName, ...
+                       'Enable', 'inactive', ...
+                       'Units', 'normalized', ...
+                       'FontSize', 10, ...
+                       'Position', [.02 0.88 0.22 0.052]);
+
+        permanenceToggle = uicontrol('Parent', popUpFig, ...
+                       'Style', 'radiobutton', ...
+                       'String', 'Add permanently', ...
+                       'Units', 'normalized', ...
+                       'FontSize', 12, ...
+                       'Position', [.02 0.72 0.3 0.06]);
+                   
+        % ok button
+        uicontrol('Parent', popUpFig, ...
+                             'String', 'Ok', ...
+                             'Units', 'normalized', ...
+                             'Callback', @okButtonCallback, ...
+                             'Position', [.85 0.05 0.12 0.05]);
+
+        % cancel button
+        uicontrol('Parent', popUpFig, ...
+                                 'String', 'Cancel', ...
+                                 'Units', 'normalized', ...
+                                 'Callback', @cancelButtonCallback, ...
+                                 'Position', [.7 0.05 0.12 0.05]);
+    end
+    
+    function okButtonCallback(~, ~)
+        global menuCallbackInvoked
+        menuCallbackInvoked = 1;
+        plotHandles.addPlot.plot = fullfile(FilePath, FileName);
+        plotHandles.addPlot.permanenceFlag = permanenceToggle.Value;
+        guidata(plotHandles.figure,plotHandles)
+        delete(popUpFig);
+    end
+
+    function cancelButtonCallback(~, ~)
+        delete(popUpFig);
     end
 end
 

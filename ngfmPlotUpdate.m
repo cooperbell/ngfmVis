@@ -1,13 +1,13 @@
 function [plotHandles] = ngfmPlotUpdate(plotHandles, dataPacket, magData, hkData, debugData)
     ngfmLoadConstants;
-    global menuCallbackInvoked;
+    global callbackInvoked;
     
     % update XYZ graphs
     set(plotHandles.lnx,'XData',x,'YData',magData(1,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore));
     set(plotHandles.lny,'XData',x,'YData',magData(2,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore));
     set(plotHandles.lnz,'XData',x,'YData',magData(3,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore));
     
-    % update spectra graph (or call custom script)
+    % update spectra
     spectra = plotHandles.currentPlotMenu.String(plotHandles.currentPlotMenu.Value);
     try
         % set current figure back to ngfmVis for if it's ever different
@@ -37,14 +37,20 @@ function [plotHandles] = ngfmPlotUpdate(plotHandles, dataPacket, magData, hkData
     drawnow;
     
     % This is a band-aid fix because I don't know how to fix it atm
-    if(menuCallbackInvoked)
-        menuCallbackInvoked = 0;
+    if(callbackInvoked)
+        callbackInvoked = 0;
         plotHandles = guidata(plotHandles.figure);
         % check if we need to add a plot
         if(~isempty(plotHandles.addPlot.plot))
             plotHandles = addPlot(plotHandles, ...
                 plotHandles.addPlot.plot, ...
                 plotHandles.addPlot.permanenceFlag);
+            guidata(plotHandles.figure, plotHandles);
+        end
+        % check if we need to delete a plot
+        if(~isempty(plotHandles.deletePlots.plots))
+            plotHandles = deletePlots(plotHandles, ...
+                plotHandles.deletePlots.plots);
             guidata(plotHandles.figure, plotHandles);
         end
     end
@@ -105,27 +111,27 @@ function [plotHandles] = updateMiscData(plotHandles,magData,dataPacket,hkData,de
     end
 end
 
-% function [plotHandles] = deletePlots(plotHandles, plots)
-%      for idx = 1:length(plots)
-%         plotFilePath = fullfile('spectraPlots', string(plots(idx)));
-%         delete(plotFilePath);
-%         
-%         % remove from dropdown
-%         plotsIdx = find(strcmp(plotHandles.currentPlotMenu.String, plots(idx)));
-%         plotHandles.currentPlotMenu.String(plotsIdx) = [];
-%         
-%         % remove from plotsToDelete list
-%         plotsIdx = find(strcmp(plotHandles.managePlots.plotsToDelete, plots(idx)));
-%         plotHandles.managePlots.plotsToDelete(plotsIdx) = [];
-%      end
-%      
-%     % reset spectra to the first option
-%     plotHandles = resetSpectra(plotHandles);
-% end
+function [plotHandles] = deletePlots(plotHandles, plots)
+    for idx = 1:length(plots)
+        plotFilePath = fullfile('spectraPlots', string(plots(idx)));
+        delete(plotFilePath);
+
+        % remove from dropdown
+        plotsIdx = find(strcmp(plotHandles.currentPlotMenu.String, plots(idx)));
+        plotHandles.currentPlotMenu.String(plotsIdx) = [];
+    end
+     
+    plotHandles.currentPlotMenu.Value = 1;
+    spectra = string(plotHandles.currentPlotMenu.String(plotHandles.currentPlotMenu.Value));
+    plotHandles = setupSpectraPlot(spectra,plotHandles);
+    
+    % reset deletePlots struct value
+    plotHandles.deletePlots.plots = {};
+end
  
 function [plotHandles] = addPlot(plotHandles, file, permanenceFlag)
         % break up file into componenets to use
-        [FilePath,name,ext] = fileparts(file);
+        [~,name,ext] = fileparts(file);
         FileName = strcat(name,ext);
         dir = 'spectraPlots';
         

@@ -3,8 +3,8 @@
 % Sets up GUI. Contains all callbacks
 function [plotHandles] = ngfmPlotInit(debugData)
     ngfmLoadConstants;
-    global menuCallbackInvoked;
-    menuCallbackInvoked = 0;
+    global callbackInvoked;
+    callbackInvoked = 0;
     
     % initialize plotHandles struct
     plotHandles = struct('closereq', 0, 'key', [], 'addPlot', [], 'deletePlots', []);
@@ -117,9 +117,9 @@ end
 
 % dropdown menu callback
 % Changes what the modular plot will show
-function dropdownCallback(hObject, ~)
-    global menuCallbackInvoked
-    menuCallbackInvoked = 1;
+function dropdownCallback(hObject, event)
+    global callbackInvoked
+    callbackInvoked = 1;
     spectra = string(hObject.String(hObject.Value));
     plotHandles = guidata(hObject);
     plotHandles = setupSpectraPlot(spectra, plotHandles);
@@ -128,8 +128,8 @@ end
 
 % Callback for when the quit button is pressed
 function quitButtonCallback(hObject,~)
-    global menuCallbackInvoked
-    menuCallbackInvoked = 1;
+    global callbackInvoked
+    callbackInvoked = 1;
     plotHandles = guidata(hObject);
     plotHandles.closereq = 1;
     guidata(hObject,plotHandles);
@@ -137,8 +137,8 @@ end
 
 % Callback for when a key is pressed on the figure
 function keyPressCallback(hObject, event)
-    global menuCallbackInvoked
-    menuCallbackInvoked = 1;
+    global callbackInvoked
+    callbackInvoked = 1;
     plotHandles = guidata(hObject);
     key = event.Character;
     if(key == 'q')
@@ -192,8 +192,8 @@ function AddPlotButtonCallback(hObject, ~)
     end
     
     function okButtonCallback(~, ~)
-        global menuCallbackInvoked
-        menuCallbackInvoked = 1;
+        global callbackInvoked
+        callbackInvoked = 1;
         plotHandles.addPlot.plot = fullfile(FilePath, FileName);
         plotHandles.addPlot.permanenceFlag = permanenceToggle.Value;
         guidata(plotHandles.figure,plotHandles)
@@ -270,8 +270,8 @@ function DeletePlotButtonCallback(hObject, ~)
     end
 
     function OkButtonCallback(~, ~)
-        global menuCallbackInvoked
-        menuCallbackInvoked = 1;
+        global callbackInvoked
+        callbackInvoked = 1;
         plotHandles.deletePlots.plots = plotsToDeleteList;
         guidata(plotHandles.figure,plotHandles)
         delete(popUpFig);
@@ -428,12 +428,12 @@ end
 %     % Retrieves file, copies it to a temp directory,
 %     % adds that to path, updates dropdown and graph
 %     function browseFileCallback(~, ~)
-%         global menuCallbackInvoked
+%         global callbackInvoked
 %         [FileName,FilePath ]= uigetfile('*.m');
 %         if (FileName ~= 0 & FileName ~= "")
 %             % check to make sure it's not a duplicate
 %             if(~ismember(FileName, plotHandles.currentPlotMenu.String))
-%                 menuCallbackInvoked = 1;
+%                 callbackInvoked = 1;
 %                 plotHandles.managePlots.plotToAdd = fullfile(FilePath, FileName);
 %                 selectedPlot.String = FileName;
 %                 browseError.Visible = 'off';
@@ -447,12 +447,12 @@ end
 %     % save changes, delete figure
 %     % If there are no changes, then treat it like the cancel button
 %     function okButtonCallback(~, ~)
-%         global menuCallbackInvoked
+%         global callbackInvoked
 %         
 %         % check if there are changes
 %         if(~isempty(plotHandles.managePlots.plotsToDelete) || ...
 %            ~isempty(plotHandles.managePlots.plotToAdd))
-%             menuCallbackInvoked = 1;
+%             callbackInvoked = 1;
 %             if (permanenceToggle.Value == 1)
 %                 plotHandles.managePlots.permanenceFlag = 1;
 %             end

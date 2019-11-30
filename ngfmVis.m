@@ -53,7 +53,7 @@ function ngfmVis(varargin)
 
     pause(2);
 
-    plotHandles = ngfmPlotInit(debugData);
+    fig = ngfmPlotInit(debugData);
 
     hkData = zeros(1,12);
 
@@ -87,8 +87,9 @@ function ngfmVis(varargin)
     newPacket = 0;
     tempPacket = zeros(1,1248);
     done=0;
-    k = [];
-        
+    closereq = 0;
+    key = [];
+    
     % main loop
     while (~done)
         % check if the worker said it's done
@@ -176,9 +177,9 @@ function ngfmVis(varargin)
             % put a try catch in for now to handle the window being closed
             % until we can put in a proper close request callback
             try
-                plotHandles = ngfmPlotUpdate(plotHandles, dataPacket, magData, hkData, debugData);
+                [fig, closereq, key] = ngfmPlotUpdate(fig, dataPacket, magData, hkData, debugData);
             catch exception
-                plotHandles.closereq = 1;
+                closereq = 1;
                 fprintf('Plot error: %s\n', exception.message)
             end
             
@@ -194,7 +195,7 @@ function ngfmVis(varargin)
         pause(0.001);
         
         % check if the user closed the main window
-        if (plotHandles.closereq == 1)
+        if (closereq == 1)
                 % Send [] as a "poison pill" to the worker to get it to stop.
                 % This properly closes up the serial port, preventing the
                 % worker from terminating while still holding onto it and 
@@ -209,21 +210,21 @@ function ngfmVis(varargin)
                 end
         end
 
-        if (~isempty(plotHandles.key))
-            if strcmp(plotHandles.key,'`')
+        if (~isempty(key))
+            if strcmp(key,'`')
                 debugData = ~debugData;
             elseif strcmp(p.Results.device, 'serial')
                 %have this sent over serial worker
                 fwrite(s,k);
             end
-            plotHandles.key = [];
+            key = [];
         end
     end
     
     disp('Terminating program')
     
-    if(isvalid(plotHandles.figure))
-        close(plotHandles.figure);
+    if(isvalid(fig))
+        close(fig);
     end
 
     if (loggingEnabled)

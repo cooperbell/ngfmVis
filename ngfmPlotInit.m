@@ -1,37 +1,30 @@
 % Author: David Miles
 % Modified by: Cooper Bell 11/27/2019
 % Sets up GUI. Contains all callbacks
-function [plotHandles] = ngfmPlotInit(debugData)
+function [fig] = ngfmPlotInit(debugData)
     ngfmLoadConstants;
-    global callbackInvoked;
-    callbackInvoked = 0;
-    
-    % initialize plotHandles struct
-    plotHandles = struct('closereq', 0, 'key', [], 'addPlot', [], 'deletePlots', []);
-    plotHandles.addPlot.plot = [];
-    plotHandles.addPlot.permanenceFlag = 0;
-    plotHandles.deletePlots.plots = {};
     
     % create figure
     % add 'CloseRequestFcn', @my_closereq when done with everything
-    plotHandles.figure = figure('Name', 'ngfmVis', 'NumberTitle','off', ...
-                                'WindowState', 'fullscreen', ...
-                                'KeyPressFcn', @keyPressCallback);                       
+    fig = figure('Name', 'ngfmVis', 'NumberTitle','off', ...
+                'WindowState', 'fullscreen', 'Tag', 'fig', ...
+                'KeyPressFcn', @keyPressCallback);  
+                            
+    handles = guihandles(fig);
                             
     % create axes
-    plotHandles.ax = axes('Parent', plotHandles.figure, 'Position', ...
-                          [0.07 0.70 0.39 0.25], 'XLim', [0 10], ...
-                          'XLimMode', 'manual');
+    handles.ax = axes('Parent', fig, 'Position', [0.07 0.70 0.39 0.25], ...
+                        'XLim', [0 10], 'XLimMode', 'manual');
                       
-    plotHandles.ay = axes('Parent', plotHandles.figure, 'Position', ...
+    handles.ay = axes('Parent', fig, 'Position', ...
                           [0.07 0.40 0.39 0.25], 'XLim', [0 10], ...
                           'XLimMode', 'manual');
                       
-    plotHandles.az = axes('Parent', plotHandles.figure, 'Position', ...
+    handles.az = axes('Parent', fig, 'Position', ...
                           [0.07 0.10 0.39 0.25], 'XLim', [0 10], ...
                           'XLimMode', 'manual');
                       
-    plotHandles.aw = axes('Parent', plotHandles.figure, 'Position', ...
+    handles.aw = axes('Parent', fig, 'Position', ...
                           [0.55 0.10 0.39 0.85]);
                       
     
@@ -50,25 +43,25 @@ function [plotHandles] = ngfmPlotInit(debugData)
     end
     
     % create dropdown
-    plotHandles.currentPlotMenu = uicontrol('Parent', plotHandles.figure, ...
-                                            'Style','popupmenu', ...
-                                            'String', plots, ...
-                                            'Units', 'Normalized', ...
-                                            'Position', [0.55 0.965 0.075 0.02], ...
-                                            'Interruptible', 'off', ...
-                                            'Tag', 'currentPlotMenu', ...
-                                            'Callback', @dropdownCallback);
+    handles.currentPlotMenu = uicontrol('Parent', fig, ...
+                                        'Style','popupmenu', ...
+                                        'String', plots, ...
+                                        'Units', 'Normalized', ...
+                                        'Position', [0.55 0.965 0.075 0.02], ...
+                                        'Interruptible', 'off', ...
+                                        'Tag', 'currentPlotMenu', ...
+                                        'Callback', @dropdownCallback);
     
     % create add plot button
-    plotHandles.addPlotButton = uicontrol('Parent', plotHandles.figure, ...
-                                         'style', 'pushbutton', ...
-                                         'String', 'Add Plot', ...
-                                         'Units', 'Normalized', ...
-                                         'Position', [0.635 0.965 0.05 0.02], ...
-                                         'Callback', @AddPlotButtonCallback);
+    handles.addPlotButton = uicontrol('Parent', fig, ...
+                                     'style', 'pushbutton', ...
+                                     'String', 'Add Plot', ...
+                                     'Units', 'Normalized', ...
+                                     'Position', [0.635 0.965 0.05 0.02], ...
+                                     'Callback', @AddPlotButtonCallback);
                                      
      % create delete plot button
-    plotHandles.deletePlotButton = uicontrol('Parent', plotHandles.figure, ...
+    handles.deletePlotButton = uicontrol('Parent', fig, ...
                                          'style', 'pushbutton', ...
                                          'String', 'Delete Plot', ...
                                          'Units', 'Normalized', ...
@@ -76,7 +69,7 @@ function [plotHandles] = ngfmPlotInit(debugData)
                                          'Callback', @DeletePlotButtonCallback);
                                         
     % create program quit button
-    plotHandles.quitButton = uicontrol('Parent', plotHandles.figure, ...
+    handles.quitButton = uicontrol('Parent', fig, ...
                                        'style', 'pushbutton', ...
                                        'String', 'Quit Program', ...
                                        'Units', 'Normalized', ...
@@ -84,35 +77,36 @@ function [plotHandles] = ngfmPlotInit(debugData)
                                        'Position', [0.01 0.965 0.047 0.022]);
                                         
     % plot spectra first so it'll look normal
-    spectra = string(plotHandles.currentPlotMenu.String(plotHandles.currentPlotMenu.Value));
-    plotHandles = setupSpectraPlot(spectra,plotHandles);
+    spectra = string(handles.currentPlotMenu.String(handles.currentPlotMenu.Value));
+    handles = setupSpectraPlot(spectra,handles);
     
     % create XYZ line handles
     ytmp = zeros(1,numSamplesToDisplay);
-    plotHandles.lnx = plot(plotHandles.ax,x,ytmp);
-    plotHandles.lny = plot(plotHandles.ay,x,ytmp);
-    plotHandles.lnz = plot(plotHandles.az,x,ytmp);
+    handles.lnx = plot(handles.ax,x,ytmp);
+    handles.lny = plot(handles.ay,x,ytmp);
+    handles.lnz = plot(handles.az,x,ytmp);
 
     % add XYZ axes properties
-    plotHandles.ax.YLabel.String = 'Bx (nT)';
-    plotHandles.ay.YLabel.String = 'By (nT)';
-    plotHandles.az.YLabel.String = 'Bz (nT)';
-    plotHandles.az.XLabel.String = 'Time (s)';
+    handles.ax.YLabel.String = 'Bx (nT)';
+    handles.ay.YLabel.String = 'By (nT)';
+    handles.az.YLabel.String = 'Bz (nT)';
+    handles.az.XLabel.String = 'Time (s)';
 
     % add XYZ line properties
-    plotHandles.lnx.Color = 'red';
-    plotHandles.lny.Color = 'green';
-    plotHandles.lnz.Color = 'blue';
-    plotHandles.lnx.Tag = 'lnx';
-    plotHandles.lny.Tag = 'lny';
-    plotHandles.lnz.Tag = 'lnz';
+    handles.lnx.Color = 'red';
+    handles.lny.Color = 'green';
+    handles.lnz.Color = 'blue';
+    handles.lnx.Tag = 'lnx';
+    handles.lny.Tag = 'lny';
+    handles.lnz.Tag = 'lnz';
                                  
     % Other Data Fields
-    plotHandles.closereq = 0;
-    plotHandles = setupMiscdata(plotHandles, debugData);
+    setappdata(fig, 'closereq', 0);
+    setappdata(fig, 'key', []);
+    handles = setupMiscdata(handles, debugData);
     
-    % store plotHandles for use in callbacks
-    guidata(plotHandles.figure, plotHandles)
+    % store handles for use in callbacks
+    guidata(fig, handles)
 end
 
 % dropdown menu callback
@@ -128,25 +122,19 @@ end
 
 % Callback for when the quit button is pressed
 function quitButtonCallback(hObject,~)
-    global callbackInvoked
-    callbackInvoked = 1;
-    plotHandles = guidata(hObject);
-    plotHandles.closereq = 1;
-    guidata(hObject,plotHandles);
+    handles = guidata(hObject);
+    setappdata(handles.fig, 'closereq', 1);
 end
 
 % Callback for when a key is pressed on the figure
 function keyPressCallback(hObject, event)
-    global callbackInvoked
-    callbackInvoked = 1;
-    plotHandles = guidata(hObject);
+    handles = guidata(hObject);
     key = event.Character;
     if(key == 'q')
-        plotHandles.closereq = 1;
+        setappdata(handles.fig, 'closereq', 1);
     else
-        plotHandles.key = key;
+        setappdata(handles.fig, 'key', key);
     end
-    guidata(hObject,plotHandles);
 end
 
 % Browse button callback

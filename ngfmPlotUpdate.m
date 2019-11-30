@@ -1,17 +1,17 @@
-function [plotHandles] = ngfmPlotUpdate(plotHandles, dataPacket, magData, hkData, debugData)
+function [fig, closereq, key] = ngfmPlotUpdate(fig, dataPacket, magData, hkData, debugData)
     ngfmLoadConstants;
-    global callbackInvoked;
+    handles = guidata(fig);
     
     % update XYZ graphs
-    set(plotHandles.lnx,'XData',x,'YData',magData(1,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore));
-    set(plotHandles.lny,'XData',x,'YData',magData(2,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore));
-    set(plotHandles.lnz,'XData',x,'YData',magData(3,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore));
+    set(handles.lnx,'XData',x,'YData',magData(1,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore));
+    set(handles.lny,'XData',x,'YData',magData(2,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore));
+    set(handles.lnz,'XData',x,'YData',magData(3,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore));
     
     % update spectra
-    spectra = plotHandles.currentPlotMenu.String(plotHandles.currentPlotMenu.Value);
+    spectra = handles.currentPlotMenu.String(handles.currentPlotMenu.Value);
     try
         % set current figure back to ngfmVis for if it's ever different
-        set(0, 'currentfigure', plotHandles.figure);
+        set(0, 'currentfigure', handles.fig);
         run(string(spectra));
     catch exception
        % print thrown error to console
@@ -21,39 +21,28 @@ function [plotHandles] = ngfmPlotUpdate(plotHandles, dataPacket, magData, hkData
         warndlg(sprintf('Unable to load plot, %s', exception.message), 'Warning', 'modal');
         
         % don't delete, just remove from dropdown
-        plotsIdx = find(strcmp(plotHandles.currentPlotMenu.String, spectra));
-        plotHandles.currentPlotMenu.String(plotsIdx) = [];
+        plotsIdx = find(strcmp(handles.currentPlotMenu.String, spectra));
+        handles.currentPlotMenu.String(plotsIdx) = [];
         
         
-        plotHandles.currentPlotMenu.Value = 1;
-        spectra = string(plotHandles.currentPlotMenu.String(plotHandles.currentPlotMenu.Value));
-        plotHandles = setupSpectraPlot(spectra,plotHandles);
+        handles.currentPlotMenu.Value = 1;
+        spectra = string(handles.currentPlotMenu.String(handles.currentPlotMenu.Value));
+        handles = setupSpectraPlot(spectra,handles);
     end
     
     % update misc data
-    plotHandles = updateMiscData(plotHandles,magData,dataPacket,hkData,debugData,numSamplesToStore,numSamplesToDisplay);
+    handles = updateMiscData(handles,magData,dataPacket,hkData,debugData,numSamplesToStore,numSamplesToDisplay);
     
     % update figures and process callbacks
     drawnow;
     
-    % This is a band-aid fix because I don't know how to fix it atm
-    if(callbackInvoked)
-        callbackInvoked = 0;
-        plotHandles = guidata(plotHandles.figure);
-        % check if we need to add a plot
-        if(~isempty(plotHandles.addPlot.plot))
-            plotHandles = addPlot(plotHandles, ...
-                plotHandles.addPlot.plot, ...
-                plotHandles.addPlot.permanenceFlag);
-            guidata(plotHandles.figure, plotHandles);
-        end
-        % check if we need to delete a plot
-        if(~isempty(plotHandles.deletePlots.plots))
-            plotHandles = deletePlots(plotHandles, ...
-                plotHandles.deletePlots.plots);
-            guidata(plotHandles.figure, plotHandles);
-        end
-    end
+    % save handles struct changes
+    guidata(handles.fig, handles);
+    
+    % set up outputs
+    fig = handles.fig;
+    closereq = getappdata(handles.fig, 'closereq');
+    key = getappdata(handles.fig, 'key');
 end
 
 function [plotHandles] = updateMiscData(plotHandles,magData,dataPacket,hkData,debugData,numSamplesToStore,numSamplesToDisplay)

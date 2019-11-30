@@ -55,6 +55,19 @@ function [fig, closereq, key] = ngfmPlotUpdate(fig, dataPacket, magData, hkData,
         guidata(handles.fig, handles);
     end
     
+    % check deletePlots
+    if(~isempty(getappdata(handles.fig, 'deletePlots')))
+        handles = guidata(handles.fig);
+        handles = deletePlots(handles, ...
+                              getappdata(handles.fig, 'deletePlots'));
+                          
+        % reset values
+        setappdata(handles.fig, 'deletePlots', {});
+        
+        % save handles struct changes
+        guidata(handles.fig, handles);
+    end
+    
     % set up outputs
     fig = handles.fig;
     closereq = getappdata(handles.fig, 'closereq');
@@ -129,9 +142,6 @@ function [plotHandles] = deletePlots(plotHandles, plots)
     plotHandles.currentPlotMenu.Value = 1;
     spectra = string(plotHandles.currentPlotMenu.String(plotHandles.currentPlotMenu.Value));
     plotHandles = setupSpectraPlot(spectra,plotHandles);
-    
-    % reset deletePlots struct value
-    plotHandles.deletePlots.plots = {};
 end
  
 function [plotHandles] = addPlot(plotHandles, file, permanenceFlag)
@@ -162,6 +172,5 @@ function [plotHandles] = addPlot(plotHandles, file, permanenceFlag)
         
         % Have dropdown show it as the selected option
         plotHandles.currentPlotMenu.Value = 1;
-        
         plotHandles = setupSpectraPlot(FileName,plotHandles);
 end

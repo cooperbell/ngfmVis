@@ -105,6 +105,7 @@ function [fig] = ngfmPlotInit(debugData)
     setappdata(fig, 'key', []);
     setappdata(fig, 'addPlot', []);
     setappdata(fig, 'permanenceFlag', 0);
+    setappdata(fig, 'deletePlots', {});
     handles = setupMiscdata(handles, debugData);
     
     % store handles for use in callbacks
@@ -137,9 +138,7 @@ function keyPressCallback(hObject, event)
     end
 end
 
-% Browse button callback
-% Retrieves file, copies it to a temp directory,
-% adds that to path, updates dropdown and graph
+% Add button callback
 function AddPlotButtonCallback(hObject, ~)
     [FileName,FilePath ]= uigetfile('*.m');
     if (FileName ~= 0 & FileName ~= "")
@@ -196,15 +195,16 @@ function AddPlotButtonCallback(hObject, ~)
     end
 end
 
+% Delete button callback
 function DeletePlotButtonCallback(hObject, ~)
-    plotHandles = guidata(hObject);
+    handles = guidata(hObject);
     plotsToDeleteList = {};
     popUpFig = figure('Name','Manage Spectra Plots', ...
                       'NumberTitle', 'off', ...
                       'MenuBar', 'none');
     
     % dispaly all current plots with a delete button
-    plots = plotHandles.currentPlotMenu.String;
+    plots = handles.currentPlotMenu.String;
     bottom_align = 0.92;
     for idx = 1:length(plots)
         uicontrol('Parent', popUpFig, ...
@@ -261,10 +261,10 @@ function DeletePlotButtonCallback(hObject, ~)
     end
 
     function OkButtonCallback(~, ~)
-        global callbackInvoked
-        callbackInvoked = 1;
-        plotHandles.deletePlots.plots = plotsToDeleteList;
-        guidata(plotHandles.figure,plotHandles)
+        if(~isempty(plotsToDeleteList))
+            setappdata(handles.fig, 'deletePlots', plotsToDeleteList);
+        end
+%         guidata(plotHandles.figure,plotHandles)
         delete(popUpFig);
     end
 

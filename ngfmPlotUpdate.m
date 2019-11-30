@@ -33,11 +33,11 @@ function [fig, closereq, key] = ngfmPlotUpdate(fig, dataPacket, magData, hkData,
     % update misc data
     handles = updateMiscData(handles,magData,dataPacket,hkData,debugData,numSamplesToStore,numSamplesToDisplay);
     
-    % update figures and process callbacks
-    drawnow;
-    
     % save handles struct changes
     guidata(handles.fig, handles);
+    
+    % update figures and process callbacks
+    drawnow;
     
     % set up outputs
     fig = handles.fig;

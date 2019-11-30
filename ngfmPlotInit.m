@@ -50,7 +50,7 @@ function [fig] = ngfmPlotInit(debugData)
                                         'Position', [0.55 0.965 0.075 0.02], ...
                                         'Interruptible', 'off', ...
                                         'Tag', 'currentPlotMenu', ...
-                                        'Callback', @dropdownCallback);
+                                        'Callback', @DropdownCallback);
     
     % create add plot button
     handles.addPlotButton = uicontrol('Parent', fig, ...
@@ -111,13 +111,11 @@ end
 
 % dropdown menu callback
 % Changes what the modular plot will show
-function dropdownCallback(hObject, event)
-    global callbackInvoked
-    callbackInvoked = 1;
+function DropdownCallback(hObject, ~)
+    handles = guidata(hObject);
     spectra = string(hObject.String(hObject.Value));
-    plotHandles = guidata(hObject);
-    plotHandles = setupSpectraPlot(spectra, plotHandles);
-    guidata(hObject,plotHandles)
+    handles = setupSpectraPlot(spectra, handles); % should I be calling this here?
+    guidata(hObject,handles)
 end
 
 % Callback for when the quit button is pressed

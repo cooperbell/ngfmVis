@@ -15,7 +15,7 @@ function [fig, closereq, key] = ngfmPlotUpdate(fig, dataPacket, magData, hkData,
         run(string(spectra));
     catch exception
        % print thrown error to console
-%         warning(exception.identifier, 'Unable to load plot, %s', exception.message)
+        warning(exception.identifier, 'Unable to load plot, %s', exception.message)
         
         % display error
         warndlg(sprintf('Unable to load plot, %s', exception.message), 'Warning', 'modal');
@@ -38,6 +38,22 @@ function [fig, closereq, key] = ngfmPlotUpdate(fig, dataPacket, magData, hkData,
     
     % update figures and process callbacks
     drawnow;
+    
+    % check addPlot
+    % can this just happen in the callback?
+    if(~isempty(getappdata(handles.fig, 'addPlot')))
+        handles = guidata(handles.fig);
+        handles = addPlot(handles, ...
+                          getappdata(handles.fig, 'addPlot'), ...
+                          getappdata(handles.fig, 'permanenceToggle'));
+                      
+        % reset values
+        setappdata(handles.fig, 'addPlot', []);
+        setappdata(handles.fig, 'permanenceToggle', 0);
+                      
+        % save handles struct changes
+        guidata(handles.fig, handles);
+    end
     
     % set up outputs
     fig = handles.fig;
@@ -148,8 +164,4 @@ function [plotHandles] = addPlot(plotHandles, file, permanenceFlag)
         plotHandles.currentPlotMenu.Value = 1;
         
         plotHandles = setupSpectraPlot(FileName,plotHandles);
-        
-        % reset addPlot struct values
-        plotHandles.addPlot.plot = [];
-        plotHandles.addPlot.permanenceFlag = 0;
 end

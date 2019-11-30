@@ -73,7 +73,7 @@ function [fig] = ngfmPlotInit(debugData)
                                        'style', 'pushbutton', ...
                                        'String', 'Quit Program', ...
                                        'Units', 'Normalized', ...
-                                       'Callback', @quitButtonCallback, ...
+                                       'Callback', @QuitButtonCallback, ...
                                        'Position', [0.01 0.965 0.047 0.022]);
                                         
     % plot spectra first so it'll look normal
@@ -103,6 +103,8 @@ function [fig] = ngfmPlotInit(debugData)
     % Other Data Fields
     setappdata(fig, 'closereq', 0);
     setappdata(fig, 'key', []);
+    setappdata(fig, 'addPlot', []);
+    setappdata(fig, 'permanenceToggle', 0);
     handles = setupMiscdata(handles, debugData);
     
     % store handles for use in callbacks
@@ -119,7 +121,7 @@ function DropdownCallback(hObject, ~)
 end
 
 % Callback for when the quit button is pressed
-function quitButtonCallback(hObject,~)
+function QuitButtonCallback(hObject,~)
     handles = guidata(hObject);
     setappdata(handles.fig, 'closereq', 1);
 end
@@ -141,7 +143,6 @@ end
 function AddPlotButtonCallback(hObject, ~)
     [FileName,FilePath ]= uigetfile('*.m');
     if (FileName ~= 0 & FileName ~= "")
-        plotHandles = guidata(hObject);
         popUpFig = figure('Name','Add a plot', ...
                           'NumberTitle', 'off', ...
                           'Resize', 'off', ...
@@ -178,11 +179,12 @@ function AddPlotButtonCallback(hObject, ~)
     end
     
     function okButtonCallback(~, ~)
-        global callbackInvoked
-        callbackInvoked = 1;
-        plotHandles.addPlot.plot = fullfile(FilePath, FileName);
-        plotHandles.addPlot.permanenceFlag = permanenceToggle.Value;
-        guidata(plotHandles.figure,plotHandles)
+        handles = guidata(hObject);
+        setappdata(handles.fig, 'addPlot', fullfile(FilePath, FileName));
+        setappdata(handles.fig, 'permanenceFlag', permanenceToggle.Value);
+%         plotHandles.addPlot.plot = fullfile(FilePath, FileName);
+%         plotHandles.addPlot.permanenceFlag = permanenceToggle.Value;
+%         guidata(plotHandles.figure,plotHandles)
         delete(popUpFig);
     end
 

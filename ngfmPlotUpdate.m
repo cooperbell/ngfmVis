@@ -45,11 +45,11 @@ function [fig, closereq, key] = ngfmPlotUpdate(fig, dataPacket, magData, hkData,
         handles = guidata(handles.fig);
         handles = addPlot(handles, ...
                           getappdata(handles.fig, 'addPlot'), ...
-                          getappdata(handles.fig, 'permanenceToggle'));
+                          getappdata(handles.fig, 'permanenceFlag'));
                       
         % reset values
         setappdata(handles.fig, 'addPlot', []);
-        setappdata(handles.fig, 'permanenceToggle', 0);
+        setappdata(handles.fig, 'permanenceFlag', 0);
                       
         % save handles struct changes
         guidata(handles.fig, handles);

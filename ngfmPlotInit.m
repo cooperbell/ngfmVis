@@ -104,7 +104,7 @@ function [fig] = ngfmPlotInit(debugData)
     setappdata(fig, 'closereq', 0);
     setappdata(fig, 'key', []);
     setappdata(fig, 'addPlot', []);
-    setappdata(fig, 'permanenceToggle', 0);
+    setappdata(fig, 'permanenceFlag', 0);
     handles = setupMiscdata(handles, debugData);
     
     % store handles for use in callbacks

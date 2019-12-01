@@ -86,4 +86,4 @@ plotHandles.hk9.Title.String = 'HK9';
 plotHandles.hk10.Title.String = 'HK10';
 plotHandles.hk11.Title.String = 'HK11';
 
-plotHandles.hk0.XLabel.String = 'Time (s)';
+plotHandles.hk0.XLabel.String = 'Seconds ago';

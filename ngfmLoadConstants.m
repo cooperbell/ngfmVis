@@ -2,6 +2,7 @@ serialBufferLen = 10000;
 assumedSamplingRate = 100;
 secondsToDisplay = 10;
 secondsToWelch = 60*60;
+hkSecondsToDisplay = 60;
 
 nfft = 8*2048;
 
@@ -85,3 +86,4 @@ etx = hex2dec('03');
 numSamplesToDisplay = assumedSamplingRate*secondsToDisplay;
 numSamplesToStore = assumedSamplingRate*secondsToWelch;
 x = linspace(0,secondsToDisplay,numSamplesToDisplay);
+hkX = linspace(0,hkSecondsToDisplay,hkSecondsToDisplay);

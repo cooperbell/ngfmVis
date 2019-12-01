@@ -7,6 +7,20 @@ function [fig, closereq, key] = ngfmPlotUpdate(fig, dataPacket, magData, hkData,
     set(handles.lny,'XData',x,'YData',magData(2,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore));
     set(handles.lnz,'XData',x,'YData',magData(3,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore));
     
+    % update hk data
+    set(handles.lnHK0,'XData',hkX,'YData', hkData(1,1:60));
+    set(handles.lnHK1,'XData',hkX,'YData', hkData(2,1:60));
+    set(handles.lnHK2,'XData',hkX,'YData', hkData(3,1:60));
+    set(handles.lnHK3,'XData',hkX,'YData', hkData(4,1:60));
+    set(handles.lnHK4,'XData',hkX,'YData', hkData(5,1:60));
+    set(handles.lnHK5,'XData',hkX,'YData', hkData(6,1:60));
+    set(handles.lnHK6,'XData',hkX,'YData', hkData(7,1:60));
+    set(handles.lnHK7,'XData',hkX,'YData', hkData(8,1:60));
+    set(handles.lnHK8,'XData',hkX,'YData', hkData(9,1:60));
+    set(handles.lnHK9,'XData',hkX,'YData', hkData(10,1:60));
+    set(handles.lnHK10,'XData',hkX,'YData', hkData(11,1:60));
+    set(handles.lnHK11,'XData',hkX,'YData', hkData(12,1:60));
+    
     % update spectra
     spectra = handles.currentPlotMenu.String(handles.currentPlotMenu.Value);
     try
@@ -31,7 +45,7 @@ function [fig, closereq, key] = ngfmPlotUpdate(fig, dataPacket, magData, hkData,
     end
     
     % update misc data
-    handles = updateMiscData(handles,magData,dataPacket,hkData,debugData,numSamplesToStore,numSamplesToDisplay);
+%     handles = updateMiscData(handles,magData,dataPacket,hkData,debugData,numSamplesToStore,numSamplesToDisplay);
     
     % save handles struct changes
     guidata(handles.fig, handles);

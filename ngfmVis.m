@@ -25,7 +25,8 @@ function ngfmVis(varargin)
     ngfmLoadConstants;
     debugData = 0;
     magData = zeros(3,numSamplesToStore);
-    hkData = zeros(1,12);
+%     hkData = zeros(1,12);
+    hkData = zeros(12,60);
     
     %add the /lib folder to path
     addpath('lib', 'spectraPlots');

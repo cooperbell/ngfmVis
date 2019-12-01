@@ -57,7 +57,6 @@ function [fig, closereq, key] = ngfmPlotUpdate(fig, dataPacket, magData, hkData,
     % can this just happen in the callback?
     if(~isempty(getappdata(handles.fig, 'addPlot')))
         handles = guidata(handles.fig);
-        set(handles.fig, 'currentaxes', handles.aw);
         handles = addPlot(handles, ...
                           getappdata(handles.fig, 'addPlot'), ...
                           getappdata(handles.fig, 'permanenceFlag'));
@@ -73,7 +72,6 @@ function [fig, closereq, key] = ngfmPlotUpdate(fig, dataPacket, magData, hkData,
     % check deletePlots
     if(~isempty(getappdata(handles.fig, 'deletePlots')))
         handles = guidata(handles.fig);
-        set(handles.fig, 'currentaxes', handles.aw);
         handles = deletePlots(handles, ...
                               getappdata(handles.fig, 'deletePlots'));
                           

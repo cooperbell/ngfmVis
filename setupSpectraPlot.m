@@ -1,4 +1,5 @@
 function [plotHandles] = setupSpectraPlot(spectra,plotHandles)
+    set(plotHandles.fig, 'currentaxes', plotHandles.aw);
     ngfmLoadConstants;
     xtmp = zeros(8190,1);
     ytmp = linspace(0,50,8190)';

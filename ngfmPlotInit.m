@@ -113,11 +113,9 @@ function [fig] = ngfmPlotInit(debugData)
     setappdata(fig, 'deletePlots', {});
     handles = setupMiscdata(handles, debugData);
     
-%     % hk stuff
-%     pause(0.1);
-%     xtmp = linspace(1,hkSecondsToDisplay,hkSecondsToDisplay);
-%     ytmp = zeros(1,hkSecondsToDisplay);
-%     handles = setupHKData(handles, xtmp, ytmp);
+    % Housekeeping data graphs
+    ytmp = zeros(1,hkSecondsToDisplay);
+    handles = setupHKData(handles, hkX, ytmp);
    
     % store handles for use in callbacks
     guidata(fig, handles)
@@ -284,48 +282,45 @@ function DeletePlotButtonCallback(hObject, ~)
 end
 
 function [plotHandles] = setupHKData(plotHandles, xtmp, ytmp)
-    plotHandles.fig = figure('Name', 'Housekeeping Data', 'NumberTitle','off', ...
-                'WindowState', 'fullscreen', 'Tag', 'hkFig');
-            
     % column 1            
-    plotHandles.hk0 = axes('Parent', plotHandles.fig, 'Position', [0.05 0.80 0.25 0.15], ...
+    plotHandles.hk0 = axes('Parent', plotHandles.tab2, 'Position', [0.05 0.80 0.25 0.15], ...
                             'XLim', [0 60], 'XLimMode', 'manual');
 
-    plotHandles.hk1 = axes('Parent', plotHandles.fig, 'Position', [0.05 0.55 0.25 0.15], ...
+    plotHandles.hk1 = axes('Parent', plotHandles.tab2, 'Position', [0.05 0.55 0.25 0.15], ...
                             'XLim', [0 60], 'XLimMode', 'manual');
 
-    plotHandles.hk2 = axes('Parent', plotHandles.fig, 'Position', [0.05 0.3 0.25 0.15], ...
+    plotHandles.hk2 = axes('Parent', plotHandles.tab2, 'Position', [0.05 0.3 0.25 0.15], ...
                             'XLim', [0 60], 'XLimMode', 'manual');
 
-    plotHandles.hk3 = axes('Parent', plotHandles.fig, 'Position', [0.05 0.05 0.25 0.15], ...
+    plotHandles.hk3 = axes('Parent', plotHandles.tab2, 'Position', [0.05 0.05 0.25 0.15], ...
                             'XLim', [0 60], 'XLimMode', 'manual');
 
 
     % column 2                    
-    plotHandles.hk4 = axes('Parent', plotHandles.fig, 'Position', [0.36 0.80 0.25 0.15], ...
+    plotHandles.hk4 = axes('Parent', plotHandles.tab2, 'Position', [0.36 0.80 0.25 0.15], ...
                             'XLim', [0 60], 'XLimMode', 'manual');
 
-    plotHandles.hk5 = axes('Parent', plotHandles.fig, 'Position', [0.36 0.55 0.25 0.15], ...
+    plotHandles.hk5 = axes('Parent', plotHandles.tab2, 'Position', [0.36 0.55 0.25 0.15], ...
                             'XLim', [0 60], 'XLimMode', 'manual');
 
-    plotHandles.hk6 = axes('Parent', plotHandles.fig, 'Position', [0.36 0.3 0.25 0.15], ...
+    plotHandles.hk6 = axes('Parent', plotHandles.tab2, 'Position', [0.36 0.3 0.25 0.15], ...
                             'XLim', [0 60], 'XLimMode', 'manual');
 
-    plotHandles.hk7 = axes('Parent', plotHandles.fig, 'Position', [0.36 0.05 0.25 0.15], ...
+    plotHandles.hk7 = axes('Parent', plotHandles.tab2, 'Position', [0.36 0.05 0.25 0.15], ...
                             'XLim', [0 60], 'XLimMode', 'manual');
 
 
     % column 3                    
-    plotHandles.hk8 = axes('Parent', plotHandles.fig, 'Position', [0.67 0.80 0.25 0.15], ...
+    plotHandles.hk8 = axes('Parent', plotHandles.tab2, 'Position', [0.67 0.80 0.25 0.15], ...
                             'XLim', [0 60], 'XLimMode', 'manual');
 
-    plotHandles.hk9 = axes('Parent', plotHandles.fig, 'Position', [0.67 0.55 0.25 0.15], ...
+    plotHandles.hk9 = axes('Parent', plotHandles.tab2, 'Position', [0.67 0.55 0.25 0.15], ...
                             'XLim', [0 60], 'XLimMode', 'manual');
 
-    plotHandles.hk10 = axes('Parent', plotHandles.fig, 'Position', [0.67 0.3 0.25 0.15], ...
+    plotHandles.hk10 = axes('Parent', plotHandles.tab2, 'Position', [0.67 0.3 0.25 0.15], ...
                             'XLim', [0 60], 'XLimMode', 'manual');
 
-    plotHandles.hk11 = axes('Parent', plotHandles.fig, 'Position', [0.67 0.05 0.25 0.15], ...
+    plotHandles.hk11 = axes('Parent', plotHandles.tab2, 'Position', [0.67 0.05 0.25 0.15], ...
                             'XLim', [0 60], 'XLimMode', 'manual');
        
     % create line handles                    
@@ -356,7 +351,18 @@ function [plotHandles] = setupHKData(plotHandles, xtmp, ytmp)
     plotHandles.hk10.Title.String = 'HK10';
     plotHandles.hk11.Title.String = 'HK11';
 
-    plotHandles.hk0.XLabel.String = 'Seconds ago';
+    plotHandles.hk0.XLabel.String = 'Packets ago';
+    plotHandles.hk1.XLabel.String = 'Packets ago';
+    plotHandles.hk2.XLabel.String = 'Packets ago';
+    plotHandles.hk3.XLabel.String = 'Packets ago';
+    plotHandles.hk4.XLabel.String = 'Packets ago';
+    plotHandles.hk5.XLabel.String = 'Packets ago';
+    plotHandles.hk6.XLabel.String = 'Packets ago';
+    plotHandles.hk7.XLabel.String = 'Packets ago';
+    plotHandles.hk8.XLabel.String = 'Packets ago';
+    plotHandles.hk9.XLabel.String = 'Packets ago';
+    plotHandles.hk10.XLabel.String = 'Packets ago';
+    plotHandles.hk11.XLabel.String = 'Packets ago';
 end
 
 function [plotHandles] = setupMiscdata(plotHandles, debugData)

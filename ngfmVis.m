@@ -25,6 +25,7 @@ function ngfmVis(varargin)
     ngfmLoadConstants;
     debugData = 0;
     magData = zeros(3,numSamplesToStore);
+    hkData = zeros(1,12);
     
     %add the /lib folder to path
     addpath('lib', 'spectraPlots');
@@ -54,9 +55,6 @@ function ngfmVis(varargin)
     pause(2);
 
     fig = ngfmPlotInit(debugData);
-
-    hkData = zeros(1,12);
-
 
     % Create a parallel pool if necessary
     if isempty(gcp())

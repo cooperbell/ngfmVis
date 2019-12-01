@@ -1,165 +1,275 @@
-function [plotHandles] = ngfmPlotInit(debugData)
+% Author: David Miles
+% Modified by: Cooper Bell 11/27/2019
+% Sets up GUI. Contains all callbacks
+function [fig] = ngfmPlotInit(debugData)
     ngfmLoadConstants;
-    global menuCallbackInvoked;
-    menuCallbackInvoked = 0;
-    
-    %create plotHandles struct
-    plotHandles = struct('closereq', 0, 'key', []);
     
     % create figure
     % add 'CloseRequestFcn', @my_closereq when done with everything
-    plotHandles.figure = figure('Name', 'ngfmVis', 'NumberTitle','off', ...
-                                'WindowState', 'fullscreen', ...
-                                'KeyPressFcn', @keyPressCallback);                       
+    fig = figure('Name', 'ngfmVis', 'NumberTitle','off', ...
+                'WindowState', 'fullscreen', 'Tag', 'fig', ...
+                'KeyPressFcn', @keyPressCallback);  
+                            
+    handles = guihandles(fig);
                             
     % create axes
-    plotHandles.ax = axes('Parent', plotHandles.figure, 'Position', ...
-                          [0.07 0.70 0.39 0.25], 'XLim', [0 10], ...
-                          'XLimMode', 'manual');
+    handles.ax = axes('Parent', fig, 'Position', [0.07 0.70 0.39 0.25], ...
+                        'XLim', [0 10], 'XLimMode', 'manual');
                       
-    plotHandles.ay = axes('Parent', plotHandles.figure, 'Position', ...
+    handles.ay = axes('Parent', fig, 'Position', ...
                           [0.07 0.40 0.39 0.25], 'XLim', [0 10], ...
                           'XLimMode', 'manual');
                       
-    plotHandles.az = axes('Parent', plotHandles.figure, 'Position', ...
+    handles.az = axes('Parent', fig, 'Position', ...
                           [0.07 0.10 0.39 0.25], 'XLim', [0 10], ...
                           'XLimMode', 'manual');
                       
-    plotHandles.aw = axes('Parent', plotHandles.figure, 'Position', ...
+    handles.aw = axes('Parent', fig, 'Position', ...
                           [0.55 0.10 0.39 0.85]);
                       
+    
+    % load in current scripts
+    if(isfolder('spectraPlots'))
+        filePattern = fullfile('spectraPlots', '*.m');
+        allFiles = dir(filePattern);
+        numScripts = size(allFiles);
+        plots = {};
+        for i = 1:numScripts(1)
+            plots = [plots, allFiles(i).name];
+        end
+    else
+        errorMessage = 'Unable to locate folder: \spectraPlots';
+        warndlg(errorMessage);
+    end
+    
     % create dropdown
-    plots = {'PlotPSD.m','PlotAmplitude.m'};
-    plotHandles.currentPlotMenu = uicontrol('Parent', plotHandles.figure, ...
-                                            'Style','popupmenu', ...
-                                            'String', plots, ...
-                                            'Position', [950 970 140 20], ...
-                                            'Interruptible', 'off', ...
-                                            'Tag', 'currentPlotMenu', ...
-                                            'Callback', @dropdownCallback);
+    handles.currentPlotMenu = uicontrol('Parent', fig, ...
+                                        'Style','popupmenu', ...
+                                        'String', plots, ...
+                                        'Units', 'Normalized', ...
+                                        'Position', [0.55 0.965 0.075 0.02], ...
+                                        'Interruptible', 'off', ...
+                                        'Tag', 'currentPlotMenu', ...
+                                        'Callback', @DropdownCallback);
     
-    % create browse button
-    plotHandles.browseButton = uicontrol('Parent', plotHandles.figure, ...
+    % create add plot button
+    handles.addPlotButton = uicontrol('Parent', fig, ...
+                                     'style', 'pushbutton', ...
+                                     'String', 'Add Plot', ...
+                                     'Units', 'Normalized', ...
+                                     'Position', [0.635 0.965 0.05 0.02], ...
+                                     'Callback', @AddPlotButtonCallback);
+                                     
+     % create delete plot button
+    handles.deletePlotButton = uicontrol('Parent', fig, ...
                                          'style', 'pushbutton', ...
-                                         'String', 'Browse', ...
-                                         'Position', [1120 970 100 22], ...
-                                         'Callback', @browseFileCallback);
-    
-    % create browse button's error text
-    plotHandles.browseLoadError = uicontrol('Parent', plotHandles.figure, ...
-                                            'style','text', ...
-                                            'String','', ...
-                                            'ForegroundColor', 'red', ...
-                                            'FontSize', 12, 'Visible', 'off', ...
-                                            'Position', [1220 969 133 22]);
+                                         'String', 'Delete Plot', ...
+                                         'Units', 'Normalized', ...
+                                         'Position', [0.695 0.965 0.05 0.02], ...
+                                         'Callback', @DeletePlotButtonCallback);
                                         
     % create program quit button
-    plotHandles.quitButton = uicontrol('Parent', plotHandles.figure, ...
+    handles.quitButton = uicontrol('Parent', fig, ...
                                        'style', 'pushbutton', ...
                                        'String', 'Quit Program', ...
                                        'Units', 'Normalized', ...
-                                       'Callback', @quitButtonCallback, ...
+                                       'Callback', @QuitButtonCallback, ...
                                        'Position', [0.01 0.965 0.047 0.022]);
                                         
     % plot spectra first so it'll look normal
-    spectra = string(plotHandles.currentPlotMenu.String(plotHandles.currentPlotMenu.Value));
-    plotHandles = setupSpectraPlot(spectra,plotHandles);
+    spectra = string(handles.currentPlotMenu.String(handles.currentPlotMenu.Value));
+    handles = setupSpectraPlot(spectra,handles);
     
     % create XYZ line handles
     ytmp = zeros(1,numSamplesToDisplay);
-    plotHandles.lnx = plot(plotHandles.ax,x,ytmp);
-    plotHandles.lny = plot(plotHandles.ay,x,ytmp);
-    plotHandles.lnz = plot(plotHandles.az,x,ytmp);
+    handles.lnx = plot(handles.ax,x,ytmp);
+    handles.lny = plot(handles.ay,x,ytmp);
+    handles.lnz = plot(handles.az,x,ytmp);
 
     % add XYZ axes properties
-    plotHandles.ax.YLabel.String = 'Bx (nT)';
-    plotHandles.ay.YLabel.String = 'By (nT)';
-    plotHandles.az.YLabel.String = 'Bz (nT)';
-    plotHandles.az.XLabel.String = 'Time (s)';
+    handles.ax.YLabel.String = 'Bx (nT)';
+    handles.ay.YLabel.String = 'By (nT)';
+    handles.az.YLabel.String = 'Bz (nT)';
+    handles.az.XLabel.String = 'Time (s)';
 
     % add XYZ line properties
-    plotHandles.lnx.Color = 'red';
-    plotHandles.lny.Color = 'green';
-    plotHandles.lnz.Color = 'blue';
-    plotHandles.lnx.Tag = 'lnx';
-    plotHandles.lny.Tag = 'lny';
-    plotHandles.lnz.Tag = 'lnz';
+    handles.lnx.Color = 'red';
+    handles.lny.Color = 'green';
+    handles.lnz.Color = 'blue';
+    handles.lnx.Tag = 'lnx';
+    handles.lny.Tag = 'lny';
+    handles.lnz.Tag = 'lnz';
                                  
     % Other Data Fields
-    plotHandles.closereq = 0;
-    plotHandles = setupMiscdata(plotHandles, debugData);
+    setappdata(fig, 'closereq', 0);
+    setappdata(fig, 'key', []);
+    setappdata(fig, 'addPlot', []);
+    setappdata(fig, 'permanenceFlag', 0);
+    setappdata(fig, 'deletePlots', {});
+    handles = setupMiscdata(handles, debugData);
     
-    % store plotHandles for use in callbacks
-    guidata(plotHandles.figure, plotHandles)
+    % store handles for use in callbacks
+    guidata(fig, handles)
 end
 
 % dropdown menu callback
 % Changes what the modular plot will show
-function dropdownCallback(hObject, ~)
-    global menuCallbackInvoked
-    menuCallbackInvoked = 1;
+function DropdownCallback(hObject, ~)
+    handles = guidata(hObject);
     spectra = string(hObject.String(hObject.Value));
-    plotHandles = guidata(hObject);
-    plotHandles = setupSpectraPlot(spectra, plotHandles);
-    guidata(hObject,plotHandles)
-end
-
-% Browse button callback
-% Retrieves file, copies it to a temp directory,
-% adds that to path, updates dropdown and graph
-function browseFileCallback(hObject, ~)
-    [FileName,FilePath ]= uigetfile('*.m');
-    if (FileName ~= 0 & FileName ~= "")
-        plotHandles = guidata(hObject);
-        
-        % find a temp directory that has write access
-        temp = tempdir;
-
-        % add that temp directory to MATLAB's search path for this session
-        addpath(temp);
-
-        % copy the selected file to temp directory
-        [status,msg] = copyfile(FilePath, temp);
-        if (~status)
-            fprintf('Copy error: %s',msg);
-        end
-        
-        % Add option to the dropdown, first in list
-        plotHandles.currentPlotMenu.String = {FileName, ...
-            plotHandles.currentPlotMenu.String{1:end}};
-        
-        % Have dropdown show it as the selected option
-        plotHandles.currentPlotMenu.Value = 1;
-        
-        plotHandles = setupSpectraPlot(FileName,plotHandles);
-        
-        guidata(hObject,plotHandles)
-    else
-        disp('error or no plot selected');
-    end
+    handles = setupSpectraPlot(spectra, handles); % should I be calling this here?
+    guidata(hObject,handles)
 end
 
 % Callback for when the quit button is pressed
-function quitButtonCallback(hObject,~)
-    global menuCallbackInvoked
-    menuCallbackInvoked = 1;
-    plotHandles = guidata(hObject);
-    plotHandles.closereq = 1;
-    guidata(hObject,plotHandles);
+function QuitButtonCallback(hObject,~)
+    handles = guidata(hObject);
+    setappdata(handles.fig, 'closereq', 1);
 end
 
 % Callback for when a key is pressed on the figure
 function keyPressCallback(hObject, event)
-    global menuCallbackInvoked
-    menuCallbackInvoked = 1;
-    plotHandles = guidata(hObject);
+    handles = guidata(hObject);
     key = event.Character;
     if(key == 'q')
-        plotHandles.closereq = 1;
+        setappdata(handles.fig, 'closereq', 1);
     else
-        plotHandles.key = key;
+        setappdata(handles.fig, 'key', key);
     end
-    guidata(hObject,plotHandles);
+end
+
+% Add button callback
+function AddPlotButtonCallback(hObject, ~)
+    [FileName,FilePath ]= uigetfile('*.m');
+    if (FileName ~= 0 & FileName ~= "")
+        handles = guidata(hObject);
+        % check to make sure it's not a duplicate
+        if(~ismember(FileName, handles.currentPlotMenu.String))
+            popUpFig = figure('Name','Add a plot', ...
+                          'NumberTitle', 'off', ...
+                          'Resize', 'off', ...
+                          'MenuBar', 'none');
+        
+            uicontrol('Parent', popUpFig, ...
+                           'Style', 'edit', ...
+                           'String', FileName, ...
+                           'Enable', 'inactive', ...
+                           'Units', 'normalized', ...
+                           'FontSize', 10, ...
+                           'Position', [.02 0.88 0.22 0.052]);
+
+            permanenceToggle = uicontrol('Parent', popUpFig, ...
+                           'Style', 'radiobutton', ...
+                           'String', 'Add permanently', ...
+                           'Units', 'normalized', ...
+                           'FontSize', 12, ...
+                           'Position', [.02 0.72 0.3 0.06]);
+
+            % ok button
+            uicontrol('Parent', popUpFig, ...
+                                 'String', 'Ok', ...
+                                 'Units', 'normalized', ...
+                                 'Callback', @okButtonCallback, ...
+                                 'Position', [.85 0.05 0.12 0.05]);
+
+            % cancel button
+            uicontrol('Parent', popUpFig, ...
+                                     'String', 'Cancel', ...
+                                     'Units', 'normalized', ...
+                                     'Callback', @cancelButtonCallback, ...
+                                     'Position', [.7 0.05 0.12 0.05]);
+        else
+            warndlg('Cannot have duplicate script names', 'Warning', ...
+                    'modal');
+        end
+    end
+    
+    function okButtonCallback(~, ~)
+        setappdata(handles.fig, 'addPlot', fullfile(FilePath, FileName));
+        setappdata(handles.fig, 'permanenceFlag', permanenceToggle.Value);
+        delete(popUpFig);
+    end
+
+    function cancelButtonCallback(~, ~)
+        delete(popUpFig);
+    end
+end
+
+% Delete button callback
+function DeletePlotButtonCallback(hObject, ~)
+    handles = guidata(hObject);
+    plotsToDeleteList = {};
+    popUpFig = figure('Name','Manage Spectra Plots', ...
+                      'NumberTitle', 'off', ...
+                      'MenuBar', 'none');
+    
+    % dispaly all current plots with a delete button
+    plots = handles.currentPlotMenu.String;
+    bottom_align = 0.92;
+    for idx = 1:length(plots)
+        uicontrol('Parent', popUpFig, ...
+                  'Style', 'Text', ...
+                  'String', string(plots(idx)), ...
+                  'Units', 'normalized', ...
+                  'FontSize', 12, ...
+                  'BackgroundColor','white',...
+                  'HorizontalAlignment', 'left', ...
+                  'Tag', string(plots(idx)), ...
+                  'Position', [.05 bottom_align 0.4 0.05]);
+
+        uicontrol('Parent', popUpFig, ...
+                   'String', 'Delete',...
+                   'Units', 'normalized', ...
+                   'UserData', string(plots(idx)), ...
+                   'Position', [.6 bottom_align 0.3 0.05], ...
+                   'Callback', @deleteCallback);
+
+        bottom_align = bottom_align - 0.1;
+    end              
+                  
+    % ok button
+    uicontrol('Parent', popUpFig, ...
+                         'String', 'Ok', ...
+                         'Units', 'normalized', ...
+                         'Callback', @OkButtonCallback, ...
+                         'Position', [.85 0.05 0.12 0.05]);
+
+    % cancel button
+    uicontrol('Parent', popUpFig, ...
+                             'String', 'Cancel', ...
+                             'Units', 'normalized', ...
+                             'Callback', @CancelButtonCallback, ...
+                             'Position', [.7 0.05 0.12 0.05]);
+                         
+    function deleteCallback(~, event)
+        plotName = event.Source.UserData;
+        answer = questdlg('Confirm delete?', 'Confirm deletion', ...
+                         'No','Yes', 'No');
+        if(strcmp(answer, 'Yes'))
+            % add to delete queue
+            plotsToDeleteList = [plotsToDeleteList, plotName];
+
+            % overwrite plot name & delete button with confirmation text
+            delete(event.Source);
+            selectionLabel = findobj('Tag', string(plotName));
+            selectionLabel.Position(3) = 1;
+            selectionLabel.String = strcat('Deleted', {' '}, ...
+                selectionLabel.String);
+            selectionLabel.FontAngle = 'italic';
+            selectionLabel.HorizontalAlignment = 'center';
+        end
+    end
+
+    function OkButtonCallback(~, ~)
+        if(~isempty(plotsToDeleteList))
+            setappdata(handles.fig, 'deletePlots', plotsToDeleteList);
+        end
+        delete(popUpFig);
+    end
+
+    function CancelButtonCallback(~, ~)
+        delete(popUpFig);
+    end
 end
 
 function [plotHandles] = setupMiscdata(plotHandles, debugData)

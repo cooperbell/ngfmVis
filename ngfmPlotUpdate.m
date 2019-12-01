@@ -1,54 +1,77 @@
-function [plotHandles] = ngfmPlotUpdate(plotHandles, dataPacket, magData, hkData, debugData)
+function [fig, closereq, key] = ngfmPlotUpdate(fig, dataPacket, magData, hkData, debugData)
     ngfmLoadConstants;
-    global menuCallbackInvoked;
+    handles = guidata(fig);
     
     % update XYZ graphs
-    set(plotHandles.lnx,'XData',x,'YData',magData(1,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore));
-    set(plotHandles.lny,'XData',x,'YData',magData(2,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore));
-    set(plotHandles.lnz,'XData',x,'YData',magData(3,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore));
+    set(handles.lnx,'XData',x,'YData',magData(1,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore));
+    set(handles.lny,'XData',x,'YData',magData(2,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore));
+    set(handles.lnz,'XData',x,'YData',magData(3,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore));
     
-    % update spectra graph (or call custom script)
+    % update spectra
+    spectra = handles.currentPlotMenu.String(handles.currentPlotMenu.Value);
     try
-        spectra = plotHandles.currentPlotMenu.String(plotHandles.currentPlotMenu.Value);
+        % set current figure back to ngfmVis for if it's ever different
+        set(0, 'currentfigure', handles.fig);
         run(string(spectra));
     catch exception
-        % display error
-        plotHandles.browseLoadError.String = 'Unable to load plot';
-        plotHandles.browseLoadError.Visible = 'on';
-        
-        % remove spectra from list
-        idx = find(strcmp(plotHandles.currentPlotMenu.String, spectra));
-        plotHandles.currentPlotMenu.String(idx) = [];
-        
-        % reset spectra to the first option
-        plotHandles.currentPlotMenu.Value = 1;
-        spectra = string(plotHandles.currentPlotMenu.String(plotHandles.currentPlotMenu.Value));
-        
-        % setup plot for new spectra
-        plotHandles = setupSpectraPlot(spectra,plotHandles);
-        
-        % so you can see the error message be printed. Change this
-        pause(1);
-        
-        % print thrown error to console
+       % print thrown error to console
         warning(exception.identifier, 'Unable to load plot, %s', exception.message)
         
-        % hide error text
-        plotHandles.browseLoadError.Visible = 'off';
-        plotHandles.browseLoadError.String = '';
+        % display error
+        warndlg(sprintf('Unable to load plot, %s', exception.message), 'Warning', 'modal');
+        
+        % don't delete, just remove from dropdown
+        plotsIdx = find(strcmp(handles.currentPlotMenu.String, spectra));
+        handles.currentPlotMenu.String(plotsIdx) = [];
+        
+        
+        handles.currentPlotMenu.Value = 1;
+        spectra = string(handles.currentPlotMenu.String(handles.currentPlotMenu.Value));
+        handles = setupSpectraPlot(spectra,handles);
     end
     
     % update misc data
-    plotHandles = updateMiscData(plotHandles,magData,dataPacket,hkData,debugData,numSamplesToStore,numSamplesToDisplay);
+    handles = updateMiscData(handles,magData,dataPacket,hkData,debugData,numSamplesToStore,numSamplesToDisplay);
+    
+    % save handles struct changes
+    guidata(handles.fig, handles);
     
     % update figures and process callbacks
     drawnow;
     
-    % This is a band-aid fix because I don't know how to fix it atm
-    if(menuCallbackInvoked)
-        menuCallbackInvoked = 0;
-        plotHandles = guidata(plotHandles.figure);
+    % check addPlot
+    % can this just happen in the callback?
+    if(~isempty(getappdata(handles.fig, 'addPlot')))
+        handles = guidata(handles.fig);
+        handles = addPlot(handles, ...
+                          getappdata(handles.fig, 'addPlot'), ...
+                          getappdata(handles.fig, 'permanenceFlag'));
+                      
+        % reset values
+        setappdata(handles.fig, 'addPlot', []);
+        setappdata(handles.fig, 'permanenceFlag', 0);
+                      
+        % save handles struct changes
+        guidata(handles.fig, handles);
     end
+    
+    % check deletePlots
+    if(~isempty(getappdata(handles.fig, 'deletePlots')))
+        handles = guidata(handles.fig);
+        handles = deletePlots(handles, ...
+                              getappdata(handles.fig, 'deletePlots'));
+                          
+        % reset values
+        setappdata(handles.fig, 'deletePlots', {});
+        
+        % save handles struct changes
+        guidata(handles.fig, handles);
+    end
+    
+    % set up outputs
+    fig = handles.fig;
+    closereq = getappdata(handles.fig, 'closereq');
+    key = getappdata(handles.fig, 'key');
 end
 
 function [plotHandles] = updateMiscData(plotHandles,magData,dataPacket,hkData,debugData,numSamplesToStore,numSamplesToDisplay)
@@ -104,4 +127,50 @@ function [plotHandles] = updateMiscData(plotHandles,magData,dataPacket,hkData,de
         set(plotHandles.sensorid,'String',sprintf('%d',dataPacket.sensorid));
         set(plotHandles.crc,'String',sprintf('%04X',dataPacket.crc));
     end
+end
+
+function [plotHandles] = deletePlots(plotHandles, plots)
+    for idx = 1:length(plots)
+        plotFilePath = fullfile('spectraPlots', string(plots(idx)));
+        delete(plotFilePath);
+
+        % remove from dropdown
+        plotsIdx = find(strcmp(plotHandles.currentPlotMenu.String, plots(idx)));
+        plotHandles.currentPlotMenu.String(plotsIdx) = [];
+    end
+     
+    plotHandles.currentPlotMenu.Value = 1;
+    spectra = string(plotHandles.currentPlotMenu.String(plotHandles.currentPlotMenu.Value));
+    plotHandles = setupSpectraPlot(spectra,plotHandles);
+end
+ 
+function [plotHandles] = addPlot(plotHandles, file, permanenceFlag)
+        % break up file into componenets to use
+        [~,name,ext] = fileparts(file);
+        FileName = strcat(name,ext);
+        dir = 'spectraPlots';
+        
+        % put file in temp dir if user didn't click permanence
+        if (~permanenceFlag)
+            % find a temp directory that has write access
+            dir = tempdir;
+
+            % add that temp directory to MATLAB's search path for this session
+            addpath(dir);
+        end
+        
+
+        % copy the selected file to temp directory
+        [status,msg] = copyfile(file, dir);
+        if (~status)
+            fprintf('Copy error: %s',msg);
+        end
+
+        % Add option to the dropdown, first in list
+        plotHandles.currentPlotMenu.String = {FileName, ...
+            plotHandles.currentPlotMenu.String{1:end}};
+        
+        % Have dropdown show it as the selected option
+        plotHandles.currentPlotMenu.Value = 1;
+        plotHandles = setupSpectraPlot(FileName,plotHandles);
 end

@@ -9,22 +9,27 @@ function [fig] = ngfmPlotInit(debugData)
     fig = figure('Name', 'ngfmVis', 'NumberTitle','off', ...
                 'WindowState', 'fullscreen', 'Tag', 'fig', ...
                 'KeyPressFcn', @keyPressCallback);
-                                 
+                            
     handles = guihandles(fig);
+    
+    % create tabs
+    tabgp = uitabgroup(fig);
+    handles.tab1 = uitab(tabgp,'Title','ngfmVis', 'Tag', 'tab1');
+    handles.tab2 = uitab(tabgp,'Title','Housekeeping Data', 'Tag', 'tab2');
                             
     % create axes
-    handles.ax = axes('Parent', fig, 'Position', [0.07 0.70 0.39 0.25], ...
+    handles.ax = axes('Parent', handles.tab1, 'Position', [0.07 0.70 0.39 0.25], ...
                         'XLim', [0 10], 'XLimMode', 'manual');
                       
-    handles.ay = axes('Parent', fig, 'Position', ...
+    handles.ay = axes('Parent', handles.tab1, 'Position', ...
                           [0.07 0.40 0.39 0.25], 'XLim', [0 10], ...
                           'XLimMode', 'manual');
                       
-    handles.az = axes('Parent', fig, 'Position', ...
+    handles.az = axes('Parent', handles.tab1, 'Position', ...
                           [0.07 0.10 0.39 0.25], 'XLim', [0 10], ...
                           'XLimMode', 'manual');
                       
-    handles.aw = axes('Parent', fig, 'Position', ...
+    handles.aw = axes('Parent', handles.tab1, 'Position', ...
                           [0.55 0.10 0.39 0.85]);
                       
     
@@ -43,7 +48,7 @@ function [fig] = ngfmPlotInit(debugData)
     end
     
     % create dropdown
-    handles.currentPlotMenu = uicontrol('Parent', fig, ...
+    handles.currentPlotMenu = uicontrol('Parent', handles.tab1, ...
                                         'Style','popupmenu', ...
                                         'String', plots, ...
                                         'Units', 'Normalized', ...
@@ -53,7 +58,7 @@ function [fig] = ngfmPlotInit(debugData)
                                         'Callback', @DropdownCallback);
     
     % create add plot button
-    handles.addPlotButton = uicontrol('Parent', fig, ...
+    handles.addPlotButton = uicontrol('Parent', handles.tab1, ...
                                      'style', 'pushbutton', ...
                                      'String', 'Add Plot', ...
                                      'Units', 'Normalized', ...
@@ -61,7 +66,7 @@ function [fig] = ngfmPlotInit(debugData)
                                      'Callback', @AddPlotButtonCallback);
                                      
      % create delete plot button
-    handles.deletePlotButton = uicontrol('Parent', fig, ...
+    handles.deletePlotButton = uicontrol('Parent', handles.tab1, ...
                                          'style', 'pushbutton', ...
                                          'String', 'Delete Plot', ...
                                          'Units', 'Normalized', ...
@@ -69,7 +74,7 @@ function [fig] = ngfmPlotInit(debugData)
                                          'Callback', @DeletePlotButtonCallback);
                                         
     % create program quit button
-    handles.quitButton = uicontrol('Parent', fig, ...
+    handles.quitButton = uicontrol('Parent', handles.tab1, ...
                                        'style', 'pushbutton', ...
                                        'String', 'Quit Program', ...
                                        'Units', 'Normalized', ...
@@ -108,11 +113,11 @@ function [fig] = ngfmPlotInit(debugData)
     setappdata(fig, 'deletePlots', {});
     handles = setupMiscdata(handles, debugData);
     
-    % hk stuff
-    pause(0.1);
-    xtmp = linspace(1,hkSecondsToDisplay,hkSecondsToDisplay);
-    ytmp = zeros(1,hkSecondsToDisplay);
-    handles = setupHKData(handles, xtmp, ytmp);
+%     % hk stuff
+%     pause(0.1);
+%     xtmp = linspace(1,hkSecondsToDisplay,hkSecondsToDisplay);
+%     ytmp = zeros(1,hkSecondsToDisplay);
+%     handles = setupHKData(handles, xtmp, ytmp);
    
     % store handles for use in callbacks
     guidata(fig, handles)
@@ -355,64 +360,64 @@ function [plotHandles] = setupHKData(plotHandles, xtmp, ytmp)
 end
 
 function [plotHandles] = setupMiscdata(plotHandles, debugData)
-    uicontrol('style','text','String','PID', 'Position', [10 35 50 20]);
-    plotHandles.pid = uicontrol('style','text','String','NaN','Position', [10 10 50 20]);
+    uicontrol('Parent', plotHandles.tab1, 'style','text','String','PID', 'Position', [10 35 50 20]);
+    plotHandles.pid = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [10 10 50 20]);
     
-    uicontrol('style','text','String','PktLen','Position', [60 35 50 20]);
-    plotHandles.packetlength = uicontrol('style','text','String','NaN','Position', [60 10 50 20]);
+    uicontrol('Parent', plotHandles.tab1, 'style','text','String','PktLen','Position', [60 35 50 20]);
+    plotHandles.packetlength = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [60 10 50 20]);
     
-    uicontrol('style','text','String','FS','Position', [110 35 50 20]);
-    plotHandles.fs = uicontrol('style','text','String','NaN','Position', [110 10 50 20]);
+    uicontrol('Parent', plotHandles.tab1, 'style','text','String','FS','Position', [110 35 50 20]);
+    plotHandles.fs = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [110 10 50 20]);
     
-    uicontrol('style','text','String','PPS','Position', [160 35 50 20]);
-    plotHandles.ppsoffset = uicontrol('style','text','String','NaN','Position', [160 10 50 20]);
+    uicontrol('Parent', plotHandles.tab1, 'style','text','String','PPS','Position', [160 35 50 20]);
+    plotHandles.ppsoffset = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [160 10 50 20]);
     
     % housekeeping data labels
-    mTextBoxHK0Label = uicontrol('style','text','Position', [210 35 50 20]);
-    plotHandles.hk0 = uicontrol('style','text','String','NaN','Position', [210 10 50 20]);
+    mTextBoxHK0Label = uicontrol('Parent', plotHandles.tab1, 'style','text','Position', [210 35 50 20]);
+    plotHandles.hk0 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [210 10 50 20]);
 
-    mTextBoxHK1Label = uicontrol('style','text','Position', [260 35 50 20]);
-    plotHandles.hk1 = uicontrol('style','text','String','NaN','Position', [260 10 50 20]);
+    mTextBoxHK1Label = uicontrol('Parent', plotHandles.tab1, 'style','text','Position', [260 35 50 20]);
+    plotHandles.hk1 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [260 10 50 20]);
     
     % do the same as above ^^^ deleting the var
-    mTextBoxHK2Label = uicontrol('style','text','Position', [310 35 50 20]);
-    mTextBoxHK2 = uicontrol('style','text','String','NaN','Position', [310 10 50 20]);
+    mTextBoxHK2Label = uicontrol('Parent', plotHandles.tab1, 'style','text','Position', [310 35 50 20]);
+    mTextBoxHK2 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [310 10 50 20]);
     plotHandles.hk2 = mTextBoxHK2;
     
-    mTextBoxHK3Label = uicontrol('style','text','Position', [360 35 50 20]);
-    mTextBoxHK3 = uicontrol('style','text','String','NaN','Position', [360 10 50 20]);
+    mTextBoxHK3Label = uicontrol('Parent', plotHandles.tab1, 'style','text','Position', [360 35 50 20]);
+    mTextBoxHK3 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [360 10 50 20]);
     plotHandles.hk3 = mTextBoxHK3;
     
-    mTextBoxHK4Label = uicontrol('style','text','Position', [410 35 50 20]);
-    mTextBoxHK4 = uicontrol('style','text','String','NaN','Position', [410 10 50 20]);
+    mTextBoxHK4Label = uicontrol('Parent', plotHandles.tab1, 'style','text','Position', [410 35 50 20]);
+    mTextBoxHK4 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [410 10 50 20]);
     plotHandles.hk4 = mTextBoxHK4;
     
-    mTextBoxHK5Label = uicontrol('style','text','Position', [460 35 50 20]);
-    mTextBoxHK5 = uicontrol('style','text','String','NaN','Position', [460 10 50 20]);
+    mTextBoxHK5Label = uicontrol('Parent', plotHandles.tab1, 'style','text','Position', [460 35 50 20]);
+    mTextBoxHK5 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [460 10 50 20]);
     plotHandles.hk5 = mTextBoxHK5;
     
-    mTextBoxHK6Label = uicontrol('style','text','Position', [510 35 50 20]);
-    mTextBoxHK6 = uicontrol('style','text','String','NaN','Position', [510 10 50 20]);
+    mTextBoxHK6Label = uicontrol('Parent', plotHandles.tab1, 'style','text','Position', [510 35 50 20]);
+    mTextBoxHK6 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [510 10 50 20]);
     plotHandles.hk6 = mTextBoxHK6;
     
-    mTextBoxHK7Label = uicontrol('style','text','Position', [560 35 50 20]);
-    mTextBoxHK7 = uicontrol('style','text','String','NaN','Position', [560 10 50 20]);
+    mTextBoxHK7Label = uicontrol('Parent', plotHandles.tab1, 'style','text','Position', [560 35 50 20]);
+    mTextBoxHK7 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [560 10 50 20]);
     plotHandles.hk7 = mTextBoxHK7;
     
-    uicontrol('style','text','String','HK8','Position', [610 35 50 20]);
-    mTextBoxHK8 = uicontrol('style','text','String','NaN','Position', [610 10 50 20]);
+    uicontrol('Parent', plotHandles.tab1, 'style','text','String','HK8','Position', [610 35 50 20]);
+    mTextBoxHK8 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [610 10 50 20]);
     plotHandles.hk8 = mTextBoxHK8;
     
-    uicontrol('style','text','String','HK9','Position', [660 35 50 20]);
-    mTextBoxHK9 = uicontrol('style','text','String','NaN','Position', [660 10 50 20]);
+    uicontrol('Parent', plotHandles.tab1, 'style','text','String','HK9','Position', [660 35 50 20]);
+    mTextBoxHK9 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [660 10 50 20]);
     plotHandles.hk9 = mTextBoxHK9;
     
-    uicontrol('style','text','String','HK10','Position', [710 35 50 20]);
-    mTextBoxHK10 = uicontrol('style','text','String','NaN','Position', [710 10 50 20]);
+    uicontrol('Parent', plotHandles.tab1, 'style','text','String','HK10','Position', [710 35 50 20]);
+    mTextBoxHK10 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [710 10 50 20]);
     plotHandles.hk10 = mTextBoxHK10;
     
-    uicontrol('style','text','String','HK11','Position', [760 35 50 20]);
-    mTextBoxHK11 = uicontrol('style','text','String','NaN','Position', [760 10 50 20]);
+    uicontrol('Parent', plotHandles.tab1, 'style','text','String','HK11','Position', [760 35 50 20]);
+    mTextBoxHK11 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [760 10 50 20]);
     plotHandles.hk11 = mTextBoxHK11;
     
     if(debugData)
@@ -435,67 +440,67 @@ function [plotHandles] = setupMiscdata(plotHandles, debugData)
         set(mTextBoxHK7Label,'String','IIn');
     end
     
-    uicontrol('style','text','String','Board ID','Position', [810 35 50 20]);
-    boardIDLabel = uicontrol('style','text','String','NaN','Position', [810 10 50 20]);
+    uicontrol('Parent', plotHandles.tab1, 'style','text','String','Board ID','Position', [810 35 50 20]);
+    boardIDLabel = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [810 10 50 20]);
     plotHandles.boardid = boardIDLabel;
     
-    uicontrol('style','text','String','Sensor ID','Position', [860 35 50 20]);
-    sensorIDLabel = uicontrol('style','text','String','NaN','Position', [860 10 50 20]);
+    uicontrol('Parent', plotHandles.tab1, 'style','text','String','Sensor ID','Position', [860 35 50 20]);
+    sensorIDLabel = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [860 10 50 20]);
     plotHandles.sensorid = sensorIDLabel;
     
-    uicontrol('style','text','String','CRC','Position', [910 35 50 20]);
-    crcLabel = uicontrol('style','text','String','NaN','Position', [910 10 50 20]);
+    uicontrol('Parent', plotHandles.tab1, 'style','text','String','CRC','Position', [910 35 50 20]);
+    crcLabel = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [910 10 50 20]);
     plotHandles.crc = crcLabel;
     
     % Magnetic data test boxes.
 
-    uicontrol('style','text','String','X Avg','Position', [960 35 50 20]);
-    xavgLabel = uicontrol('style','text','String','NaN','Position', [960 10 50 20]);
+    uicontrol('Parent', plotHandles.tab1, 'style','text','String','X Avg','Position', [960 35 50 20]);
+    xavgLabel = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [960 10 50 20]);
     plotHandles.xavg = xavgLabel;
     
-    uicontrol('style','text','String','X stddev','Position', [1010 35 50 20]);
-    xstddevLabel = uicontrol('style','text','String','NaN','Position', [1010 10 50 20]);
+    uicontrol('Parent', plotHandles.tab1, 'style','text','String','X stddev','Position', [1010 35 50 20]);
+    xstddevLabel = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [1010 10 50 20]);
     plotHandles.xstddev = xstddevLabel;
     
-    uicontrol('style','text','String','Y Avg','Position', [1060 35 50 20]);
-    yavgLabel = uicontrol('style','text','String','NaN','Position', [1060 10 50 20]);
+    uicontrol('Parent', plotHandles.tab1, 'style','text','String','Y Avg','Position', [1060 35 50 20]);
+    yavgLabel = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [1060 10 50 20]);
     plotHandles.yavg = yavgLabel;
     
-    uicontrol('style','text','String','Y stddev','Position', [1110 35 50 20]);
-    ystddevLabel = uicontrol('style','text','String','NaN','Position', [1110 10 50 20]);
+    uicontrol('Parent', plotHandles.tab1, 'style','text','String','Y stddev','Position', [1110 35 50 20]);
+    ystddevLabel = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [1110 10 50 20]);
     plotHandles.ystddev = ystddevLabel;
     
-    uicontrol('style','text','String','Z Avg','Position', [1160 35 50 20]);
-    zavgLabel = uicontrol('style','text','String','NaN','Position', [1160 10 50 20]);
+    uicontrol('Parent', plotHandles.tab1, 'style','text','String','Z Avg','Position', [1160 35 50 20]);
+    zavgLabel = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [1160 10 50 20]);
     plotHandles.zavg = zavgLabel;
     
-    uicontrol('style','text','String','Z stddev','Position', [1210 35 50 20]);
-    zstddevLabel = uicontrol('style','text','String','NaN','Position', [1210 10 50 20]);
+    uicontrol('Parent', plotHandles.tab1, 'style','text','String','Z stddev','Position', [1210 35 50 20]);
+    zstddevLabel = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [1210 10 50 20]);
     plotHandles.zstddev = zstddevLabel;
     
     % Amplitude Spectra Stuff
 
-    uicontrol('style','text','String','X RMS','Position', [1260 35 50 20]);
-    xampLabel = uicontrol('style','text','String','NaN','Position', [1260 10 50 20]);
+    uicontrol('Parent', plotHandles.tab1, 'style','text','String','X RMS','Position', [1260 35 50 20]);
+    xampLabel = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [1260 10 50 20]);
     plotHandles.xamp = xampLabel;
     
-    uicontrol('style','text','String','X Hz','Position', [1310 35 50 20]);
-    xfreqLabel = uicontrol('style','text','String','NaN','Position', [1310 10 50 20]);
+    uicontrol('Parent', plotHandles.tab1, 'style','text','String','X Hz','Position', [1310 35 50 20]);
+    xfreqLabel = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [1310 10 50 20]);
     plotHandles.xfreq = xfreqLabel;
     
-    uicontrol('style','text','String','Y RMS','Position', [1360 35 50 20]);
-    yampLabel = uicontrol('style','text','String','NaN','Position', [1360 10 50 20]);
+    uicontrol('Parent', plotHandles.tab1, 'style','text','String','Y RMS','Position', [1360 35 50 20]);
+    yampLabel = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [1360 10 50 20]);
     plotHandles.yamp = yampLabel;
     
-    uicontrol('style','text','String','Y Hz','Position', [1410 35 50 20]);
-    yfreqLabel = uicontrol('style','text','String','NaN','Position', [1410 10 50 20]);
+    uicontrol('Parent', plotHandles.tab1, 'style','text','String','Y Hz','Position', [1410 35 50 20]);
+    yfreqLabel = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [1410 10 50 20]);
     plotHandles.yfreq = yfreqLabel;
     
-    uicontrol('style','text','String','Z RMS','Position', [1460 35 50 20]);
-    zampLabel = uicontrol('style','text','String','NaN','Position', [1460 10 50 20]);
+    uicontrol('Parent', plotHandles.tab1, 'style','text','String','Z RMS','Position', [1460 35 50 20]);
+    zampLabel = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [1460 10 50 20]);
     plotHandles.zamp = zampLabel;
     
-    uicontrol('style','text','String','Z Hz','Position', [1510 35 50 20]);
-    zfreqLabel = uicontrol('style','text','String','NaN','Position', [1510 10 50 20]);
+    uicontrol('Parent', plotHandles.tab1, 'style','text','String','Z Hz','Position', [1510 35 50 20]);
+    zfreqLabel = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [1510 10 50 20]);
     plotHandles.zfreq = zfreqLabel;
 end

@@ -1,4 +1,6 @@
-function UIFigure = ngfmVisParam()
+function ngfmVisParam()
+
+    % create figure
     UIFigure = uifigure;
     UIFigure.AutoResizeChildren = 'off';
     UIFigure.Position = [100 100 640 480];
@@ -6,7 +8,7 @@ function UIFigure = ngfmVisParam()
     UIFigure.Resize = 'off';
     S.figure = UIFigure;
 
-
+    % Add grid layout to figure
     GridLayout = uigridlayout(UIFigure);
     GridLayout.ColumnWidth = {12, '1x'};
     GridLayout.RowHeight = {'1x'};

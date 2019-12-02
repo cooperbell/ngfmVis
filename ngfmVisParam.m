@@ -1,9 +1,9 @@
-function UIFigure = ngfmVisParam1(S)
+function UIFigure = ngfmVisParam()
     UIFigure = uifigure;
     UIFigure.AutoResizeChildren = 'off';
     UIFigure.Position = [100 100 640 480];
     UIFigure.Name = 'Input Parameters Page';
-%     UIFigure.SizeChangedFcn = @updateAppLayout;
+    UIFigure.Resize = 'off';
     S.figure = UIFigure;
 
 
@@ -72,10 +72,10 @@ function UIFigure = ngfmVisParam1(S)
 
     % Create ConfigFileDropDown
     ConfigFileDropDown = uidropdown(RightPanel);
-    ConfigFileDropDown.Items = {'mag_1.config'};
+    ConfigFileDropDown.Items = {'config.txt'};
     ConfigFileDropDown.ValueChangedFcn = @GetConfigFiles;
     ConfigFileDropDown.Position = [35 119 130 22];
-    ConfigFileDropDown.Value = 'mag_1.config';
+    ConfigFileDropDown.Value = 'config.txt';
     S.ConfigFileDropDown = ConfigFileDropDown;
 
     % Create BrowseButton_2
@@ -97,11 +97,8 @@ function UIFigure = ngfmVisParam1(S)
     StartButton.Position = [35 49 76 22];
     StartButton.Text = 'Start';
     S.StartButton = StartButton;
-
-    % Show the figure after all components are created
-%     UIFigure.Visible = 'on';
     
-    % save
+    % save for use in callbacks
     guidata(S.figure, S)
     
     drawnow;
@@ -109,7 +106,7 @@ function UIFigure = ngfmVisParam1(S)
 
 
     % Callback function: BrowseButton, SourceEditField
-    function SourceBrowseButton(hObject, eventdata)
+    function SourceBrowseButton(hObject, ~)
         handles = guidata(hObject);
         handles.figure.Visible = 'off'; 
         
@@ -120,7 +117,7 @@ function UIFigure = ngfmVisParam1(S)
     end
 
     % Button pushed function: BrowseButton_2
-    function LogToBrowse(hObject, eventdata)
+    function LogToBrowse(hObject, ~)
         handles = guidata(hObject);
         handles.figure.Visible = 'off'; 
         [FileName,FilePath ]= uigetfile('*.txt*');
@@ -130,7 +127,7 @@ function UIFigure = ngfmVisParam1(S)
     end
 
     % Value changed function: InputDropDown
-    function CheckValue(hObject, eventdata)
+    function CheckValue(hObject, ~)
         handles = guidata(hObject);
 
         value = hObject.InputDropDown.Value;
@@ -165,33 +162,6 @@ function UIFigure = ngfmVisParam1(S)
             logTo = 'null';
         end
         setappdata(handles.figure, 'params', {lower(inputSelect), source, logTo});
-%         if(strcmp(inputSelect, 'File'))
-%             VAR = {'file', source,logTo};
-%         else
-%             VAR = {'serial', source, logTo};
-%         end
         handles.figure.Visible = 'off';
-    end
-
-    % Changes arrangement of the app based on UIFigure width
-    function updateAppLayout(hObject, eventdata)
-%         global UIFigure;
-%         global GridLayout;
-%         global RightPanel;
-        handles = guidata(hObject);
-        currentFigureWidth = handles.figure.Position(3);
-        if(currentFigureWidth <= 576)
-            % Change to a 2x1 grid
-            handles.GridLayout.RowHeight = {480, 480};
-            handles.GridLayout.ColumnWidth = {'1x'};
-            handles.RightPanel.Layout.Row = 2;
-            handles.RightPanel.Layout.Column = 1;
-        else
-            % Change to a 1x2 grid
-            handles.GridLayout.RowHeight = {'1x'};
-            handles.GridLayout.ColumnWidth = {12, '1x'};
-            handles.RightPanel.Layout.Row = 1;
-            handles.RightPanel.Layout.Column = 2;
-        end
     end
 end

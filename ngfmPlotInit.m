@@ -105,13 +105,26 @@ function [fig] = ngfmPlotInit()
     handles.lny.Tag = 'lny';
     handles.lnz.Tag = 'lnz';
                                  
-    % Other Data Fields
+    % app data
     setappdata(fig, 'closereq', 0);
     setappdata(fig, 'key', []);
     setappdata(fig, 'addPlot', []);
     setappdata(fig, 'permanenceFlag', 0);
     setappdata(fig, 'deletePlots', {});
     setappdata(fig, 'debugData', 0);
+    setappdata(fig, 'hkAxes', {'hk0', 'hk1', 'hk2', 'hk3', 'hk4', ...
+                               'hk5', 'hk6', 'hk7', 'hk8', 'hk9', ...
+                               'hk10', 'hk11'});
+                           
+    setappdata(fig, 'hkTitles', {'+1V2', 'TSens', 'TRef', 'TBrd', ...
+                                 'V+', 'VIn', 'Ref/2', 'IIn', 'HK8', ...
+                                 'HK9', 'HK10', 'HK11'});
+                             
+    setappdata(fig, 'hkLines', {'lnHK0', 'lnHK1', 'lnHK2', 'lnHK3', 'lnHK4', ...
+                               'lnHK5', 'lnHK6', 'lnHK7', 'lnHK8', 'lnHK9', ...
+                               'lnHK10', 'lnHK11'});
+    
+    % Other Data Fields
     handles = setupMiscdata(handles);
     
     % Housekeeping data graphs
@@ -305,6 +318,11 @@ function DeletePlotButtonCallback(hObject, ~)
 end
 
 function [plotHandles] = setupHKData(plotHandles, xtmp, ytmp)
+
+    hkAxes = getappdata(plotHandles.fig, 'hkAxes');
+    hkTitles = getappdata(plotHandles.fig, 'hkTitles');
+    hkLines = getappdata(plotHandles.fig, 'hkLines');
+    
     % column 1            
     plotHandles.hk0 = axes('Parent', plotHandles.tab2, 'Position', [0.05 0.80 0.25 0.15], ...
                             'XLim', [0 60], 'XLimMode', 'manual');
@@ -346,46 +364,16 @@ function [plotHandles] = setupHKData(plotHandles, xtmp, ytmp)
     plotHandles.hk11 = axes('Parent', plotHandles.tab2, 'Position', [0.67 0.05 0.25 0.15], ...
                             'XLim', [0 60], 'XLimMode', 'manual');
        
-    % create line handles                    
-    plotHandles.lnHK0 = plot(plotHandles.hk0, xtmp, ytmp);
-    plotHandles.lnHK1 = plot(plotHandles.hk1, xtmp, ytmp);
-    plotHandles.lnHK2 = plot(plotHandles.hk2, xtmp, ytmp);
-    plotHandles.lnHK3 = plot(plotHandles.hk3, xtmp, ytmp);
-    plotHandles.lnHK4 = plot(plotHandles.hk4, xtmp, ytmp);
-    plotHandles.lnHK5 = plot(plotHandles.hk5, xtmp, ytmp);
-    plotHandles.lnHK6 = plot(plotHandles.hk6, xtmp, ytmp);
-    plotHandles.lnHK7 = plot(plotHandles.hk7, xtmp, ytmp);
-    plotHandles.lnHK8 = plot(plotHandles.hk8, xtmp, ytmp);
-    plotHandles.lnHK9 = plot(plotHandles.hk9, xtmp, ytmp);
-    plotHandles.lnHK10 = plot(plotHandles.hk10, xtmp, ytmp);
-    plotHandles.lnHK11 = plot(plotHandles.hk11, xtmp, ytmp);
+    % create line handles             
+    for i = 1:length(hkLines)
+         plotHandles.(hkLines{i}) = plot(plotHandles.(hkAxes{i}), xtmp, ytmp);
+    end
     
     % axes properties
-    plotHandles.hk0.Title.String = '+1V2';
-    plotHandles.hk1.Title.String = 'TSens';
-    plotHandles.hk2.Title.String = 'TRef';
-    plotHandles.hk3.Title.String = 'TBrd';
-    plotHandles.hk4.Title.String = 'V+';
-    plotHandles.hk5.Title.String = 'VIn';
-    plotHandles.hk6.Title.String = 'Ref/2';
-    plotHandles.hk7.Title.String = 'IIn';
-    plotHandles.hk8.Title.String = 'HK8';
-    plotHandles.hk9.Title.String = 'HK9';
-    plotHandles.hk10.Title.String = 'HK10';
-    plotHandles.hk11.Title.String = 'HK11';
-
-    plotHandles.hk0.XLabel.String = 'Packets ago';
-    plotHandles.hk1.XLabel.String = 'Packets ago';
-    plotHandles.hk2.XLabel.String = 'Packets ago';
-    plotHandles.hk3.XLabel.String = 'Packets ago';
-    plotHandles.hk4.XLabel.String = 'Packets ago';
-    plotHandles.hk5.XLabel.String = 'Packets ago';
-    plotHandles.hk6.XLabel.String = 'Packets ago';
-    plotHandles.hk7.XLabel.String = 'Packets ago';
-    plotHandles.hk8.XLabel.String = 'Packets ago';
-    plotHandles.hk9.XLabel.String = 'Packets ago';
-    plotHandles.hk10.XLabel.String = 'Packets ago';
-    plotHandles.hk11.XLabel.String = 'Packets ago';
+    for i = 1:length(hkAxes)
+        plotHandles.(hkAxes{i}).Title.String = hkTitles{i};
+        plotHandles.(hkAxes{i}).XLabel.String = 'Packets ago';
+    end
 end
 
 function [plotHandles] = setupMiscdata(plotHandles)

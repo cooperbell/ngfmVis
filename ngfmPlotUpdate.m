@@ -31,10 +31,12 @@ function [fig, closereq, key, debugData] = ngfmPlotUpdate(fig, dataPacket, magDa
     end
     
     % update hk data
-    handles = updateHKData(handles, hkX, hkData);
+    handles = updateHKData(handles, hkX, hkData, hkSecondsToDisplay);
     
     % update misc data
-%     handles = updateMiscData(handles,magData,dataPacket,hkData,debugData,numSamplesToStore,numSamplesToDisplay);
+    handles = updateMiscData(handles, magData, dataPacket, ...
+        getappdata(handles.fig,'debugData'), numSamplesToStore, ...
+        numSamplesToDisplay);
     
     % save handles struct changes
     guidata(handles.fig, handles);
@@ -79,23 +81,26 @@ function [fig, closereq, key, debugData] = ngfmPlotUpdate(fig, dataPacket, magDa
 end
 
 % update hk data
-function [plotHandles] = updateHKData(plotHandles, hkX, hkData)
-    set(plotHandles.lnHK0,'XData',hkX,'YData', hkData(1,1:60));
-    set(plotHandles.lnHK1,'XData',hkX,'YData', hkData(2,1:60));
-    set(plotHandles.lnHK2,'XData',hkX,'YData', hkData(3,1:60));
-    set(plotHandles.lnHK3,'XData',hkX,'YData', hkData(4,1:60));
-    set(plotHandles.lnHK4,'XData',hkX,'YData', hkData(5,1:60));
-    set(plotHandles.lnHK5,'XData',hkX,'YData', hkData(6,1:60));
-    set(plotHandles.lnHK6,'XData',hkX,'YData', hkData(7,1:60));
-    set(plotHandles.lnHK7,'XData',hkX,'YData', hkData(8,1:60));
-    set(plotHandles.lnHK8,'XData',hkX,'YData', hkData(9,1:60));
-    set(plotHandles.lnHK9,'XData',hkX,'YData', hkData(10,1:60));
-    set(plotHandles.lnHK10,'XData',hkX,'YData', hkData(11,1:60));
-    set(plotHandles.lnHK11,'XData',hkX,'YData', hkData(12,1:60));
+function [plotHandles] = updateHKData(plotHandles, hkX, hkData, hkSecondsToDisplay)
+    hkLines = getappdata(plotHandles.fig, 'hkLines');
+    hkAxes = getappdata(plotHandles.fig, 'hkAxes');
+    
+    % update line handles' x and y arrays
+    for i = 1:length(hkLines)
+        set(plotHandles.(hkLines{i}),'XData',hkX,'YData', hkData(i,1:hkSecondsToDisplay));
+    end
+    
+    % apply Y Axis label scaling for easier viewing
+    for i = 1:length(hkAxes)
+        [S, L] = bounds(hkData(i,:));
+        if(L > S)
+            plotHandles.(hkAxes{i}).YLim = [(S/1.1), (L*1.1)];
+        end
+    end
 end
 
 
-function [plotHandles] = updateMiscData(plotHandles,magData,dataPacket,hkData,debugData,numSamplesToStore,numSamplesToDisplay)
+function [plotHandles] = updateMiscData(plotHandles,magData,dataPacket,debugData,numSamplesToStore,numSamplesToDisplay)
     % update hk data
     set(plotHandles.xavg,'String',sprintf('%5.3f',mean(magData(1,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore))));
     set(plotHandles.yavg,'String',sprintf('%5.3f',mean(magData(2,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore))));
@@ -111,18 +116,6 @@ function [plotHandles] = updateMiscData(plotHandles,magData,dataPacket,hkData,de
         set(plotHandles.packetlength,'String',sprintf('%04X',dataPacket.packetlength));
         set(plotHandles.fs,'String',sprintf('%04X',dataPacket.fs));
         set(plotHandles.ppsoffset,'String',sprintf('%08X',dataPacket.ppsoffset));
-        set(plotHandles.hk0,'String',sprintf('%04X',dataPacket.hk(1)));
-        set(plotHandles.hk1,'String',sprintf('%04X',dataPacket.hk(2)));
-        set(plotHandles.hk2,'String',sprintf('%04X',dataPacket.hk(3)));
-        set(plotHandles.hk3,'String',sprintf('%04X',dataPacket.hk(4)));
-        set(plotHandles.hk4,'String',sprintf('%04X',dataPacket.hk(5)));
-        set(plotHandles.hk5,'String',sprintf('%04X',dataPacket.hk(6)));
-        set(plotHandles.hk6,'String',sprintf('%04X',dataPacket.hk(7)));
-        set(plotHandles.hk7,'String',sprintf('%04X',dataPacket.hk(8)));
-        set(plotHandles.hk8,'String',sprintf('%04X',dataPacket.hk(9)));
-        set(plotHandles.hk9,'String',sprintf('%04X',dataPacket.hk(10)));
-        set(plotHandles.hk10,'String',sprintf('%04X',dataPacket.hk(11)));
-        set(plotHandles.hk11,'String',sprintf('%04X',dataPacket.hk(12)));
         set(plotHandles.boardid,'String',sprintf('%04X',dataPacket.boardid));
         set(plotHandles.sensorid,'String',sprintf('%04X',dataPacket.sensorid));
         set(plotHandles.crc,'String',sprintf('%04X',dataPacket.crc));
@@ -131,19 +124,6 @@ function [plotHandles] = updateMiscData(plotHandles,magData,dataPacket,hkData,de
         set(plotHandles.packetlength,'String',sprintf('%d',dataPacket.packetlength));
         set(plotHandles.fs,'String',sprintf('%d',dataPacket.fs));
         set(plotHandles.ppsoffset,'String',sprintf('%d',dataPacket.ppsoffset));
-
-        set(plotHandles.hk0,'String',sprintf('%4.2f',hkData(1)));
-        set(plotHandles.hk1,'String',sprintf('%4.2f',hkData(2)));
-        set(plotHandles.hk2,'String',sprintf('%4.2f',hkData(3)));
-        set(plotHandles.hk3,'String',sprintf('%4.2f',hkData(4)));
-        set(plotHandles.hk4,'String',sprintf('%4.2f',hkData(5)));
-        set(plotHandles.hk5,'String',sprintf('%4.2f',hkData(6)));
-        set(plotHandles.hk6,'String',sprintf('%4.2f',hkData(7)));
-        set(plotHandles.hk7,'String',sprintf('%4.2f',hkData(8)));
-        set(plotHandles.hk8,'String',sprintf('%2.2f',hkData(9)));
-        set(plotHandles.hk9,'String',sprintf('%2.2f',hkData(10)));
-        set(plotHandles.hk10,'String',sprintf('%2.2f',hkData(11)));
-        set(plotHandles.hk11,'String',sprintf('%2.2f',hkData(12)));
         set(plotHandles.boardid,'String',sprintf('%d',dataPacket.boardid));
         set(plotHandles.sensorid,'String',sprintf('%d',dataPacket.sensorid));
         set(plotHandles.crc,'String',sprintf('%04X',dataPacket.crc));

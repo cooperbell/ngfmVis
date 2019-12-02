@@ -2,12 +2,13 @@
 % To read from file: ngfmVis('file','capture09102019.txt','log.txt')
 % To read from serial: ngfmVis('serial','/dev/tty.usbserial-6961_0_0080','log.txt')
 function ngfmVis(varargin)
-    global VAR;
-    VAR = varargin;
-    
     % if no args, run input params GUI
     if nargin == 0
-        ngfmVisParam1;
+        fig = ngfmVisParam;
+        waitfor(fig, 'Visible', 'off');
+        varargin = getappdata(fig, 'params');
+        delete(fig);
+        clear fig
     end
 
     % parse input args
@@ -15,10 +16,7 @@ function ngfmVis(varargin)
     addRequired(p,'device',  @(x)any(strcmpi(x,{'serial', 'file'})));
     addRequired(p,'devicePath', @ischar);
     addRequired(p,'saveFile', @ischar);
-    parse(p,VAR{:});
-    
-    % clear global used with the input params GUI
-    clear global VAR;
+    parse(p,varargin{:});
 
     % load vars
     loadconfig;

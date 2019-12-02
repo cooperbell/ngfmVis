@@ -390,7 +390,8 @@ function [plotHandles] = setupMiscdata(plotHandles)
     leftJustify = 340;
     for i = 1:19
         uicontrol('Parent', plotHandles.tab1, 'style','text', ...
-            'String',names{i}, 'Position', [leftJustify 35 50 20]);
+                  'String',names{i}, 'FontWeight', 'bold', ...
+                  'Position', [leftJustify 35 50 20]);
         plotHandles.(miscData{i}) = uicontrol('Parent', plotHandles.tab1, ...
             'style','text','String','NaN','Position', [leftJustify 10 50 20]);
         leftJustify = leftJustify+50;

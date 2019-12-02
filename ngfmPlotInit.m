@@ -1,7 +1,7 @@
 % Author: David Miles
 % Modified by: Cooper Bell 11/27/2019
 % Sets up GUI. Contains all callbacks
-function [fig] = ngfmPlotInit(debugData)
+function [fig] = ngfmPlotInit()
     ngfmLoadConstants;
     
     % create figure
@@ -111,7 +111,8 @@ function [fig] = ngfmPlotInit(debugData)
     setappdata(fig, 'addPlot', []);
     setappdata(fig, 'permanenceFlag', 0);
     setappdata(fig, 'deletePlots', {});
-    handles = setupMiscdata(handles, debugData);
+    setappdata(fig, 'debugData', 0);
+    handles = setupMiscdata(handles);
     
     % Housekeeping data graphs
     ytmp = zeros(1,hkSecondsToDisplay);
@@ -142,6 +143,28 @@ function keyPressCallback(hObject, event)
     key = event.Character;
     if(key == 'q')
         setappdata(handles.fig, 'closereq', 1);
+    elseif(key == '`')
+        debugData = ~getappdata(handles.fig, 'debugData');
+        setappdata(handles.fig, 'debugData', debugData);
+        if(debugData)
+            handles.hk0.Title.String = 'HK0';
+            handles.hk1.Title.String = 'HK1';
+            handles.hk2.Title.String = 'HK2';
+            handles.hk3.Title.String = 'HK3';
+            handles.hk4.Title.String = 'HK4';
+            handles.hk5.Title.String = 'HK5';
+            handles.hk6.Title.String = 'HK6';
+            handles.hk7.Title.String = 'HK7';
+        else
+            handles.hk0.Title.String = '+1V2';
+            handles.hk1.Title.String = 'TSens';
+            handles.hk2.Title.String = 'TRef';
+            handles.hk3.Title.String = 'TBrd';
+            handles.hk4.Title.String = 'V+';
+            handles.hk5.Title.String = 'VIn';
+            handles.hk6.Title.String = 'Ref/2';
+            handles.hk7.Title.String = 'IIn';
+        end
     else
         setappdata(handles.fig, 'key', key);
     end
@@ -365,7 +388,7 @@ function [plotHandles] = setupHKData(plotHandles, xtmp, ytmp)
     plotHandles.hk11.XLabel.String = 'Packets ago';
 end
 
-function [plotHandles] = setupMiscdata(plotHandles, debugData)
+function [plotHandles] = setupMiscdata(plotHandles)
     uicontrol('Parent', plotHandles.tab1, 'style','text','String','PID', 'Position', [10 35 50 20]);
     plotHandles.pid = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [10 10 50 20]);
     
@@ -378,73 +401,73 @@ function [plotHandles] = setupMiscdata(plotHandles, debugData)
     uicontrol('Parent', plotHandles.tab1, 'style','text','String','PPS','Position', [160 35 50 20]);
     plotHandles.ppsoffset = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [160 10 50 20]);
     
-    % housekeeping data labels
-    mTextBoxHK0Label = uicontrol('Parent', plotHandles.tab1, 'style','text','Position', [210 35 50 20]);
-    plotHandles.hk0 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [210 10 50 20]);
-
-    mTextBoxHK1Label = uicontrol('Parent', plotHandles.tab1, 'style','text','Position', [260 35 50 20]);
-    plotHandles.hk1 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [260 10 50 20]);
-    
-    % do the same as above ^^^ deleting the var
-    mTextBoxHK2Label = uicontrol('Parent', plotHandles.tab1, 'style','text','Position', [310 35 50 20]);
-    mTextBoxHK2 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [310 10 50 20]);
-    plotHandles.hk2 = mTextBoxHK2;
-    
-    mTextBoxHK3Label = uicontrol('Parent', plotHandles.tab1, 'style','text','Position', [360 35 50 20]);
-    mTextBoxHK3 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [360 10 50 20]);
-    plotHandles.hk3 = mTextBoxHK3;
-    
-    mTextBoxHK4Label = uicontrol('Parent', plotHandles.tab1, 'style','text','Position', [410 35 50 20]);
-    mTextBoxHK4 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [410 10 50 20]);
-    plotHandles.hk4 = mTextBoxHK4;
-    
-    mTextBoxHK5Label = uicontrol('Parent', plotHandles.tab1, 'style','text','Position', [460 35 50 20]);
-    mTextBoxHK5 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [460 10 50 20]);
-    plotHandles.hk5 = mTextBoxHK5;
-    
-    mTextBoxHK6Label = uicontrol('Parent', plotHandles.tab1, 'style','text','Position', [510 35 50 20]);
-    mTextBoxHK6 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [510 10 50 20]);
-    plotHandles.hk6 = mTextBoxHK6;
-    
-    mTextBoxHK7Label = uicontrol('Parent', plotHandles.tab1, 'style','text','Position', [560 35 50 20]);
-    mTextBoxHK7 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [560 10 50 20]);
-    plotHandles.hk7 = mTextBoxHK7;
-    
-    uicontrol('Parent', plotHandles.tab1, 'style','text','String','HK8','Position', [610 35 50 20]);
-    mTextBoxHK8 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [610 10 50 20]);
-    plotHandles.hk8 = mTextBoxHK8;
-    
-    uicontrol('Parent', plotHandles.tab1, 'style','text','String','HK9','Position', [660 35 50 20]);
-    mTextBoxHK9 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [660 10 50 20]);
-    plotHandles.hk9 = mTextBoxHK9;
-    
-    uicontrol('Parent', plotHandles.tab1, 'style','text','String','HK10','Position', [710 35 50 20]);
-    mTextBoxHK10 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [710 10 50 20]);
-    plotHandles.hk10 = mTextBoxHK10;
-    
-    uicontrol('Parent', plotHandles.tab1, 'style','text','String','HK11','Position', [760 35 50 20]);
-    mTextBoxHK11 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [760 10 50 20]);
-    plotHandles.hk11 = mTextBoxHK11;
-    
-    if(debugData)
-        set(mTextBoxHK0Label,'String','HK0');
-        set(mTextBoxHK1Label,'String','HK1');
-        set(mTextBoxHK2Label,'String','HK2');
-        set(mTextBoxHK3Label,'String','HK3');
-        set(mTextBoxHK4Label,'String','HK4');
-        set(mTextBoxHK5Label,'String','HK5');
-        set(mTextBoxHK6Label,'String','HK6');
-        set(mTextBoxHK7Label,'String','HK7');
-    else
-        set(mTextBoxHK0Label,'String','+1V2');
-        set(mTextBoxHK1Label,'String','TSens');
-        set(mTextBoxHK2Label,'String','TRef');
-        set(mTextBoxHK3Label,'String','TBrd');
-        set(mTextBoxHK4Label,'String','V+');
-        set(mTextBoxHK5Label,'String','VIn');
-        set(mTextBoxHK6Label,'String','Ref/2');
-        set(mTextBoxHK7Label,'String','IIn');
-    end
+%     % housekeeping data labels
+%     mTextBoxHK0Label = uicontrol('Parent', plotHandles.tab1, 'style','text','Position', [210 35 50 20]);
+%     plotHandles.hk0 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [210 10 50 20]);
+% 
+%     mTextBoxHK1Label = uicontrol('Parent', plotHandles.tab1, 'style','text','Position', [260 35 50 20]);
+%     plotHandles.hk1 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [260 10 50 20]);
+%     
+%     % do the same as above ^^^ deleting the var
+%     mTextBoxHK2Label = uicontrol('Parent', plotHandles.tab1, 'style','text','Position', [310 35 50 20]);
+%     mTextBoxHK2 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [310 10 50 20]);
+%     plotHandles.hk2 = mTextBoxHK2;
+%     
+%     mTextBoxHK3Label = uicontrol('Parent', plotHandles.tab1, 'style','text','Position', [360 35 50 20]);
+%     mTextBoxHK3 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [360 10 50 20]);
+%     plotHandles.hk3 = mTextBoxHK3;
+%     
+%     mTextBoxHK4Label = uicontrol('Parent', plotHandles.tab1, 'style','text','Position', [410 35 50 20]);
+%     mTextBoxHK4 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [410 10 50 20]);
+%     plotHandles.hk4 = mTextBoxHK4;
+%     
+%     mTextBoxHK5Label = uicontrol('Parent', plotHandles.tab1, 'style','text','Position', [460 35 50 20]);
+%     mTextBoxHK5 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [460 10 50 20]);
+%     plotHandles.hk5 = mTextBoxHK5;
+%     
+%     mTextBoxHK6Label = uicontrol('Parent', plotHandles.tab1, 'style','text','Position', [510 35 50 20]);
+%     mTextBoxHK6 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [510 10 50 20]);
+%     plotHandles.hk6 = mTextBoxHK6;
+%     
+%     mTextBoxHK7Label = uicontrol('Parent', plotHandles.tab1, 'style','text','Position', [560 35 50 20]);
+%     mTextBoxHK7 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [560 10 50 20]);
+%     plotHandles.hk7 = mTextBoxHK7;
+%     
+%     uicontrol('Parent', plotHandles.tab1, 'style','text','String','HK8','Position', [610 35 50 20]);
+%     mTextBoxHK8 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [610 10 50 20]);
+%     plotHandles.hk8 = mTextBoxHK8;
+%     
+%     uicontrol('Parent', plotHandles.tab1, 'style','text','String','HK9','Position', [660 35 50 20]);
+%     mTextBoxHK9 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [660 10 50 20]);
+%     plotHandles.hk9 = mTextBoxHK9;
+%     
+%     uicontrol('Parent', plotHandles.tab1, 'style','text','String','HK10','Position', [710 35 50 20]);
+%     mTextBoxHK10 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [710 10 50 20]);
+%     plotHandles.hk10 = mTextBoxHK10;
+%     
+%     uicontrol('Parent', plotHandles.tab1, 'style','text','String','HK11','Position', [760 35 50 20]);
+%     mTextBoxHK11 = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [760 10 50 20]);
+%     plotHandles.hk11 = mTextBoxHK11;
+%     
+%     if(debugData)
+%         set(mTextBoxHK0Label,'String','HK0');
+%         set(mTextBoxHK1Label,'String','HK1');
+%         set(mTextBoxHK2Label,'String','HK2');
+%         set(mTextBoxHK3Label,'String','HK3');
+%         set(mTextBoxHK4Label,'String','HK4');
+%         set(mTextBoxHK5Label,'String','HK5');
+%         set(mTextBoxHK6Label,'String','HK6');
+%         set(mTextBoxHK7Label,'String','HK7');
+%     else
+%         set(mTextBoxHK0Label,'String','+1V2');
+%         set(mTextBoxHK1Label,'String','TSens');
+%         set(mTextBoxHK2Label,'String','TRef');
+%         set(mTextBoxHK3Label,'String','TBrd');
+%         set(mTextBoxHK4Label,'String','V+');
+%         set(mTextBoxHK5Label,'String','VIn');
+%         set(mTextBoxHK6Label,'String','Ref/2');
+%         set(mTextBoxHK7Label,'String','IIn');
+%     end
     
     uicontrol('Parent', plotHandles.tab1, 'style','text','String','Board ID','Position', [810 35 50 20]);
     boardIDLabel = uicontrol('Parent', plotHandles.tab1, 'style','text','String','NaN','Position', [810 10 50 20]);

@@ -46,13 +46,11 @@ magData(1,1:numSamplesToStore-assumedSamplingRate) = magData(1,assumedSamplingRa
 magData(2,1:numSamplesToStore-assumedSamplingRate) = magData(2,assumedSamplingRate+1:numSamplesToStore);
 magData(3,1:numSamplesToStore-assumedSamplingRate) = magData(3,assumedSamplingRate+1:numSamplesToStore);
 
-% magData(1,1:359,900) = magData(1, 101:360,000); %debug
 
 magData(1,numSamplesToStore-assumedSamplingRate+1:numSamplesToStore) = XDACScale*double(dataPacket.xdac) + XADCScale*double(dataPacket.xadc) + XOffset;
 magData(2,numSamplesToStore-assumedSamplingRate+1:numSamplesToStore) = YDACScale*double(dataPacket.ydac) + YADCScale*double(dataPacket.yadc) + YOffset;
 magData(3,numSamplesToStore-assumedSamplingRate+1:numSamplesToStore) = ZDACScale*double(dataPacket.zdac) + ZADCScale*double(dataPacket.zadc) + ZOffset;
 
-% magData(1,(359,899):360,000) = data% debug
 
 for i = 1:12
     hkData(i,2:hkSecondsToDisplay) = hkData(i,1:hkSecondsToDisplay-1);

@@ -1,4 +1,4 @@
-function [fig, closereq, key] = ngfmPlotUpdate(fig, dataPacket, magData, hkData, debugData)
+function [fig, closereq, key, debugData] = ngfmPlotUpdate(fig, dataPacket, magData, hkData)
     ngfmLoadConstants;
     handles = guidata(fig);
     
@@ -31,18 +31,7 @@ function [fig, closereq, key] = ngfmPlotUpdate(fig, dataPacket, magData, hkData,
     end
     
     % update hk data
-    set(handles.lnHK0,'XData',hkX,'YData', hkData(1,1:60));
-    set(handles.lnHK1,'XData',hkX,'YData', hkData(2,1:60));
-    set(handles.lnHK2,'XData',hkX,'YData', hkData(3,1:60));
-    set(handles.lnHK3,'XData',hkX,'YData', hkData(4,1:60));
-    set(handles.lnHK4,'XData',hkX,'YData', hkData(5,1:60));
-    set(handles.lnHK5,'XData',hkX,'YData', hkData(6,1:60));
-    set(handles.lnHK6,'XData',hkX,'YData', hkData(7,1:60));
-    set(handles.lnHK7,'XData',hkX,'YData', hkData(8,1:60));
-    set(handles.lnHK8,'XData',hkX,'YData', hkData(9,1:60));
-    set(handles.lnHK9,'XData',hkX,'YData', hkData(10,1:60));
-    set(handles.lnHK10,'XData',hkX,'YData', hkData(11,1:60));
-    set(handles.lnHK11,'XData',hkX,'YData', hkData(12,1:60));
+    handles = updateHKData(handles, hkX, hkData);
     
     % update misc data
 %     handles = updateMiscData(handles,magData,dataPacket,hkData,debugData,numSamplesToStore,numSamplesToDisplay);
@@ -86,7 +75,25 @@ function [fig, closereq, key] = ngfmPlotUpdate(fig, dataPacket, magData, hkData,
     fig = handles.fig;
     closereq = getappdata(handles.fig, 'closereq');
     key = getappdata(handles.fig, 'key');
+    debugData = getappdata(handles.fig, 'debugData');
 end
+
+% update hk data
+function [plotHandles] = updateHKData(plotHandles, hkX, hkData)
+    set(plotHandles.lnHK0,'XData',hkX,'YData', hkData(1,1:60));
+    set(plotHandles.lnHK1,'XData',hkX,'YData', hkData(2,1:60));
+    set(plotHandles.lnHK2,'XData',hkX,'YData', hkData(3,1:60));
+    set(plotHandles.lnHK3,'XData',hkX,'YData', hkData(4,1:60));
+    set(plotHandles.lnHK4,'XData',hkX,'YData', hkData(5,1:60));
+    set(plotHandles.lnHK5,'XData',hkX,'YData', hkData(6,1:60));
+    set(plotHandles.lnHK6,'XData',hkX,'YData', hkData(7,1:60));
+    set(plotHandles.lnHK7,'XData',hkX,'YData', hkData(8,1:60));
+    set(plotHandles.lnHK8,'XData',hkX,'YData', hkData(9,1:60));
+    set(plotHandles.lnHK9,'XData',hkX,'YData', hkData(10,1:60));
+    set(plotHandles.lnHK10,'XData',hkX,'YData', hkData(11,1:60));
+    set(plotHandles.lnHK11,'XData',hkX,'YData', hkData(12,1:60));
+end
+
 
 function [plotHandles] = updateMiscData(plotHandles,magData,dataPacket,hkData,debugData,numSamplesToStore,numSamplesToDisplay)
     % update hk data

@@ -94,7 +94,7 @@ function [plotHandles] = updateHKData(plotHandles, hkX, hkData, hkPacketsToDispl
     for i = 1:length(hkAxes)
         [S, L] = bounds(hkData(i,:));
         if(L > S)
-            plotHandles.(hkAxes{i}).YLim = [(S/1.1), (L*1.1)];
+            plotHandles.(hkAxes{i}).YLim = [(S/1.05), (L*1.05)];
         end
     end
 end

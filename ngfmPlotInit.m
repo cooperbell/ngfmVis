@@ -128,7 +128,7 @@ function [fig] = ngfmPlotInit()
     handles = setupMiscdata(handles);
     
     % Housekeeping data graphs
-    ytmp = zeros(1,hkSecondsToDisplay);
+    ytmp = zeros(1,hkPacketsToDisplay);
     handles = setupHKData(handles, hkX, ytmp);
    
     % store handles for use in callbacks

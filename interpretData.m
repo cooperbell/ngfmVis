@@ -53,12 +53,12 @@ magData(3,numSamplesToStore-assumedSamplingRate+1:numSamplesToStore) = ZDACScale
 
 
 for i = 1:12
-    hkData(i,2:hkSecondsToDisplay) = hkData(i,1:hkSecondsToDisplay-1);
+    hkData(i,2:hkPacketsToDisplay) = hkData(i,1:hkPacketsToDisplay-1);
 end
 
 
-hkData(1,1) = HK0Scale*double(dataPacket.hk(1))+HK0Offset; % debug
-hkData(2,1) = HK1Scale*double(dataPacket.hk(2))+HK1Offset; % debug
+hkData(1,1) = HK0Scale*double(dataPacket.hk(1))+HK0Offset; 
+hkData(2,1) = HK1Scale*double(dataPacket.hk(2))+HK1Offset; 
 hkData(3,1) = HK2Scale*double(dataPacket.hk(3))+HK2Offset;
 hkData(4,1) = HK3Scale*double(dataPacket.hk(4))+HK3Offset;
 hkData(5,1) = HK4Scale*double(dataPacket.hk(5))+HK4Offset;

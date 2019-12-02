@@ -31,7 +31,7 @@ function [fig, closereq, key, debugData] = ngfmPlotUpdate(fig, dataPacket, magDa
     end
     
     % update hk data
-    handles = updateHKData(handles, hkX, hkData, hkSecondsToDisplay);
+    handles = updateHKData(handles, hkX, hkData, hkPacketsToDisplay);
     
     % update misc data
     handles = updateMiscData(handles, magData, dataPacket, ...
@@ -81,13 +81,13 @@ function [fig, closereq, key, debugData] = ngfmPlotUpdate(fig, dataPacket, magDa
 end
 
 % update hk data
-function [plotHandles] = updateHKData(plotHandles, hkX, hkData, hkSecondsToDisplay)
+function [plotHandles] = updateHKData(plotHandles, hkX, hkData, hkPacketsToDisplay)
     hkLines = getappdata(plotHandles.fig, 'hkLines');
     hkAxes = getappdata(plotHandles.fig, 'hkAxes');
     
     % update line handles' x and y arrays
     for i = 1:length(hkLines)
-        set(plotHandles.(hkLines{i}),'XData',hkX,'YData', hkData(i,1:hkSecondsToDisplay));
+        set(plotHandles.(hkLines{i}),'XData',hkX,'YData', hkData(i,1:hkPacketsToDisplay));
     end
     
     % apply Y Axis label scaling for easier viewing

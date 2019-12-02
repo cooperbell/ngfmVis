@@ -1,4 +1,4 @@
-function [fig, closereq, key] = ngfmPlotUpdate(fig, dataPacket, magData, hkData, debugData)
+function [fig, closereq, key, debugData] = ngfmPlotUpdate(fig, dataPacket, magData, hkData)
     ngfmLoadConstants;
     handles = guidata(fig);
     
@@ -6,7 +6,7 @@ function [fig, closereq, key] = ngfmPlotUpdate(fig, dataPacket, magData, hkData,
     set(handles.lnx,'XData',x,'YData',magData(1,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore));
     set(handles.lny,'XData',x,'YData',magData(2,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore));
     set(handles.lnz,'XData',x,'YData',magData(3,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore));
-    
+
     % update spectra
     spectra = handles.currentPlotMenu.String(handles.currentPlotMenu.Value);
     try
@@ -30,8 +30,13 @@ function [fig, closereq, key] = ngfmPlotUpdate(fig, dataPacket, magData, hkData,
         handles = setupSpectraPlot(spectra,handles);
     end
     
+    % update hk data
+    handles = updateHKData(handles, hkX, hkData, hkPacketsToDisplay);
+    
     % update misc data
-    handles = updateMiscData(handles,magData,dataPacket,hkData,debugData,numSamplesToStore,numSamplesToDisplay);
+    handles = updateMiscData(handles, magData, dataPacket, ...
+        getappdata(handles.fig,'debugData'), numSamplesToStore, ...
+        numSamplesToDisplay);
     
     % save handles struct changes
     guidata(handles.fig, handles);
@@ -72,60 +77,52 @@ function [fig, closereq, key] = ngfmPlotUpdate(fig, dataPacket, magData, hkData,
     fig = handles.fig;
     closereq = getappdata(handles.fig, 'closereq');
     key = getappdata(handles.fig, 'key');
+    debugData = getappdata(handles.fig, 'debugData');
 end
 
-function [plotHandles] = updateMiscData(plotHandles,magData,dataPacket,hkData,debugData,numSamplesToStore,numSamplesToDisplay)
-    % update hk data
-    set(plotHandles.xavg,'String',sprintf('%5.3f',mean(magData(1,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore))));
-    set(plotHandles.yavg,'String',sprintf('%5.3f',mean(magData(2,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore))));
-    set(plotHandles.zavg,'String',sprintf('%5.3f',mean(magData(3,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore))));
+% update hk data
+function [plotHandles] = updateHKData(plotHandles, hkX, hkData, hkPacketsToDisplay)
+    hkLines = getappdata(plotHandles.fig, 'hkLines');
+    hkAxes = getappdata(plotHandles.fig, 'hkAxes');
+    
+    % update line handles' x and y arrays
+    for i = 1:length(hkLines)
+        set(plotHandles.(hkLines{i}),'XData',hkX,'YData', hkData(i,1:hkPacketsToDisplay));
+    end
+    
+    % apply Y Axis label scaling for easier viewing
+    for i = 1:length(hkAxes)
+        [S, L] = bounds(hkData(i,:));
+        if(L > S)
+            plotHandles.(hkAxes{i}).YLim = [(S/1.05), (L*1.05)];
+        end
+    end
+end
 
-    set(plotHandles.xstddev,'String',sprintf('%5.3f',std(magData(1,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore))));
-    set(plotHandles.ystddev,'String',sprintf('%5.3f',std(magData(2,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore))));
-    set(plotHandles.zstddev,'String',sprintf('%5.3f',std(magData(3,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore))));
-
+function [plotHandles] = updateMiscData(plotHandles,magData,dataPacket,debugData,numSamplesToStore,numSamplesToDisplay)
+    plotHandles.xavg.String = sprintf('%5.3f',mean(magData(1,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore)));
+    plotHandles.yavg.String = sprintf('%5.3f',mean(magData(2,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore)));
+    plotHandles.zavg.String = sprintf('%5.3f',mean(magData(3,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore)));
+    plotHandles.xstddev.String = sprintf('%5.3f',std(magData(1,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore)));
+    plotHandles.ystddev.String = sprintf('%5.3f',std(magData(2,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore)));
+    plotHandles.zstddev.String = sprintf('%5.3f',std(magData(3,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore)));
 
     if (debugData)
-        set(plotHandles.pid,'String',sprintf('%02X',dataPacket.pid));
-        set(plotHandles.packetlength,'String',sprintf('%04X',dataPacket.packetlength));
-        set(plotHandles.fs,'String',sprintf('%04X',dataPacket.fs));
-        set(plotHandles.ppsoffset,'String',sprintf('%08X',dataPacket.ppsoffset));
-        set(plotHandles.hk0,'String',sprintf('%04X',dataPacket.hk(1)));
-        set(plotHandles.hk1,'String',sprintf('%04X',dataPacket.hk(2)));
-        set(plotHandles.hk2,'String',sprintf('%04X',dataPacket.hk(3)));
-        set(plotHandles.hk3,'String',sprintf('%04X',dataPacket.hk(4)));
-        set(plotHandles.hk4,'String',sprintf('%04X',dataPacket.hk(5)));
-        set(plotHandles.hk5,'String',sprintf('%04X',dataPacket.hk(6)));
-        set(plotHandles.hk6,'String',sprintf('%04X',dataPacket.hk(7)));
-        set(plotHandles.hk7,'String',sprintf('%04X',dataPacket.hk(8)));
-        set(plotHandles.hk8,'String',sprintf('%04X',dataPacket.hk(9)));
-        set(plotHandles.hk9,'String',sprintf('%04X',dataPacket.hk(10)));
-        set(plotHandles.hk10,'String',sprintf('%04X',dataPacket.hk(11)));
-        set(plotHandles.hk11,'String',sprintf('%04X',dataPacket.hk(12)));
-        set(plotHandles.boardid,'String',sprintf('%04X',dataPacket.boardid));
-        set(plotHandles.sensorid,'String',sprintf('%04X',dataPacket.sensorid));
-        set(plotHandles.crc,'String',sprintf('%04X',dataPacket.crc));
+        plotHandles.pid.String = sprintf('%02X',dataPacket.pid);
+        plotHandles.packetlength.String = sprintf('%04X',dataPacket.packetlength);
+        plotHandles.fs.String = sprintf('%04X',dataPacket.fs);
+        plotHandles.ppsoffset.String = sprintf('%08X',dataPacket.ppsoffset);
+        plotHandles.boardid.String = sprintf('%04X',dataPacket.boardid);
+        plotHandles.sensorid.String = sprintf('%04X',dataPacket.sensorid);
+        plotHandles.crc.String = sprintf('%04X',dataPacket.crc);
     else
-        set(plotHandles.pid,'String',sprintf('%d',dataPacket.pid));
-        set(plotHandles.packetlength,'String',sprintf('%d',dataPacket.packetlength));
-        set(plotHandles.fs,'String',sprintf('%d',dataPacket.fs));
-        set(plotHandles.ppsoffset,'String',sprintf('%d',dataPacket.ppsoffset));
-
-        set(plotHandles.hk0,'String',sprintf('%4.2f',hkData(1)));
-        set(plotHandles.hk1,'String',sprintf('%4.2f',hkData(2)));
-        set(plotHandles.hk2,'String',sprintf('%4.2f',hkData(3)));
-        set(plotHandles.hk3,'String',sprintf('%4.2f',hkData(4)));
-        set(plotHandles.hk4,'String',sprintf('%4.2f',hkData(5)));
-        set(plotHandles.hk5,'String',sprintf('%4.2f',hkData(6)));
-        set(plotHandles.hk6,'String',sprintf('%4.2f',hkData(7)));
-        set(plotHandles.hk7,'String',sprintf('%4.2f',hkData(8)));
-        set(plotHandles.hk8,'String',sprintf('%2.2f',hkData(9)));
-        set(plotHandles.hk9,'String',sprintf('%2.2f',hkData(10)));
-        set(plotHandles.hk10,'String',sprintf('%2.2f',hkData(11)));
-        set(plotHandles.hk11,'String',sprintf('%2.2f',hkData(12)));
-        set(plotHandles.boardid,'String',sprintf('%d',dataPacket.boardid));
-        set(plotHandles.sensorid,'String',sprintf('%d',dataPacket.sensorid));
-        set(plotHandles.crc,'String',sprintf('%04X',dataPacket.crc));
+        plotHandles.pid.String = sprintf('%d',dataPacket.pid);
+        plotHandles.packetlength.String = sprintf('%d',dataPacket.packetlength);
+        plotHandles.fs.String = sprintf('%d',dataPacket.fs);
+        plotHandles.ppsoffset.String = sprintf('%d',dataPacket.ppsoffset);
+        plotHandles.boardid.String = sprintf('%d',dataPacket.boardid);
+        plotHandles.sensorid.String = sprintf('%d',dataPacket.sensorid);
+        plotHandles.crc.String = sprintf('%04X',dataPacket.crc);
     end
 end
 

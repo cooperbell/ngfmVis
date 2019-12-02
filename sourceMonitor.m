@@ -80,7 +80,8 @@ function sourceMonitor(qConstant, data_queue, kill_queue, device, devicePath, se
                     serialCounter = serialCounter - 1;
                 end
             end
-            pause(0.005); % This sets fread to ~175hz on my machine
+%             pause(0.005); % This sets fread to ~175hz on my machine
+            pause(0.01);
         end
     end
 end

@@ -23,8 +23,8 @@ function ngfmVis(varargin)
     % load vars
     loadconfig;
     ngfmLoadConstants;
-    debugData = 0;
     magData = zeros(3,numSamplesToStore);
+    hkData = zeros(12,hkPacketsToDisplay);
     
     %add the /lib folder to path
     addpath('lib', 'spectraPlots');
@@ -53,10 +53,7 @@ function ngfmVis(varargin)
 
     pause(2);
 
-    fig = ngfmPlotInit(debugData);
-
-    hkData = zeros(1,12);
-
+    fig = ngfmPlotInit();
 
     % Create a parallel pool if necessary
     if isempty(gcp())
@@ -177,7 +174,8 @@ function ngfmVis(varargin)
             % put a try catch in for now to handle the window being closed
             % until we can put in a proper close request callback
             try
-                [fig, closereq, key] = ngfmPlotUpdate(fig, dataPacket, magData, hkData, debugData);
+                [fig, closereq, key, debugData] = ...
+                    ngfmPlotUpdate(fig, dataPacket, magData, hkData);
             catch exception
                 closereq = 1;
                 fprintf('Plot error: %s\n', exception.message)
@@ -210,10 +208,10 @@ function ngfmVis(varargin)
                 end
         end
 
-        if (~isempty(key))
-            if strcmp(key,'`')
-                debugData = ~debugData;
-            elseif strcmp(p.Results.device, 'serial')
+        if(~isempty(key))
+%             if strcmp(key,'`')
+%                 debugData = ~debugData;
+            if strcmp(p.Results.device, 'serial')
                 %have this sent over serial worker
                 fwrite(s,k);
             end

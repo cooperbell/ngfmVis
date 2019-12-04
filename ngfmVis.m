@@ -2,12 +2,13 @@
 % To read from file: ngfmVis('file','capture09102019.txt','log.txt')
 % To read from serial: ngfmVis('serial','/dev/tty.usbserial-6961_0_0080','log.txt')
 function ngfmVis(varargin)
-    global VAR;
-    VAR = varargin;
-    
     % if no args, run input params GUI
     if nargin == 0
-        ngfmVisParam1;
+        fig = ngfmVisParam;
+        waitfor(fig, 'Visible', 'off');
+        varargin = getappdata(fig, 'params');
+        delete(fig);
+        clear fig
     end
 
     % parse input args
@@ -15,10 +16,7 @@ function ngfmVis(varargin)
     addRequired(p,'device',  @(x)any(strcmpi(x,{'serial', 'file'})));
     addRequired(p,'devicePath', @ischar);
     addRequired(p,'saveFile', @ischar);
-    parse(p,VAR{:});
-    
-    % clear global used with the input params GUI
-    clear global VAR;
+    parse(p,varargin{:});
 
     % load vars
     loadconfig;
@@ -26,7 +24,7 @@ function ngfmVis(varargin)
     magData = zeros(3,numSamplesToStore);
     hkData = zeros(12,hkPacketsToDisplay);
     
-    %add the /lib folder to path
+    %add the /lib and /spectraPlots folder to path
     addpath('lib', 'spectraPlots');
     
 
@@ -59,7 +57,9 @@ function ngfmVis(varargin)
     if isempty(gcp())
         parpool(1);
     end
-
+    
+    % https://www.mathworks.com/matlabcentral/answers/ ...
+    % 424145-how-can-i-send-data-on-the-fly-to-a-worker-when-using-parfeval
     % Get the worker to construct a data queue on which it can receive
     % messages from the main thread
     workerQueueConstant = parallel.pool.Constant(@parallel.pool.PollableDataQueue);
@@ -77,7 +77,9 @@ function ngfmVis(varargin)
     kill_queue = parallel.pool.PollableDataQueue;
     
     % call sourceMonitor asynchronously
-    F = parfeval(@sourceMonitor, 0, workerQueueConstant, data_queue, kill_queue, p.Results.device, p.Results.devicePath, serialBufferLen, dle, stx, etx);
+    F = parfeval(@sourceMonitor, 0, workerQueueConstant, data_queue, ...
+                 kill_queue, p.Results.device, p.Results.devicePath, ...
+                 serialBufferLen, dle, stx, etx);
     
     
     % main loop vars

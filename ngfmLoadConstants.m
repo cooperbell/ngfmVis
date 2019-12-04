@@ -2,7 +2,7 @@ serialBufferLen = 10000;
 assumedSamplingRate = 100;
 secondsToDisplay = 10;
 secondsToWelch = 60*60;
-hkPacketsToDisplay = 10;
+hkPacketsToDisplay = 100;
 
 nfft = 8*2048;
 

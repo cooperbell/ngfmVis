@@ -1,4 +1,4 @@
-function ngfmVisParam()
+function UIFigure = ngfmVisParam()
 
     % create figure
     UIFigure = uifigure;
@@ -74,10 +74,17 @@ function ngfmVisParam()
 
     % Create ConfigFileDropDown
     ConfigFileDropDown = uidropdown(RightPanel);
-    ConfigFileDropDown.Items = {'config.txt'};
-    ConfigFileDropDown.ValueChangedFcn = @GetConfigFiles;
     ConfigFileDropDown.Position = [35 119 130 22];
-    ConfigFileDropDown.Value = 'config.txt';
+    fileList = dir('*.txt');
+    numFiles = size(fileList);
+    files = {};
+    for i = 1:numFiles(1)
+        files = [files, fileList(i).name];
+    end
+    ConfigFileDropDown.Items = files;
+%     ConfigFileDropDown.ValueChangedFcn = @GetConfigFiles;
+    
+%     ConfigFileDropDown.Value = 'config.txt';
     S.ConfigFileDropDown = ConfigFileDropDown;
 
     % Create BrowseButton_2
@@ -148,22 +155,20 @@ function ngfmVisParam()
         end
     end
 
-    % Value changed function: ConfigFileDropDown
-    function GetConfigFiles(hObject, eventdata)
-        %fileList = dir('*.config');
-        %app.ConfigFileDropDown.Items = fileList;
-    end
-
     % Button pushed function: StartButton
     function StartButtonPushed(hObject, ~)
         handles = guidata(hObject);
         source = handles.SourceEditField.Value;
         inputSelect = handles.InputDropDown.Value;
         logTo = handles.LogtoEditField.Value;
+        % TODO
+        %configFile = handles.ConfigFileDropDown.Value;
         if(strcmp(logTo, ''))
             logTo = 'null';
         end
         setappdata(handles.figure, 'params', {lower(inputSelect), source, logTo});
+        %TODO
+        % setappdata(handles.figure, 'params', {lower(inputSelect), source, logTo, configFile});
         handles.figure.Visible = 'off';
     end
 end

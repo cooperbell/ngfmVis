@@ -10,6 +10,7 @@
 		<inputOffset>uint16(36)</inputOffset>
 	</input>
 	<hks>
+        <hk0>[1,1,0]</hk0>
 		<hk1>[1,1,0]</hk1>
 		<hk2>[1,1,0]</hk2>
 		<hk3>[1,1,0]</hk3>
@@ -43,6 +44,7 @@
 		<reservedB>uint8(0)</reservedB>
 		<reservedC>uint8(0)</reservedC>
 		<reservedD>uint8(0)</reservedD>
+		<reservedE>uint8(0)</reservedE>
 		<etx>uint8(0)</etx>
 		<crc>uint16(0)</crc>
 	</format>

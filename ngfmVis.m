@@ -21,7 +21,7 @@ function ngfmVis(varargin)
     clear global VAR;
 
     % load vars
-    loadconfig;
+    loadconfigxml;
     ngfmLoadConstants;
     magData = zeros(3,numSamplesToStore);
     hkData = zeros(12,hkPacketsToDisplay);
@@ -123,59 +123,65 @@ function ngfmVis(varargin)
 
         % parse packet
         if (newPacket)
-            dataPacket.dle =            tempPacket(1);
-            dataPacket.stx =            tempPacket(2);
-            dataPacket.pid =            tempPacket(3);
-            dataPacket.packettype =     tempPacket(4);
-            dataPacket.packetlength =   swapbytes(typecast(tempPacket(5:6), 'uint16'));
-            dataPacket.fs =             swapbytes(typecast(tempPacket(7:8), 'uint16'));
-            dataPacket.ppsoffset =      swapbytes(typecast(tempPacket(9:12), 'uint32'));
-            dataPacket.hk(1) =          swapbytes(typecast(tempPacket(13:14), 'uint16'));
-            dataPacket.hk(2) =          swapbytes(typecast(tempPacket(15:16), 'uint16'));
-            dataPacket.hk(3) =          swapbytes(typecast(tempPacket(17:18), 'uint16'));
-            dataPacket.hk(4) =          swapbytes(typecast(tempPacket(19:20), 'uint16'));
-            dataPacket.hk(5) =          swapbytes(typecast(tempPacket(21:22), 'uint16'));
-            dataPacket.hk(6) =          swapbytes(typecast(tempPacket(23:24), 'uint16'));
-            dataPacket.hk(7) =          swapbytes(typecast(tempPacket(25:26), 'uint16'));
-            dataPacket.hk(8) =          swapbytes(typecast(tempPacket(27:28), 'uint16'));
-            dataPacket.hk(9) =          swapbytes(typecast(tempPacket(29:30), 'uint16'));
-            dataPacket.hk(10) =         swapbytes(typecast(tempPacket(31:32), 'uint16'));
-            dataPacket.hk(11) =         swapbytes(typecast(tempPacket(33:34), 'uint16'));
-            dataPacket.hk(12) =         swapbytes(typecast(tempPacket(35:36), 'uint16'));
-
-            dataOffset = inputOffset;
-            for n = 1:100
-                dataPacket.xdac(n) =    typecast( swapbytes( typecast( tempPacket(dataOffset + (n-1)*12 + 1:dataOffset + (n-1)*12 + 2), 'uint16') ), 'int16' );
-                dataPacket.ydac(n) =    typecast( swapbytes( typecast( tempPacket(dataOffset + (n-1)*12 + 5:dataOffset + (n-1)*12 + 6), 'uint16') ), 'int16' );
-                dataPacket.zdac(n) =    typecast( swapbytes( typecast( tempPacket(dataOffset + (n-1)*12 + 9:dataOffset + (n-1)*12 + 10), 'uint16') ), 'int16' );
-
-                dataPacket.xadc(n) =    typecast( swapbytes( typecast( tempPacket(dataOffset + (n-1)*12 + 3:dataOffset + (n-1)*12 + 4), 'uint16') ), 'int16' );
-                dataPacket.yadc(n) =    typecast( swapbytes( typecast( tempPacket(dataOffset + (n-1)*12 + 7:dataOffset + (n-1)*12 + 8), 'uint16') ), 'int16' );
-                dataPacket.zadc(n) =    typecast( swapbytes( typecast( tempPacket(dataOffset + (n-1)*12 + 11:dataOffset + (n-1)*12 + 12), 'uint16') ), 'int16' );
-
-            end
-
-            dataOffset = dataOffset + 100*12;
-
-            dataPacket.boardid =        swapbytes(typecast(tempPacket(dataOffset+1:dataOffset+2), 'uint16'));
-            dataPacket.sensorid =       swapbytes(typecast(tempPacket(dataOffset+3:dataOffset+4), 'uint16'));
-            dataPacket.reservedA =      typecast(tempPacket(dataOffset+5), 'uint8');
-            dataPacket.reservedB =      typecast(tempPacket(dataOffset+6), 'uint8');
-            dataPacket.reservedC =      typecast(tempPacket(dataOffset+7), 'uint8');
-            dataPacket.reservedD =      typecast(tempPacket(dataOffset+8), 'uint8');
-            dataPacket.reservedE =      typecast(tempPacket(dataOffset+9), 'uint8');
-            dataPacket.etx =            typecast(tempPacket(dataOffset+10), 'uint8');
-            dataPacket.crc =            swapbytes(typecast(tempPacket(dataOffset+11:dataOffset+12), 'uint16'));
-
+            testpack = getDataPacket(dataPacket, tempPacket, inputOffset);
+%             dataPacket.dle =            tempPacket(1);
+%             dataPacket.stx =            tempPacket(2);
+%             dataPacket.pid =            tempPacket(3);
+%             dataPacket.packettype =     tempPacket(4);
+%             dataPacket.packetlength =   swapbytes(typecast(tempPacket(5:6), 'uint16'));
+%             dataPacket.fs =             swapbytes(typecast(tempPacket(7:8), 'uint16'));
+%             dataPacket.ppsoffset =      swapbytes(typecast(tempPacket(9:12), 'uint32'));
+%             dataPacket.hk(1) =          swapbytes(typecast(tempPacket(13:14), 'uint16'));
+%             dataPacket.hk(2) =          swapbytes(typecast(tempPacket(15:16), 'uint16'));
+%             dataPacket.hk(3) =          swapbytes(typecast(tempPacket(17:18), 'uint16'));
+%             dataPacket.hk(4) =          swapbytes(typecast(tempPacket(19:20), 'uint16'));
+%             dataPacket.hk(5) =          swapbytes(typecast(tempPacket(21:22), 'uint16'));
+%             dataPacket.hk(6) =          swapbytes(typecast(tempPacket(23:24), 'uint16'));
+%             dataPacket.hk(7) =          swapbytes(typecast(tempPacket(25:26), 'uint16'));
+%             dataPacket.hk(8) =          swapbytes(typecast(tempPacket(27:28), 'uint16'));
+%             dataPacket.hk(9) =          swapbytes(typecast(tempPacket(29:30), 'uint16'));
+%             dataPacket.hk(10) =         swapbytes(typecast(tempPacket(31:32), 'uint16'));
+%             dataPacket.hk(11) =         swapbytes(typecast(tempPacket(33:34), 'uint16'));
+%             dataPacket.hk(12) =         swapbytes(typecast(tempPacket(35:36), 'uint16'));
+% 
+%             dataOffset = inputOffset;
+%             for n = 1:100
+%                 dataPacket.xdac(n) =    typecast( swapbytes( typecast( tempPacket(dataOffset + (n-1)*12 + 1:dataOffset + (n-1)*12 + 2), 'uint16') ), 'int16' );
+%                 dataPacket.ydac(n) =    typecast( swapbytes( typecast( tempPacket(dataOffset + (n-1)*12 + 5:dataOffset + (n-1)*12 + 6), 'uint16') ), 'int16' );
+%                 dataPacket.zdac(n) =    typecast( swapbytes( typecast( tempPacket(dataOffset + (n-1)*12 + 9:dataOffset + (n-1)*12 + 10), 'uint16') ), 'int16' );
+% 
+%                 dataPacket.xadc(n) =    typecast( swapbytes( typecast( tempPacket(dataOffset + (n-1)*12 + 3:dataOffset + (n-1)*12 + 4), 'uint16') ), 'int16' );
+%                 dataPacket.yadc(n) =    typecast( swapbytes( typecast( tempPacket(dataOffset + (n-1)*12 + 7:dataOffset + (n-1)*12 + 8), 'uint16') ), 'int16' );
+%                 dataPacket.zadc(n) =    typecast( swapbytes( typecast( tempPacket(dataOffset + (n-1)*12 + 11:dataOffset + (n-1)*12 + 12), 'uint16') ), 'int16' );
+% 
+%             end
+% 
+%             dataOffset = dataOffset + 100*12;
+% 
+%             dataPacket.boardid =        swapbytes(typecast(tempPacket(dataOffset+1:dataOffset+2), 'uint16'));
+%             dataPacket.sensorid =       swapbytes(typecast(tempPacket(dataOffset+3:dataOffset+4), 'uint16'));
+%             dataPacket.reservedA =      typecast(tempPacket(dataOffset+5), 'uint8');
+%             dataPacket.reservedB =      typecast(tempPacket(dataOffset+6), 'uint8');
+%             dataPacket.reservedC =      typecast(tempPacket(dataOffset+7), 'uint8');
+%             dataPacket.reservedD =      typecast(tempPacket(dataOffset+8), 'uint8');
+%             dataPacket.reservedE =      typecast(tempPacket(dataOffset+9), 'uint8');
+%             dataPacket.etx =            typecast(tempPacket(dataOffset+10), 'uint8');
+%             dataPacket.crc =            swapbytes(typecast(tempPacket(dataOffset+11:dataOffset+12), 'uint16'));
+% 
+%             if(isequaln(testpack, dataPacket))
+%                 asd = 0;
+%             else
+%                 asd = 1;
+%             end
             fprintf('Packet parser PID = %d.\n', dataPacket.pid);
 
-            [dataPacket, magData, hkData] = interpretData( dataPacket, magData, hkData, hk);
+            [testpack, magData, hkData] = interpretData( testpack, magData, hkData, hk);
             
             % put a try catch in for now to handle the window being closed
             % until we can put in a proper close request callback
             try
                 [fig, closereq, key, debugData] = ...
-                    ngfmPlotUpdate(fig, dataPacket, magData, hkData);
+                    ngfmPlotUpdate(fig, testpack, magData, hkData);
             catch exception
                 closereq = 1;
                 fprintf('Plot error: %s\n', exception.message)

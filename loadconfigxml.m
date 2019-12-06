@@ -1,4 +1,5 @@
 
+
 xmlconfig = 'pgconfig.xml';
 configFIle= xml2struct(xmlconfig);
 config = configFIle.config;
@@ -23,7 +24,11 @@ for i=1:numel(hk_field)
     catch
         value = hks.(hk_field{i}).Text;
     end
-    eval([hk_field{i} '= value;']);
+    if i == 1
+        hk = value;
+    else
+        hk = [hk;value];
+    end
 end
 
 pktname = fieldnames(pkt);

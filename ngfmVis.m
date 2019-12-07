@@ -23,9 +23,10 @@ function ngfmVis(varargin)
     ngfmLoadConstants;
     magData = zeros(3,numSamplesToStore);
     hkData = zeros(12,hkPacketsToDisplay);
+    logFile = p.Results.saveFile;
     
-    %add the /lib and /spectraPlots folder to path
-    addpath('lib', 'spectraPlots');
+    %add subfolders to path
+    addpath('lib', 'spectraPlots', 'log');
     
 
     % Print whether the mode is serial or file
@@ -36,15 +37,18 @@ function ngfmVis(varargin)
     end
 
     % enable logging to a specified file or don't
-    if (strcmp(p.Results.saveFile, 'null'))
+    if (strcmp(logFile, 'null'))
         loggingEnabled = 0;
     else
         loggingEnabled = 1;
-        logFileHandle = fopen(p.Results.saveFile, 'w+');
+        if(strcmp(logFile, ''))
+            logFile = strcat('log_', datestr(now,'yyyymmdd-HHMMSS'), '.txt');
+        end
+        logFileHandle = fopen(strcat('log/',logFile), 'w+');
     end
 
     if (loggingEnabled == 1)
-        fprintf('Logging data to: %s\n', p.Results.saveFile);
+        fprintf('Logging data to: %s\n', logFile);
     else
         fprintf('Logging data DISABLED.\n');
     end
@@ -69,16 +73,16 @@ function ngfmVis(varargin)
 
     % create a pollable data queue. The worker will send raw data to this
     % for the main thread to use
-    data_queue = parallel.pool.PollableDataQueue;
+    dataQueue = parallel.pool.PollableDataQueue;
     
-    % create a queue for killing the program. The worker will send a value
-    % to this that the main thread will see instantly instead of it being
-    % pushed to the back of the data queue
-    kill_queue = parallel.pool.PollableDataQueue;
+    % create a queue for the worker to communicate back to the program.
+    % The worker will send a value to this that the main thread will see
+    % instantly instead of it being pushed to the back of the data queue
+    workerQueue = parallel.pool.PollableDataQueue;
     
     % call sourceMonitor asynchronously
-    F = parfeval(@sourceMonitor, 0, workerQueueConstant, data_queue, ...
-                 kill_queue, p.Results.device, p.Results.devicePath, ...
+    F = parfeval(@sourceMonitor, 0, workerQueueConstant, dataQueue, ...
+                 workerQueue, p.Results.device, p.Results.devicePath, ...
                  serialBufferLen, dle, stx, etx);
     
     
@@ -92,7 +96,7 @@ function ngfmVis(varargin)
     % main loop
     while (~done)
         % check if the worker said it's done
-        [data, kill_msg] = poll(kill_queue);
+        [data, kill_msg] = poll(workerQueue);
         if(kill_msg)
             if(data == 0)
                 fprintf('Serial Port or File closed\n');
@@ -102,7 +106,7 @@ function ngfmVis(varargin)
         end
         
         % check if there's data to read
-        [data, data_available] = poll(data_queue); 
+        [data, data_available] = poll(dataQueue, 1); 
         if(data_available)
             if(isa(data,'cell'))
                 fprintf('%s\n', char(data));
@@ -125,49 +129,7 @@ function ngfmVis(varargin)
 
         % parse packet
         if (newPacket)
-            dataPacket.dle =            tempPacket(1);
-            dataPacket.stx =            tempPacket(2);
-            dataPacket.pid =            tempPacket(3);
-            dataPacket.packettype =     tempPacket(4);
-            dataPacket.packetlength =   swapbytes(typecast(tempPacket(5:6), 'uint16'));
-            dataPacket.fs =             swapbytes(typecast(tempPacket(7:8), 'uint16'));
-            dataPacket.ppsoffset =      swapbytes(typecast(tempPacket(9:12), 'uint32'));
-            dataPacket.hk(1) =          swapbytes(typecast(tempPacket(13:14), 'uint16'));
-            dataPacket.hk(2) =          swapbytes(typecast(tempPacket(15:16), 'uint16'));
-            dataPacket.hk(3) =          swapbytes(typecast(tempPacket(17:18), 'uint16'));
-            dataPacket.hk(4) =          swapbytes(typecast(tempPacket(19:20), 'uint16'));
-            dataPacket.hk(5) =          swapbytes(typecast(tempPacket(21:22), 'uint16'));
-            dataPacket.hk(6) =          swapbytes(typecast(tempPacket(23:24), 'uint16'));
-            dataPacket.hk(7) =          swapbytes(typecast(tempPacket(25:26), 'uint16'));
-            dataPacket.hk(8) =          swapbytes(typecast(tempPacket(27:28), 'uint16'));
-            dataPacket.hk(9) =          swapbytes(typecast(tempPacket(29:30), 'uint16'));
-            dataPacket.hk(10) =         swapbytes(typecast(tempPacket(31:32), 'uint16'));
-            dataPacket.hk(11) =         swapbytes(typecast(tempPacket(33:34), 'uint16'));
-            dataPacket.hk(12) =         swapbytes(typecast(tempPacket(35:36), 'uint16'));
-
-            dataOffset = inputOffset;
-            for n = 1:100
-                dataPacket.xdac(n) =    typecast( swapbytes( typecast( tempPacket(dataOffset + (n-1)*12 + 1:dataOffset + (n-1)*12 + 2), 'uint16') ), 'int16' );
-                dataPacket.ydac(n) =    typecast( swapbytes( typecast( tempPacket(dataOffset + (n-1)*12 + 5:dataOffset + (n-1)*12 + 6), 'uint16') ), 'int16' );
-                dataPacket.zdac(n) =    typecast( swapbytes( typecast( tempPacket(dataOffset + (n-1)*12 + 9:dataOffset + (n-1)*12 + 10), 'uint16') ), 'int16' );
-
-                dataPacket.xadc(n) =    typecast( swapbytes( typecast( tempPacket(dataOffset + (n-1)*12 + 3:dataOffset + (n-1)*12 + 4), 'uint16') ), 'int16' );
-                dataPacket.yadc(n) =    typecast( swapbytes( typecast( tempPacket(dataOffset + (n-1)*12 + 7:dataOffset + (n-1)*12 + 8), 'uint16') ), 'int16' );
-                dataPacket.zadc(n) =    typecast( swapbytes( typecast( tempPacket(dataOffset + (n-1)*12 + 11:dataOffset + (n-1)*12 + 12), 'uint16') ), 'int16' );
-
-            end
-
-            dataOffset = dataOffset + 100*12;
-
-            dataPacket.boardid =        swapbytes(typecast(tempPacket(dataOffset+1:dataOffset+2), 'uint16'));
-            dataPacket.sensorid =       swapbytes(typecast(tempPacket(dataOffset+3:dataOffset+4), 'uint16'));
-            dataPacket.reservedA =      typecast(tempPacket(dataOffset+5), 'uint8');
-            dataPacket.reservedB =      typecast(tempPacket(dataOffset+6), 'uint8');
-            dataPacket.reservedC =      typecast(tempPacket(dataOffset+7), 'uint8');
-            dataPacket.reservedD =      typecast(tempPacket(dataOffset+8), 'uint8');
-            dataPacket.reservedE =      typecast(tempPacket(dataOffset+9), 'uint8');
-            dataPacket.etx =            typecast(tempPacket(dataOffset+10), 'uint8');
-            dataPacket.crc =            swapbytes(typecast(tempPacket(dataOffset+11:dataOffset+12), 'uint16'));
+            dataPacket = parsePacket(tempPacket, inputOffset);
 
             fprintf('Packet parser PID = %d.\n', dataPacket.pid);
 
@@ -230,4 +192,50 @@ function ngfmVis(varargin)
     if (loggingEnabled)
         fclose(logFileHandle);
     end
+end
+
+function dataPacket = parsePacket(tempPacket, inputOffset)
+    dataPacket.dle =            tempPacket(1);
+    dataPacket.stx =            tempPacket(2);
+    dataPacket.pid =            tempPacket(3);
+    dataPacket.packettype =     tempPacket(4);
+    dataPacket.packetlength =   swapbytes(typecast(tempPacket(5:6), 'uint16'));
+    dataPacket.fs =             swapbytes(typecast(tempPacket(7:8), 'uint16'));
+    dataPacket.ppsoffset =      swapbytes(typecast(tempPacket(9:12), 'uint32'));
+    dataPacket.hk(1) =          swapbytes(typecast(tempPacket(13:14), 'uint16'));
+    dataPacket.hk(2) =          swapbytes(typecast(tempPacket(15:16), 'uint16'));
+    dataPacket.hk(3) =          swapbytes(typecast(tempPacket(17:18), 'uint16'));
+    dataPacket.hk(4) =          swapbytes(typecast(tempPacket(19:20), 'uint16'));
+    dataPacket.hk(5) =          swapbytes(typecast(tempPacket(21:22), 'uint16'));
+    dataPacket.hk(6) =          swapbytes(typecast(tempPacket(23:24), 'uint16'));
+    dataPacket.hk(7) =          swapbytes(typecast(tempPacket(25:26), 'uint16'));
+    dataPacket.hk(8) =          swapbytes(typecast(tempPacket(27:28), 'uint16'));
+    dataPacket.hk(9) =          swapbytes(typecast(tempPacket(29:30), 'uint16'));
+    dataPacket.hk(10) =         swapbytes(typecast(tempPacket(31:32), 'uint16'));
+    dataPacket.hk(11) =         swapbytes(typecast(tempPacket(33:34), 'uint16'));
+    dataPacket.hk(12) =         swapbytes(typecast(tempPacket(35:36), 'uint16'));
+
+    dataOffset = inputOffset;
+    for n = 1:100
+        dataPacket.xdac(n) =    typecast( swapbytes( typecast( tempPacket(dataOffset + (n-1)*12 + 1:dataOffset + (n-1)*12 + 2), 'uint16') ), 'int16' );
+        dataPacket.ydac(n) =    typecast( swapbytes( typecast( tempPacket(dataOffset + (n-1)*12 + 5:dataOffset + (n-1)*12 + 6), 'uint16') ), 'int16' );
+        dataPacket.zdac(n) =    typecast( swapbytes( typecast( tempPacket(dataOffset + (n-1)*12 + 9:dataOffset + (n-1)*12 + 10), 'uint16') ), 'int16' );
+
+        dataPacket.xadc(n) =    typecast( swapbytes( typecast( tempPacket(dataOffset + (n-1)*12 + 3:dataOffset + (n-1)*12 + 4), 'uint16') ), 'int16' );
+        dataPacket.yadc(n) =    typecast( swapbytes( typecast( tempPacket(dataOffset + (n-1)*12 + 7:dataOffset + (n-1)*12 + 8), 'uint16') ), 'int16' );
+        dataPacket.zadc(n) =    typecast( swapbytes( typecast( tempPacket(dataOffset + (n-1)*12 + 11:dataOffset + (n-1)*12 + 12), 'uint16') ), 'int16' );
+
+    end
+
+    dataOffset = dataOffset + 100*12;
+
+    dataPacket.boardid =        swapbytes(typecast(tempPacket(dataOffset+1:dataOffset+2), 'uint16'));
+    dataPacket.sensorid =       swapbytes(typecast(tempPacket(dataOffset+3:dataOffset+4), 'uint16'));
+    dataPacket.reservedA =      typecast(tempPacket(dataOffset+5), 'uint8');
+    dataPacket.reservedB =      typecast(tempPacket(dataOffset+6), 'uint8');
+    dataPacket.reservedC =      typecast(tempPacket(dataOffset+7), 'uint8');
+    dataPacket.reservedD =      typecast(tempPacket(dataOffset+8), 'uint8');
+    dataPacket.reservedE =      typecast(tempPacket(dataOffset+9), 'uint8');
+    dataPacket.etx =            typecast(tempPacket(dataOffset+10), 'uint8');
+    dataPacket.crc =            swapbytes(typecast(tempPacket(dataOffset+11:dataOffset+12), 'uint16'));
 end

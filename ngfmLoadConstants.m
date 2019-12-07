@@ -13,7 +13,7 @@ NumYTicks = 5;
 %XADCScale = -0.1273;
 %XOffset = 0;
 
-XDACScale = 0;
+XDACScale = 1.94;
 XADCScale = 0.0134/1.05;
 XOffset = 0;
 

@@ -21,6 +21,13 @@ function UIFigure = ngfmVisParam()
     RightPanel.Layout.Row = 1;
     RightPanel.Layout.Column = 2;
 
+    % Create SourceEditFieldLabel
+    TitleLabel = uilabel(RightPanel);
+    TitleLabel.Position = [230 430 250 40];
+    TitleLabel.Text = 'Input Parameters ';
+    TitleLabel.FontSize = 24;
+    S.SourceEditFieldLabel = TitleLabel;
+    
 
     % Create SourceEditFieldLabel
     SourceEditFieldLabel = uilabel(RightPanel);

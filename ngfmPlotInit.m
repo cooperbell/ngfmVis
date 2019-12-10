@@ -16,6 +16,8 @@ function [fig] = ngfmPlotInit()
     tabgp = uitabgroup(fig);
     handles.tab1 = uitab(tabgp,'Title','ngfmVis', 'Tag', 'tab1');
     handles.tab2 = uitab(tabgp,'Title','Housekeeping Data', 'Tag', 'tab2');
+    handles.tab3 = uitab(tabgp,'Title','Hardware Commands', 'Tag', 'tab3');
+
                             
     % create axes
     handles.ax = axes('Parent', handles.tab1, 'Position', [0.07 0.70 0.39 0.25], ...
@@ -131,6 +133,9 @@ function [fig] = ngfmPlotInit()
     ytmp = zeros(1,hkPacketsToDisplay);
     handles = setupHKData(handles, hkX, ytmp);
    
+    %Hardware Command
+    ngfmHardwareCmd(fig, handles);
+    
     % store handles for use in callbacks
     guidata(fig, handles)
 end

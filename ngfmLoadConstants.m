@@ -2,7 +2,7 @@ serialBufferLen = 10000;
 assumedSamplingRate = 100;
 secondsToDisplay = 10;
 secondsToWelch = 60*60;
-hkPacketsToDisplay = 10;
+hkPacketsToDisplay = 100;
 
 nfft = 8*2048;
 
@@ -13,7 +13,7 @@ NumYTicks = 5;
 %XADCScale = -0.1273;
 %XOffset = 0;
 
-XDACScale = 0;
+XDACScale = 1.94;
 XADCScale = 0.0134/1.05;
 XOffset = 0;
 

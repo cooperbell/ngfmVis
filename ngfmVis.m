@@ -6,6 +6,9 @@ function ngfmVis(varargin)
     if nargin == 0
         fig = ngfmVisParam;
         waitfor(fig, 'Visible', 'off');
+        if(~isempty(fig))
+            return
+        end
         varargin = getappdata(fig, 'params');
         delete(fig);
         clear fig

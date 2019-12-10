@@ -1,3 +1,4 @@
+
 config = [];
 fid = fopen('config.txt');
 line = fgetl(fid);

@@ -19,7 +19,7 @@ function ngfmVis(varargin)
     parse(p,varargin{:});
 
     % load vars
-    loadconfig;
+    loadconfigxml;
     ngfmLoadConstants;
     magData = zeros(3,numSamplesToStore);
     hkData = zeros(12,hkPacketsToDisplay);
@@ -129,17 +129,17 @@ function ngfmVis(varargin)
 
         % parse packet
         if (newPacket)
-            dataPacket = parsePacket(tempPacket, inputOffset);
+            testpack = getDataPacket(dataPacket, tempPacket, inputOffset);
+            
+            fprintf('Packet parser PID = %d.\n', testpack.pid);
 
-            fprintf('Packet parser PID = %d.\n', dataPacket.pid);
-
-            [dataPacket, magData, hkData] = interpretData( dataPacket, magData, hkData, hk);
+            [testpack, magData, hkData] = interpretData( testpack, magData, hkData, hk);
             
             % put a try catch in for now to handle the window being closed
             % until we can put in a proper close request callback
             try
                 [fig, closereq, key, debugData] = ...
-                    ngfmPlotUpdate(fig, dataPacket, magData, hkData);
+                    ngfmPlotUpdate(fig, testpack, magData, hkData);
             catch exception
                 closereq = 1;
                 fprintf('Plot error: %s\n', exception.message)

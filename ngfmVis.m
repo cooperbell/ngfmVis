@@ -88,8 +88,8 @@ function ngfmVis(varargin)
     % get the worker's queue back for main to use
     % This queue is for main to send data over to allow the async worker
     % to terminate gracefully, avoiding serial port and thread lockups
-    [data, data_available] = poll(dataQueue, 1);
-    if(data_available)
+    [data, dataAvailable] = poll(dataQueue, 1);
+    if(dataAvailable)
         workerQueue = data;
     end
 
@@ -104,8 +104,8 @@ function ngfmVis(varargin)
     % main loop
     while (~done)
         % check if the worker said it's done
-        [data, kill_msg] = poll(workerDoneQueue);
-        if(kill_msg)
+        [data, dataAvailable] = poll(workerDoneQueue);
+        if(dataAvailable)
             if(data == 0)
                 fprintf('Serial Port or File closed\n');
                 done = 1;
@@ -114,8 +114,8 @@ function ngfmVis(varargin)
         end
         
         % check if there's data to read
-        [data, data_available] = poll(dataQueue, 1); 
-        if(data_available)
+        [data, dataAvailable] = poll(dataQueue, 1); 
+        if(dataAvailable)
             if(isa(data,'cell'))
                 fprintf('%s\n', char(data));
                 done = 1;

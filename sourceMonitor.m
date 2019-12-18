@@ -3,7 +3,7 @@
 % It's purpose is to capture data from the source (port mostly)
 % unencumbered from the rest of the program and send that data back to the
 % main thread.
-function sourceMonitor(workerQueueConstant, dataQueue, kill_queue, device, devicePath, serialBufferLen, dle, stx, etx)
+function sourceMonitor(workerQueueConstant, dataQueue, workerDoneQueue, device, devicePath, serialBufferLen, dle, stx, etx)
     % construct queue that main can use to talk to this worker
     % and send it back for it to use
     workerQueue = workerQueueConstant.Value;
@@ -44,7 +44,7 @@ function sourceMonitor(workerQueueConstant, dataQueue, kill_queue, device, devic
             clear s
             
             % send termination value
-            send(kill_queue, 0);
+            send(workerDoneQueue, 0);
             finished = 1;
             continue;
         else

@@ -3,8 +3,12 @@
 % It's purpose is to capture data from the source (port mostly)
 % unencumbered from the rest of the program and send that data back to the
 % main thread.
-function sourceMonitor(qConstant, data_queue, kill_queue, device, devicePath, serialBufferLen, dle, stx, etx)
-    q = qConstant.Value;
+function sourceMonitor(workerQueueConstant, dataQueue, workerDoneQueue, device, devicePath, serialBufferLen, dle, stx, etx)
+    % construct queue that main can use to talk to this worker
+    % and send it back for it to use
+    workerQueue = workerQueueConstant.Value;
+    send(dataQueue, workerQueue);
+    
     finished = 0;
     serialBuffer = zeros(serialBufferLen);
     serialCounter = 1;
@@ -18,21 +22,21 @@ function sourceMonitor(qConstant, data_queue, kill_queue, device, devicePath, se
             flushinput(s);
         catch exception
             vec = {exception.message};
-            send(data_queue, vec);
+            send(dataQueue, vec);
             return;
         end
     else
         if (exist(devicePath, 'file') == 2)
             s = fopen(devicePath);
         else
-            send(data_queue, 2);
+            send(dataQueue, 2);
             return;
         end
     end
     
     while (~finished)
         % Check for a kill message from main thread
-        [~, OK] = poll(q);
+        [~, OK] = poll(workerQueue);
         if(OK)
             % properly close up port/file
             fclose(s);
@@ -40,7 +44,7 @@ function sourceMonitor(qConstant, data_queue, kill_queue, device, devicePath, se
             clear s
             
             % send termination value
-            send(kill_queue, 0);
+            send(workerDoneQueue, 0);
             finished = 1;
             continue;
         else
@@ -53,7 +57,7 @@ function sourceMonitor(qConstant, data_queue, kill_queue, device, devicePath, se
                 fclose(s);
                 delete(s);
                 clear s
-                send(data_queue, 3);
+                send(dataQueue, 3);
             elseif (serialCounter+count > serialBufferLen)
                 fprintf('Serial buffer overfilled');
             else
@@ -74,7 +78,7 @@ function sourceMonitor(qConstant, data_queue, kill_queue, device, devicePath, se
                     serialBuffer(1:serialCounter-1248) = serialBuffer(1249:serialCounter);
                     serialCounter = serialCounter - 1248;
                     % send to data queue
-                    send(data_queue, tempPacket); 
+                    send(dataQueue, tempPacket); 
                 else
                     serialBuffer(1:serialBufferLen-1)=serialBuffer(2:serialBufferLen);
                     serialCounter = serialCounter - 1;

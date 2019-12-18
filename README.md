@@ -12,5 +12,5 @@ Data visualizer for magnetometers developed by the University of Iowa's Space Ph
 - Arguments are as follows:
   - Input: either `serial` or `file`
   - Source: based on input, serial port or file location, respectively
-  - Logging: file name or `null` for no logging
+  - Logging: filename.extension, '' for timestamp.txt, or `null` for no logging
   

@@ -67,27 +67,32 @@ function ngfmVis(varargin)
     
     % https://www.mathworks.com/matlabcentral/answers/ ...
     % 424145-how-can-i-send-data-on-the-fly-to-a-worker-when-using-parfeval
+    
     % Get the worker to construct a data queue on which it can receive
     % messages from the main thread
     workerQueueConstant = parallel.pool.Constant(@parallel.pool.PollableDataQueue);
 
-    % Get the worker to send the queue object back to the main thread
-    workerQueueClient = fetchOutputs(parfeval(@(x) x.Value, 1, workerQueueConstant));
-
-    % create a pollable data queue. The worker will send raw data to this
+    % Pollable data queue that the worker will use to send raw data over
     % for the main thread to use
     dataQueue = parallel.pool.PollableDataQueue;
     
-    % create a queue for the worker to communicate back to the program.
-    % The worker will send a value to this that the main thread will see
-    % instantly instead of it being pushed to the back of the data queue
-    workerQueue = parallel.pool.PollableDataQueue;
+    % Pollable data queue that the worker will use to send data over
+    % that tells the main thread it is done working
+    workerDoneQueue = parallel.pool.PollableDataQueue;
     
     % call sourceMonitor asynchronously
     F = parfeval(@sourceMonitor, 0, workerQueueConstant, dataQueue, ...
-                 workerQueue, p.Results.device, p.Results.devicePath, ...
+                 workerDoneQueue, p.Results.device, p.Results.devicePath, ...
                  serialBufferLen, dle, stx, etx);
     
+    % get the worker's queue back for main to use
+    % This queue is for main to send data over to allow the async worker
+    % to terminate gracefully, avoiding serial port and thread lockups
+    [data, data_available] = poll(dataQueue, 1);
+    if(data_available)
+        workerQueue = data;
+    end
+
     
     % main loop vars
     newPacket = 0;
@@ -99,7 +104,7 @@ function ngfmVis(varargin)
     % main loop
     while (~done)
         % check if the worker said it's done
-        [data, kill_msg] = poll(workerQueue);
+        [data, kill_msg] = poll(workerDoneQueue);
         if(kill_msg)
             if(data == 0)
                 fprintf('Serial Port or File closed\n');
@@ -165,7 +170,7 @@ function ngfmVis(varargin)
                 % This properly closes up the serial port, preventing the
                 % worker from terminating while still holding onto it and 
                 % causing the port to be unconnectable to new workers
-                send(workerQueueClient, []);
+                send(workerQueue, []);
                 if strcmp(p.Results.device, 'file')
                     % most likely the file has been read and the worker is
                     % terminated, so just close whole program

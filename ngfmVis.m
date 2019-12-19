@@ -127,7 +127,6 @@ function ngfmVis(varargin)
             else
                 numToRead = 1;
             end
-            
             % process all available packets at once
             for i = 1:numToRead
                 [data, ~] = poll(dataQueue, 1); 
@@ -164,8 +163,6 @@ function ngfmVis(varargin)
                 end
             end
         end
-
-        pause(0.001);
         
         % check if the user closed the main window
         if (closereq == 1)

@@ -1,6 +1,6 @@
 % Author: Cooper Bell
 % This function runs as an async worker called from ngfmVis(). 
-% It's purpose is to capture data from the source (port mostly)
+% It's purpose is to capture data from the source (serial port or file)
 % unencumbered from the rest of the program and send that data back to the
 % main thread.
 function sourceMonitor(workerQueueConstant, dataQueue, workerDoneQueue, device, devicePath, serialBufferLen, dle, stx, etx)
@@ -21,7 +21,7 @@ function sourceMonitor(workerQueueConstant, dataQueue, workerDoneQueue, device, 
             fopen(s);
             flushinput(s);
         catch exception
-            % Send error with message
+            % Send serial port error with message
             vec = {exception.message};
             send(dataQueue, vec);
             return;
@@ -30,14 +30,14 @@ function sourceMonitor(workerQueueConstant, dataQueue, workerDoneQueue, device, 
         if (exist(devicePath, 'file') == 2)
             s = fopen(devicePath);
         else
-            % Send error code 2, 'File not found'
+            % Send error code 1, 'File not found'
             send(workerDoneQueue, 1);
             return;
         end
     end
     
     while (~finished)
-        % Check for a kill message from main thread
+        % Check for a message from main thread, close everything up
         [~, OK] = poll(workerQueue);
         if(OK)
             % properly close up port/file
@@ -59,6 +59,7 @@ function sourceMonitor(workerQueueConstant, dataQueue, workerDoneQueue, device, 
                 fclose(s);
                 delete(s);
                 clear s
+                % Send error code 2, 'Fread returned zero'
                 send(workerDoneQueue, 2);
             elseif (serialCounter+count > serialBufferLen)
                 fprintf('Serial buffer overfilled');

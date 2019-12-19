@@ -101,7 +101,8 @@ function ngfmVis(varargin)
     
     % main loop
     while (~done)
-        % check if the worker said it's done
+        % If there is anything in this queue then the worker is done
+        % Print the associated code's message
         [data, dataAvailable] = poll(workerDoneQueue);
         if(dataAvailable)
             if(data == 0)
@@ -134,17 +135,13 @@ function ngfmVis(varargin)
                     fprintf('%s\n', char(data));
                     done = 1;
                     break;
-%                 elseif(data == 3)
-%                     fprintf('Fread returned zero\n');
-%                     done = 1;
-%                     break; %change to break
                 else
                 % parse packet
-                testpack = getDataPacket(dataPacket, data, inputOffset);
+                tempPacket = getDataPacket(dataPacket, data, inputOffset);
 
-                fprintf('Packet parser PID = %d.\n', testpack.pid);
+                fprintf('Packet parser PID = %d.\n', tempPacket.pid);
 
-                [testpack, magData, hkData] = interpretData( testpack, magData, hkData, hk);
+                [tempPacket, magData, hkData] = interpretData( tempPacket, magData, hkData, hk);
                 end
                 
             end
@@ -153,7 +150,7 @@ function ngfmVis(varargin)
             % until we can put in a proper close request callback
             try
                 [fig, closereq, key, debugData] = ...
-                    ngfmPlotUpdate(fig, testpack, magData, hkData);
+                    ngfmPlotUpdate(fig, tempPacket, magData, hkData);
             catch exception
                 closereq = 1;
                 fprintf('Plot error: %s\n', exception.message)
@@ -187,8 +184,6 @@ function ngfmVis(varargin)
         end
 
         if(~isempty(key))
-%             if strcmp(key,'`')
-%                 debugData = ~debugData;
             if strcmp(p.Results.device, 'serial')
                 %have this sent over serial worker
                 fwrite(s,k);

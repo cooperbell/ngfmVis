@@ -76,7 +76,7 @@ function [fig, closereq, key, debugData] = ngfmPlotUpdate(fig, dataPacket, magDa
     % set up outputs
     fig = handles.fig;
     closereq = getappdata(handles.fig, 'closereq');
-    key = getappdata(handles.fig, 'key');
+    key = getappdata(handles.fig, 'key'); setappdata(handles.fig, 'key', []);
     debugData = getappdata(handles.fig, 'debugData');
 end
 

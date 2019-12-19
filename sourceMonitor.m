@@ -38,17 +38,19 @@ function sourceMonitor(workerQueueConstant, dataQueue, workerDoneQueue, device, 
     
     while (~finished)
         % Check for a message from main thread, close everything up
-        [~, OK] = poll(workerQueue);
-        if(OK)
-            % properly close up port/file
-            fclose(s);
-            delete(s);
-            clear s
-            
-            % send termination value
-            send(workerDoneQueue, 0);
-            finished = 1;
-            continue;
+        [data, dataAvailable] = poll(workerQueue);
+        if(dataAvailable)
+            if(data == 0)
+                % properly close up port/file
+                fclose(s);
+                delete(s);
+                clear s
+
+                % send termination value
+                send(workerDoneQueue, 0);
+                finished = 1;
+                continue;
+            end
         else
             % read port
             [A,count] = fread(s,32,'uint8');

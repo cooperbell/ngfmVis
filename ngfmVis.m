@@ -166,18 +166,18 @@ function ngfmVis(varargin)
         
         % check if the user closed the main window
         if (closereq == 1)
-                % Send [] as a "poison pill" to the worker to get it to stop.
-                % This properly closes up the serial port, preventing the
-                % worker from terminating while still holding onto it and 
-                % causing the port to be unconnectable to new workers
-                send(workerQueue, []);
-                if strcmp(p.Results.device, 'file')
-                    % most likely the file has been read and the worker is
-                    % terminated, so just close whole program
-                    pause(0.1);
-                    done = 1;
-                    continue;
-                end
+            % Send 0 as a "poison pill" to the worker to get it to stop.
+            % This properly closes up the serial port, preventing the
+            % worker from terminating while still holding onto it and 
+            % causing the port to be unconnectable to new workers
+            send(workerQueue, 0);
+            if strcmp(p.Results.device, 'file')
+                % most likely the file has been read and the worker is
+                % terminated, so just close whole program
+                pause(0.1);
+                done = 1;
+                continue;
+            end
         end
 
         if(~isempty(key))
@@ -185,7 +185,6 @@ function ngfmVis(varargin)
                 %have this sent over serial worker
                 fwrite(s,k);
             end
-            key = [];
         end
     end
     

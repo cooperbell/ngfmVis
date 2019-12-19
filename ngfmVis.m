@@ -95,64 +95,66 @@ function ngfmVis(varargin)
 
     
     % main loop vars
-    newPacket = 0;
-    tempPacket = zeros(1,1248);
-    done=0;
+    done = 0;
     closereq = 0;
     key = [];
     
     % main loop
     while (~done)
-        % check if the worker said it's done
+        % If there is anything in this queue then the worker is done
+        % Print the associated code's message
         [data, dataAvailable] = poll(workerDoneQueue);
         if(dataAvailable)
             if(data == 0)
                 fprintf('Serial Port or File closed\n');
                 done = 1;
                 continue;
-            end
-        end
-        
-        % check if there's data to read
-        [data, dataAvailable] = poll(dataQueue, 1); 
-        if(dataAvailable)
-            if(isa(data,'cell'))
-                fprintf('%s\n', char(data));
-                done = 1;
-                continue;
-            end
-            if(data == 2)
+            elseif(data == 1)
                 fprintf('Error: File not found\n');
                 done = 1;
                 continue;
-            end
-            if(data == 3)
+            elseif(data == 2)
                 fprintf('Fread returned zero\n');
                 done = 1;
                 continue;
             end
-            newPacket = 1;
-            tempPacket = data;
-        end 
+        end
+        
+        % check if there's data to read
+        if (dataQueue.QueueLength > 0)
+            if(strcmp(p.Results.device, 'serial'))
+                numToRead = dataQueue.QueueLength;
+            else
+                numToRead = 1;
+            end
+            % process all available packets at once
+            for i = 1:numToRead
+                [data, ~] = poll(dataQueue, 1); 
+                if(isa(data,'cell'))
+                    fprintf('%s\n', char(data));
+                    done = 1;
+                    break;
+                else
+                % parse packet
+                tempPacket = getDataPacket(dataPacket, data, inputOffset);
 
-        % parse packet
-        if (newPacket)
-            testpack = getDataPacket(dataPacket, tempPacket, inputOffset);
-            
-            fprintf('Packet parser PID = %d.\n', testpack.pid);
+                fprintf('Packet parser PID = %d.\n', tempPacket.pid);
 
-            [testpack, magData, hkData] = interpretData( testpack, magData, hkData, hk);
-            
+                [tempPacket, magData, hkData] = interpretData( tempPacket, magData, hkData, hk);
+                end
+                
+            end
+
             % put a try catch in for now to handle the window being closed
             % until we can put in a proper close request callback
             try
                 [fig, closereq, key, debugData] = ...
-                    ngfmPlotUpdate(fig, testpack, magData, hkData);
+                    ngfmPlotUpdate(fig, tempPacket, magData, hkData);
             catch exception
                 closereq = 1;
                 fprintf('Plot error: %s\n', exception.message)
             end
-            
+
             if (loggingEnabled)
                 if (~debugData)
                     logData( logFileHandle, magData, hkData );
@@ -160,9 +162,7 @@ function ngfmVis(varargin)
                     logDebugData( logFileHandle, dataPacket );
                 end
             end
-            
         end
-        pause(0.001);
         
         % check if the user closed the main window
         if (closereq == 1)
@@ -181,8 +181,6 @@ function ngfmVis(varargin)
         end
 
         if(~isempty(key))
-%             if strcmp(key,'`')
-%                 debugData = ~debugData;
             if strcmp(p.Results.device, 'serial')
                 %have this sent over serial worker
                 fwrite(s,k);

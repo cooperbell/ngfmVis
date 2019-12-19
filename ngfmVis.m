@@ -108,6 +108,14 @@ function ngfmVis(varargin)
                 fprintf('Serial Port or File closed\n');
                 done = 1;
                 continue;
+            elseif(data == 1)
+                fprintf('Error: File not found\n');
+                done = 1;
+                continue;
+            elseif(data == 2)
+                fprintf('Fread returned zero\n');
+                done = 1;
+                continue;
             end
         end
         
@@ -125,15 +133,11 @@ function ngfmVis(varargin)
                 if(isa(data,'cell'))
                     fprintf('%s\n', char(data));
                     done = 1;
-                    break; %change to break
-                elseif(data == 2)
-                    fprintf('Error: File not found\n');
-                    done = 1;
-                    break; %change to break
-                elseif(data == 3)
-                    fprintf('Fread returned zero\n');
-                    done = 1;
-                    break; %change to break
+                    break;
+%                 elseif(data == 3)
+%                     fprintf('Fread returned zero\n');
+%                     done = 1;
+%                     break; %change to break
                 else
                 % parse packet
                 testpack = getDataPacket(dataPacket, data, inputOffset);

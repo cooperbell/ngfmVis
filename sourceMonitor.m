@@ -21,6 +21,7 @@ function sourceMonitor(workerQueueConstant, dataQueue, workerDoneQueue, device, 
             fopen(s);
             flushinput(s);
         catch exception
+            % Send error with message
             vec = {exception.message};
             send(dataQueue, vec);
             return;
@@ -29,7 +30,8 @@ function sourceMonitor(workerQueueConstant, dataQueue, workerDoneQueue, device, 
         if (exist(devicePath, 'file') == 2)
             s = fopen(devicePath);
         else
-            send(dataQueue, 2);
+            % Send error code 2, 'File not found'
+            send(workerDoneQueue, 1);
             return;
         end
     end
@@ -57,7 +59,7 @@ function sourceMonitor(workerQueueConstant, dataQueue, workerDoneQueue, device, 
                 fclose(s);
                 delete(s);
                 clear s
-                send(dataQueue, 3);
+                send(workerDoneQueue, 2);
             elseif (serialCounter+count > serialBufferLen)
                 fprintf('Serial buffer overfilled');
             else
@@ -84,8 +86,8 @@ function sourceMonitor(workerQueueConstant, dataQueue, workerDoneQueue, device, 
                     serialCounter = serialCounter - 1;
                 end
             end
-%             pause(0.005); % This sets fread to ~175hz on my machine
-            pause(0.01);
+            pause(0.005); % This sets fread to ~175hz on my machine
+%             pause(0.01);
         end
     end
 end

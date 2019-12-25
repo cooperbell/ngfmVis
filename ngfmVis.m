@@ -77,7 +77,7 @@ function ngfmVis(varargin)
     dataQueue = parallel.pool.PollableDataQueue;
     
     % Pollable data queue that the worker will use to send data over
-    % that tells the main thread it is done working
+    % that tells the main thread it is done executing
     workerDoneQueue = parallel.pool.PollableDataQueue;
     
     % call sourceMonitor asynchronously
@@ -88,12 +88,11 @@ function ngfmVis(varargin)
     % get the worker's queue back for main to use
     % This queue is for main to send data over to allow the async worker
     % to terminate gracefully, avoiding serial port and thread lockups
-    [data, dataAvailable] = poll(dataQueue, 1);
-    if(dataAvailable)
-        workerQueue = data;
+    [dataQueueData, dataQueueDataAvail] = poll(dataQueue, 1);
+    if(dataQueueDataAvail)
+        workerQueue = dataQueueData;
     end
 
-    
     % main loop vars
     done = 0;
     closereq = 0;
@@ -103,20 +102,26 @@ function ngfmVis(varargin)
     while (~done)
         % If there is anything in this queue then the worker is done
         % Print the associated code's message
-        [data, dataAvailable] = poll(workerDoneQueue);
-        if(dataAvailable)
-            if(data == 0)
+        [workerDoneQueueData, workerDoneQueueDataAvail] = poll(workerDoneQueue);
+        if(workerDoneQueueDataAvail)
+            if(isa(workerDoneQueueData,'cell'))
+                fprintf('%s\n', char(workerDoneQueueData));
+                done = 1;
+                break;
+            elseif(workerDoneQueueData == 0)
                 fprintf('Serial Port or File closed\n');
                 done = 1;
                 continue;
-            elseif(data == 1)
+            elseif(workerDoneQueueData == 1)
                 fprintf('Error: File not found\n');
                 done = 1;
                 continue;
-            elseif(data == 2)
+            elseif(workerDoneQueueData == 2)
                 fprintf('Fread returned zero\n');
                 done = 1;
                 continue;
+            elseif(ischar(workerDoneQueueData))
+                fprintf('received character %c\n', workerDoneQueueData);
             end
         end
         
@@ -129,20 +134,17 @@ function ngfmVis(varargin)
             end
             % process all available packets at once
             for i = 1:numToRead
-                [data, ~] = poll(dataQueue, 1); 
-                if(isa(data,'cell'))
-                    fprintf('%s\n', char(data));
-                    done = 1;
-                    break;
-                else
-                % parse packet
-                tempPacket = getDataPacket(dataPacket, data, inputOffset);
+                [dataQueueData, dataQueueDataAvail] = poll(dataQueue, 1); 
+                if(dataQueueDataAvail)
+                    if(isa(dataQueueData, 'uint8'))
+                        % parse packet
+                        tempPacket = getDataPacket(dataPacket, dataQueueData, inputOffset);
 
-                fprintf('Packet parser PID = %d.\n', tempPacket.pid);
+                        fprintf('Packet parser PID = %d.\n', tempPacket.pid);
 
-                [tempPacket, magData, hkData] = interpretData( tempPacket, magData, hkData, hk);
+                        [tempPacket, magData, hkData] = interpretData( tempPacket, magData, hkData, hk);
+                    end
                 end
-                
             end
 
             % put a try catch in for now to handle the window being closed
@@ -180,10 +182,12 @@ function ngfmVis(varargin)
             end
         end
 
-        if(~isempty(key))
-            if strcmp(p.Results.device, 'serial')
-                %have this sent over serial worker
-                fwrite(s,k);
+        if(~isempty(key)) % && strcmp(p.Results.device, 'serial') ?
+            if 1 %strcmp(p.Results.device, 'serial')
+                % send the commands to the async worker
+                for i = 1:length(key)
+                    send(workerQueue, char(key(i)));
+                end
             end
         end
     end

@@ -23,7 +23,7 @@ function sourceMonitor(workerQueueConstant, dataQueue, workerDoneQueue, device, 
         catch exception
             % Send serial port error with message
             vec = {exception.message};
-            send(dataQueue, vec);
+            send(workerDoneQueue, vec);
             return;
         end
     else
@@ -50,47 +50,51 @@ function sourceMonitor(workerQueueConstant, dataQueue, workerDoneQueue, device, 
                 send(workerDoneQueue, 0);
                 finished = 1;
                 continue;
+            elseif(ischar(data))
+                % send hardware command
+                fwrite(s,data,'char')
+                %send(workerDoneQueue, data);
             end
-        else
-            % read port
-            [A,count] = fread(s,32,'uint8');
-            
-            if (count == 0)
-                pause(0.01);
-                finished = 1;
-                fclose(s);
-                delete(s);
-                clear s
-                % Send error code 2, 'Fread returned zero'
-                send(workerDoneQueue, 2);
-            elseif (serialCounter+count > serialBufferLen)
-                fprintf('Serial buffer overfilled');
-            else
-                if (count == 1)
-                    serialBuffer(serialCounter) = A; % look into this
-                else
-                    serialBuffer(serialCounter:serialCounter+count-1) = A;
-                end
-                serialCounter = serialCounter + count;
-            end
-            
-            newPacket = 0;
-            tempPacket = zeros(1,1248);
-            while ( (newPacket ==0 ) && (serialCounter > 1248) )
-                if ((serialBuffer(1) == dle) && (serialBuffer(2) == stx) && (serialBuffer(1246) == etx) )
-                    tempPacket = uint8(serialBuffer(1:1248));
-                    newPacket = 1;
-                    serialBuffer(1:serialCounter-1248) = serialBuffer(1249:serialCounter);
-                    serialCounter = serialCounter - 1248;
-                    % send to data queue
-                    send(dataQueue, tempPacket); 
-                else
-                    serialBuffer(1:serialBufferLen-1)=serialBuffer(2:serialBufferLen);
-                    serialCounter = serialCounter - 1;
-                end
-            end
-            pause(0.005); % This sets fread to ~175hz on my machine
-%             pause(0.01);
         end
+        
+        % read port
+        [A,count] = fread(s,32,'uint8');
+
+        if (count == 0)
+            pause(0.01);
+            finished = 1;
+            fclose(s);
+            delete(s);
+            clear s
+            % Send error code 2, 'Fread returned zero'
+            send(workerDoneQueue, 2);
+        elseif (serialCounter+count > serialBufferLen)
+            fprintf('Serial buffer overfilled');
+        else
+            if (count == 1)
+                serialBuffer(serialCounter) = A; % look into this
+            else
+                serialBuffer(serialCounter:serialCounter+count-1) = A;
+            end
+            serialCounter = serialCounter + count;
+        end
+
+        newPacket = 0;
+        tempPacket = zeros(1,1248);
+        while ( (newPacket ==0 ) && (serialCounter > 1248) )
+            if ((serialBuffer(1) == dle) && (serialBuffer(2) == stx) && (serialBuffer(1246) == etx) )
+                tempPacket = uint8(serialBuffer(1:1248));
+                newPacket = 1;
+                serialBuffer(1:serialCounter-1248) = serialBuffer(1249:serialCounter);
+                serialCounter = serialCounter - 1248;
+                % send to data queue
+                send(dataQueue, tempPacket); 
+            else
+                serialBuffer(1:serialBufferLen-1)=serialBuffer(2:serialBufferLen);
+                serialCounter = serialCounter - 1;
+            end
+        end
+        pause(0.005); % This sets fread to ~175hz on my machine
+%             pause(0.01);
     end
 end

@@ -182,15 +182,15 @@ function ngfmVis(varargin)
             end
         end
 
-        if(~isempty(key)) % && strcmp(p.Results.device, 'serial') ?
-            if 1 %strcmp(p.Results.device, 'serial')
-                % send the commands to the async worker
-                for i = 1:length(key)
-                    send(workerQueue, char(key(i)));
-                end
+        if(~isempty(key) && strcmp(p.Results.device, 'serial'))
+            % send the commands to the async source monitor
+            for i = 1:length(key)
+                send(workerQueue, char(key(i)));
             end
         end
     end
+    
+    % close up
     
     disp('Terminating program')
     

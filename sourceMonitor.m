@@ -17,7 +17,8 @@ function sourceMonitor(workerQueueConstant, dataQueue, workerDoneQueue, device, 
     if(strcmp(device, 'serial'))
         baudRate = 57600;
         s = serial(devicePath,'BaudRate',baudRate);
-        try 
+        try
+            % open port
             fopen(s);
             flushinput(s);
         catch exception
@@ -53,7 +54,6 @@ function sourceMonitor(workerQueueConstant, dataQueue, workerDoneQueue, device, 
             elseif(ischar(data))
                 % send hardware command
                 fwrite(s,data,'char')
-                %send(workerDoneQueue, data);
             end
         end
         

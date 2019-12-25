@@ -56,39 +56,12 @@ function ngfmVis(varargin)
     
     % set up GUI
     fig = ngfmPlotInit();
-
-    % Create a parallel pool if necessary
-    if isempty(gcp())
-        parpool(1);
-    end
     
-    % https://www.mathworks.com/matlabcentral/answers/ ...
-    % 424145-how-can-i-send-data-on-the-fly-to-a-worker-when-using-parfeval
-    
-    % Get the worker to construct a data queue on which it can receive
-    % messages from the main thread
-    workerQueueConstant = parallel.pool.Constant(@parallel.pool.PollableDataQueue);
-
-    % Pollable data queue that the worker will use to send raw data over
-    % for the main thread to use
-    packetQueue = parallel.pool.PollableDataQueue;
-    
-    % Pollable data queue that the worker will use to send data over
-    % that tells the main thread it is done executing
-    workerDoneQueue = parallel.pool.PollableDataQueue;
-    
-    % call sourceMonitor asynchronously
-    F = parfeval(@sourceMonitor, 0, workerQueueConstant, packetQueue, ...
-                 workerDoneQueue, p.Results.device, p.Results.devicePath, ...
-                 serialBufferLen, dle, stx, etx);
-    
-    % get the worker's queue back for main to use
-    % This queue is for main to send data over to allow the async worker
-    % to terminate gracefully, avoiding serial port and thread lockups
-    [packetQueueData, packetQueueDataAvail] = poll(packetQueue, 1);
-    if(packetQueueDataAvail)
-        workerQueue = packetQueueData;
-    end
+    % setup the parallel stuff. Construct queues and call sourceMonitor
+    % asynchronously
+    [F, packetQueue, workerDoneQueue, workerQueue] = ...
+        setupSourceMonitorWorker(p.Results.device, p.Results.devicePath, ...
+                                 serialBufferLen, dle, stx, etx);
 
     % main loop vars
     done = 0;
@@ -186,6 +159,42 @@ function ngfmVis(varargin)
 
     if (loggingEnabled)
         fclose(logFileHandle);
+    end
+end
+
+% Construct queues for communicating back and forth with the async worker
+% Call sourceMonitor asynchronously
+function [F, packetQueue, workerDoneQueue, workerQueue] = ...
+    setupSourceMonitorWorker(device, devicePath, serialBufferLen, dle, stx, etx)
+
+    % Create a parallel pool if necessary
+    if isempty(gcp())
+        parpool(1);
+    end
+
+    % Get the worker to construct a data queue on which it can receive
+    % messages from the main thread
+    workerQueueConstant = parallel.pool.Constant(@parallel.pool.PollableDataQueue);
+
+    % Pollable data queue that the worker will use to send raw data over
+    % for the main thread to use
+    packetQueue = parallel.pool.PollableDataQueue;
+    
+    % Pollable data queue that the worker will use to send data over
+    % that tells the main thread it is done executing
+    workerDoneQueue = parallel.pool.PollableDataQueue;
+    
+    % call sourceMonitor asynchronously
+    F = parfeval(@sourceMonitor, 0, workerQueueConstant, packetQueue, ...
+                 workerDoneQueue, device, devicePath, serialBufferLen, ...
+                 dle, stx, etx);
+    
+    % get the worker's queue back for main to use
+    % This queue is for main to send data over to allow the async worker
+    % to terminate gracefully, avoiding serial port and thread lockups
+    [packetQueueData, packetQueueDataAvail] = poll(packetQueue, 1);
+    if(packetQueueDataAvail)
+        workerQueue = packetQueueData;
     end
 end
 

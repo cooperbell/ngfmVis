@@ -74,28 +74,28 @@ function ngfmVis(varargin)
 
     % Pollable data queue that the worker will use to send raw data over
     % for the main thread to use
-    dataQueue = parallel.pool.PollableDataQueue;
+    packetQueue = parallel.pool.PollableDataQueue;
     
     % Pollable data queue that the worker will use to send data over
     % that tells the main thread it is done executing
     workerDoneQueue = parallel.pool.PollableDataQueue;
     
     % call sourceMonitor asynchronously
-    F = parfeval(@sourceMonitor, 0, workerQueueConstant, dataQueue, ...
+    F = parfeval(@sourceMonitor, 0, workerQueueConstant, packetQueue, ...
                  workerDoneQueue, p.Results.device, p.Results.devicePath, ...
                  serialBufferLen, dle, stx, etx);
     
     % get the worker's queue back for main to use
     % This queue is for main to send data over to allow the async worker
     % to terminate gracefully, avoiding serial port and thread lockups
-    [dataQueueData, dataQueueDataAvail] = poll(dataQueue, 1);
-    if(dataQueueDataAvail)
-        workerQueue = dataQueueData;
+    [packetQueueData, packetQueueDataAvail] = poll(packetQueue, 1);
+    if(packetQueueDataAvail)
+        workerQueue = packetQueueData;
     end
 
     % main loop vars
     done = 0;
-    closereq = 0;
+    closeRequest = 0;
     key = [];
     
     % main loop
@@ -126,19 +126,19 @@ function ngfmVis(varargin)
         end
         
         % check if there's data to read
-        if (dataQueue.QueueLength > 0)
+        if (packetQueue.QueueLength > 0)
             if(strcmp(p.Results.device, 'serial'))
-                numToRead = dataQueue.QueueLength;
+                numToRead = packetQueue.QueueLength;
             else
                 numToRead = 1;
             end
             % process all available packets at once
             for i = 1:numToRead
-                [dataQueueData, dataQueueDataAvail] = poll(dataQueue, 1); 
-                if(dataQueueDataAvail)
-                    if(isa(dataQueueData, 'uint8'))
+                [packetQueueData, packetQueueDataAvail] = poll(packetQueue, 1); 
+                if(packetQueueDataAvail)
+                    if(isa(packetQueueData, 'uint8'))
                         % parse packet
-                        tempPacket = getDataPacket(dataPacket, dataQueueData, inputOffset);
+                        tempPacket = getDataPacket(dataPacket, packetQueueData, inputOffset);
 
                         fprintf('Packet parser PID = %d.\n', tempPacket.pid);
 
@@ -150,10 +150,10 @@ function ngfmVis(varargin)
             % put a try catch in for now to handle the window being closed
             % until we can put in a proper close request callback
             try
-                [fig, closereq, key, debugData] = ...
+                [fig, closeRequest, key, debugData] = ...
                     ngfmPlotUpdate(fig, tempPacket, magData, hkData);
             catch exception
-                closereq = 1;
+                closeRequest = 1;
                 fprintf('Plot error: %s\n', exception.message)
             end
 
@@ -167,7 +167,7 @@ function ngfmVis(varargin)
         end
         
         % check if the user closed the main window
-        if (closereq == 1)
+        if (closeRequest == 1)
             % Send 0 as a "poison pill" to the worker to get it to stop.
             % This properly closes up the serial port, preventing the
             % worker from terminating while still holding onto it and 

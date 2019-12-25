@@ -23,8 +23,8 @@ function sourceMonitor(workerQueueConstant, dataQueue, workerDoneQueue, device, 
             flushinput(s);
         catch exception
             % Send serial port error with message
-            vec = {exception.message};
-            send(workerDoneQueue, vec);
+            errorMsg = {exception.message};
+            send(workerDoneQueue, errorMsg);
             return;
         end
     else
@@ -39,8 +39,8 @@ function sourceMonitor(workerQueueConstant, dataQueue, workerDoneQueue, device, 
     
     while (~finished)
         % Check for a message from main thread, close everything up
-        [data, dataAvailable] = poll(workerQueue);
-        if(dataAvailable)
+        [data, dataAvail] = poll(workerQueue);
+        if(dataAvail)
             if(data == 0)
                 % properly close up port/file
                 fclose(s);

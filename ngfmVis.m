@@ -41,20 +41,17 @@ function ngfmVis(varargin)
     % enable logging to a specified file or don't
     if (strcmp(logFile, 'null'))
         loggingEnabled = 0;
+         fprintf('Logging data DISABLED.\n');
     else
         loggingEnabled = 1;
         if(strcmp(logFile, ''))
             logFile = strcat('log_', datestr(now,'yyyymmdd-HHMMSS'), '.txt');
         end
         logFileHandle = fopen(strcat('log/',logFile), 'w+');
-    end
-
-    if (loggingEnabled == 1)
         fprintf('Logging data to: %s\n', logFile);
-    else
-        fprintf('Logging data DISABLED.\n');
     end
 
+    % give user time to read the console
     pause(2);
     
     % set up GUI

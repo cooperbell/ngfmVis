@@ -97,32 +97,23 @@ function ngfmVis(varargin)
     done = 0;
     closeRequest = 0;
     key = [];
+    workerMsgs = {'Serial port closed\n', ...
+                'Error: File not found\n', ...
+                'Fread returned zero\n'};
     
     % main loop
     while (~done)
         % If there is anything in this queue then the worker is done
-        % Print the associated code's message
+        % Print the error or associated code's message, begin program exit process
         [workerDoneQueueData, workerDoneQueueDataAvail] = poll(workerDoneQueue);
         if(workerDoneQueueDataAvail)
             if(isa(workerDoneQueueData,'cell'))
                 fprintf('%s\n', char(workerDoneQueueData));
-                done = 1;
-                break;
-            elseif(workerDoneQueueData == 0)
-                fprintf('Serial Port or File closed\n');
-                done = 1;
-                continue;
-            elseif(workerDoneQueueData == 1)
-                fprintf('Error: File not found\n');
-                done = 1;
-                continue;
-            elseif(workerDoneQueueData == 2)
-                fprintf('Fread returned zero\n');
-                done = 1;
-                continue;
-            elseif(ischar(workerDoneQueueData))
-                fprintf('received character %c\n', workerDoneQueueData);
+            elseif(ismember(workerDoneQueueData, [1 2 3]))
+                fprintf(string(workerMsgs(workerDoneQueueData)))
             end
+            done = 1;
+            continue;
         end
         
         % check if there's data to read
@@ -139,9 +130,7 @@ function ngfmVis(varargin)
                     if(isa(packetQueueData, 'uint8'))
                         % parse packet
                         tempPacket = getDataPacket(dataPacket, packetQueueData, inputOffset);
-
                         fprintf('Packet parser PID = %d.\n', tempPacket.pid);
-
                         [tempPacket, magData, hkData] = interpretData( tempPacket, magData, hkData, hk);
                     end
                 end
@@ -191,7 +180,6 @@ function ngfmVis(varargin)
     end
     
     % close up
-    
     disp('Terminating program')
     
     if(isvalid(fig))

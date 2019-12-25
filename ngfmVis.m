@@ -31,7 +31,6 @@ function ngfmVis(varargin)
     %add subfolders to path
     addpath('lib', 'spectraPlots', 'log');
     
-
     % Print whether the mode is serial or file
     if strcmp(p.Results.device, 'serial')
         fprintf('Running is SERIAL mode on %s.\n', p.Results.devicePath);
@@ -57,7 +56,8 @@ function ngfmVis(varargin)
     end
 
     pause(2);
-
+    
+    % set up GUI
     fig = ngfmPlotInit();
 
     % Create a parallel pool if necessary

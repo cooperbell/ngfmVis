@@ -33,7 +33,7 @@ function ngfmVis(varargin)
     
     % Print whether the mode is serial or file
     if strcmp(p.Results.device, 'serial')
-        fprintf('Running is SERIAL mode on %s.\n', p.Results.devicePath);
+        fprintf('Running in SERIAL mode on %s.\n', p.Results.devicePath);
     else
         fprintf('Running in FILE replay mode from %s.\n', p.Results.devicePath);
     end
@@ -123,16 +123,15 @@ function ngfmVis(varargin)
             else
                 numToRead = 1;
             end
+            
             % process all available packets at once
             for i = 1:numToRead
                 [packetQueueData, packetQueueDataAvail] = poll(packetQueue, 1); 
-                if(packetQueueDataAvail)
-                    if(isa(packetQueueData, 'uint8'))
-                        % parse packet
-                        tempPacket = getDataPacket(dataPacket, packetQueueData, inputOffset);
-                        fprintf('Packet parser PID = %d.\n', tempPacket.pid);
-                        [tempPacket, magData, hkData] = interpretData( tempPacket, magData, hkData, hk);
-                    end
+                if(packetQueueDataAvail && isa(packetQueueData, 'uint8'))
+                    % parse packet
+                    tempPacket = getDataPacket(dataPacket, packetQueueData, inputOffset);
+                    fprintf('Packet parser PID = %d.\n', tempPacket.pid);
+                    [tempPacket, magData, hkData] = interpretData( tempPacket, magData, hkData, hk);
                 end
             end
 
@@ -146,6 +145,7 @@ function ngfmVis(varargin)
                 fprintf('Plot error: %s\n', exception.message)
             end
 
+            % log
             if (loggingEnabled)
                 if (~debugData)
                     logData( logFileHandle, magData, hkData );
@@ -171,8 +171,9 @@ function ngfmVis(varargin)
             end
         end
 
+        % Check if there is a hardware command to send
         if(~isempty(key) && strcmp(p.Results.device, 'serial'))
-            % send the commands to the async source monitor
+            % send the commands to the async worker's queue
             for i = 1:length(key)
                 send(workerQueue, char(key(i)));
             end

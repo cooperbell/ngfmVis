@@ -31,7 +31,6 @@ function ngfmVis(varargin)
     %add subfolders to path
     addpath('lib', 'spectraPlots', 'log');
     
-
     % Print whether the mode is serial or file
     if strcmp(p.Results.device, 'serial')
         fprintf('Running is SERIAL mode on %s.\n', p.Results.devicePath);
@@ -57,7 +56,8 @@ function ngfmVis(varargin)
     end
 
     pause(2);
-
+    
+    % set up GUI
     fig = ngfmPlotInit();
 
     % Create a parallel pool if necessary
@@ -74,84 +74,86 @@ function ngfmVis(varargin)
 
     % Pollable data queue that the worker will use to send raw data over
     % for the main thread to use
-    dataQueue = parallel.pool.PollableDataQueue;
+    packetQueue = parallel.pool.PollableDataQueue;
     
     % Pollable data queue that the worker will use to send data over
-    % that tells the main thread it is done working
+    % that tells the main thread it is done executing
     workerDoneQueue = parallel.pool.PollableDataQueue;
     
     % call sourceMonitor asynchronously
-    F = parfeval(@sourceMonitor, 0, workerQueueConstant, dataQueue, ...
+    F = parfeval(@sourceMonitor, 0, workerQueueConstant, packetQueue, ...
                  workerDoneQueue, p.Results.device, p.Results.devicePath, ...
                  serialBufferLen, dle, stx, etx);
     
     % get the worker's queue back for main to use
     % This queue is for main to send data over to allow the async worker
     % to terminate gracefully, avoiding serial port and thread lockups
-    [data, dataAvailable] = poll(dataQueue, 1);
-    if(dataAvailable)
-        workerQueue = data;
+    [packetQueueData, packetQueueDataAvail] = poll(packetQueue, 1);
+    if(packetQueueDataAvail)
+        workerQueue = packetQueueData;
     end
 
-    
     % main loop vars
     done = 0;
-    closereq = 0;
+    closeRequest = 0;
     key = [];
     
     % main loop
     while (~done)
         % If there is anything in this queue then the worker is done
         % Print the associated code's message
-        [data, dataAvailable] = poll(workerDoneQueue);
-        if(dataAvailable)
-            if(data == 0)
+        [workerDoneQueueData, workerDoneQueueDataAvail] = poll(workerDoneQueue);
+        if(workerDoneQueueDataAvail)
+            if(isa(workerDoneQueueData,'cell'))
+                fprintf('%s\n', char(workerDoneQueueData));
+                done = 1;
+                break;
+            elseif(workerDoneQueueData == 0)
                 fprintf('Serial Port or File closed\n');
                 done = 1;
                 continue;
-            elseif(data == 1)
+            elseif(workerDoneQueueData == 1)
                 fprintf('Error: File not found\n');
                 done = 1;
                 continue;
-            elseif(data == 2)
+            elseif(workerDoneQueueData == 2)
                 fprintf('Fread returned zero\n');
                 done = 1;
                 continue;
+            elseif(ischar(workerDoneQueueData))
+                fprintf('received character %c\n', workerDoneQueueData);
             end
         end
         
         % check if there's data to read
-        if (dataQueue.QueueLength > 0)
+        if (packetQueue.QueueLength > 0)
             if(strcmp(p.Results.device, 'serial'))
-                numToRead = dataQueue.QueueLength;
+                numToRead = packetQueue.QueueLength;
             else
                 numToRead = 1;
             end
             % process all available packets at once
             for i = 1:numToRead
-                [data, ~] = poll(dataQueue, 1); 
-                if(isa(data,'cell'))
-                    fprintf('%s\n', char(data));
-                    done = 1;
-                    break;
-                else
-                % parse packet
-                tempPacket = getDataPacket(dataPacket, data, inputOffset);
+                [packetQueueData, packetQueueDataAvail] = poll(packetQueue, 1); 
+                if(packetQueueDataAvail)
+                    if(isa(packetQueueData, 'uint8'))
+                        % parse packet
+                        tempPacket = getDataPacket(dataPacket, packetQueueData, inputOffset);
 
-                fprintf('Packet parser PID = %d.\n', tempPacket.pid);
+                        fprintf('Packet parser PID = %d.\n', tempPacket.pid);
 
-                [tempPacket, magData, hkData] = interpretData( tempPacket, magData, hkData, hk);
+                        [tempPacket, magData, hkData] = interpretData( tempPacket, magData, hkData, hk);
+                    end
                 end
-                
             end
 
             % put a try catch in for now to handle the window being closed
             % until we can put in a proper close request callback
             try
-                [fig, closereq, key, debugData] = ...
+                [fig, closeRequest, key, debugData] = ...
                     ngfmPlotUpdate(fig, tempPacket, magData, hkData);
             catch exception
-                closereq = 1;
+                closeRequest = 1;
                 fprintf('Plot error: %s\n', exception.message)
             end
 
@@ -165,29 +167,30 @@ function ngfmVis(varargin)
         end
         
         % check if the user closed the main window
-        if (closereq == 1)
-                % Send [] as a "poison pill" to the worker to get it to stop.
-                % This properly closes up the serial port, preventing the
-                % worker from terminating while still holding onto it and 
-                % causing the port to be unconnectable to new workers
-                send(workerQueue, []);
-                if strcmp(p.Results.device, 'file')
-                    % most likely the file has been read and the worker is
-                    % terminated, so just close whole program
-                    pause(0.1);
-                    done = 1;
-                    continue;
-                end
+        if (closeRequest == 1)
+            % Send 0 as a "poison pill" to the worker to get it to stop.
+            % This properly closes up the serial port, preventing the
+            % worker from terminating while still holding onto it and 
+            % causing the port to be unconnectable to new workers
+            send(workerQueue, 0);
+            if strcmp(p.Results.device, 'file')
+                % most likely the file has been read and the worker is
+                % terminated, so just close whole program
+                pause(0.1);
+                done = 1;
+                continue;
+            end
         end
 
-        if(~isempty(key))
-            if strcmp(p.Results.device, 'serial')
-                %have this sent over serial worker
-                fwrite(s,k);
+        if(~isempty(key) && strcmp(p.Results.device, 'serial'))
+            % send the commands to the async source monitor
+            for i = 1:length(key)
+                send(workerQueue, char(key(i)));
             end
-            key = [];
         end
     end
+    
+    % close up
     
     disp('Terminating program')
     

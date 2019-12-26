@@ -151,29 +151,29 @@ function ngfmHardwareCmd()
     % ----- Table Load -----------------------------------------
 
     % Create TableLoadLabel
-    TableLoadLabel = uicontrol('Parent', fig, 'style', 'text', ...
+    uicontrol('Parent', fig, 'style', 'text', ...
         'String', 'Table Load', 'Units', 'normalized', 'FontSize', 16, ...
         'HorizontalAlignment', 'center', 'Position', [0.2 0.25 0.05 0.03]);
 
     % Create AddressLabel
-    AddressLabel = uicontrol('Parent', fig, 'style', 'text', ...
+    uicontrol('Parent', fig, 'style', 'text', ...
         'String', 'Address', 'Units', 'normalized', 'FontSize', 14, ...
         'HorizontalAlignment', 'center', 'Position', [0.4 0.29 0.04 0.02]);
 
     % Create DataLabel
-    DataLabel = uicontrol('Parent', fig, 'style', 'text', ...
+    uicontrol('Parent', fig, 'style', 'text', ...
         'String', 'Data', 'Units', 'normalized', 'tag', 'dataCmd', ...
         'FontSize', 14, 'HorizontalAlignment', 'center', ...
         'Position', [0.55 0.29 0.03 0.02]);
     
     % Create EditFieldAdress
-    EditFieldAddress = uicontrol('Parent', fig, 'style', 'edit', ...
+    handles.tableAddress = uicontrol('Parent', fig, 'style', 'edit', ...
         'Units', 'normalized', 'tag', 'AddrField', 'FontSize', 14, ...
         'String', '0x0000', 'HorizontalAlignment', 'center', ...
         'Position', [0.385 0.25 0.07 0.03]);
 
     % Create EditFieldData
-    EditFieldData = uicontrol('Parent', fig, 'style', 'edit', ...
+    handles.tableData = uicontrol('Parent', fig, 'style', 'edit', ...
         'Units', 'normalized', 'tag', 'dataField', 'FontSize', 14, ...
         'String', '0x0000', 'HorizontalAlignment', 'center', ...
         'Position', [0.53 0.25 0.07 0.03]);
@@ -236,7 +236,7 @@ function ngfmHardwareCmd()
         'HorizontalAlignment', 'center', 'Position', [0.39 0.9 0.25 0.03]);
 
     % Create TBAddDataLabel
-    TBAddDataLabel = uicontrol('Parent', fig, 'style', 'text', ...
+    handles.TBAddDataLabel = uicontrol('Parent', fig, 'style', 'text', ...
         'String', 'Error: Incorrect address or data entry', ...
         'Units', 'normalized', 'tag', 'ErrorLoad', 'FontSize', 16, ...
         'ForegroundColor', [1 0 0], 'Visible', 'off', ...
@@ -339,6 +339,7 @@ function SendFBCalib(hObject, ~)
         return
     end
 
+    % for each selected channel, add a C
     for i = 1:length(arrChannel)
         arr = [arr, arrChannel(i)];
         arr = [arr, 'C'];
@@ -370,6 +371,7 @@ function SendDeadspace(hObject, ~)
         num = num + 255;
     end
 
+    % for each selected channel, add specific number of G's
     for i = 1:length(arrChannel)
         arr = [arr, arrChannel(i)];
         for j = 1:num
@@ -402,6 +404,7 @@ function SendOffset(hObject, ~)
         num = num + 255;
     end
 
+    % for each selected channel, add specific number of P's
     for i = 1:length(arrChannel)
         arr = [arr, arrChannel(i)];
         for j = 1:num
@@ -411,50 +414,34 @@ function SendOffset(hObject, ~)
     setappdata(handles.fig, 'key', arr);
 end
 
-    % Button pushed function: SendTableLoadButton
-    function SendTbLoad(hObject, eventData)
-        handles = guidata(hObject);
-        arrChannel = checkChannel(handles);
-        channelCount = length(arrChannel);
-        arr = get(handles.tab3, 'Children');
+% Button pushed function: SendTableLoadButton
+function SendTbLoad(hObject, ~)
+    handles = guidata(hObject);
+    arrChannel = checkChannel(handles);
+    displayError(handles, '');
+    handles.TBAddDataLabel.Visible = 'off';
+    arr = {};
 
-        key = getappdata(handles.fig, 'key');
-        
-        if(channelCount == 0)
-            arr(7).Visible = 'on';
-            return
-        end
-        if(strcmp(arr(7).Visible, 'on'))
-            arr(7).Visible = 'off';
-        end
-        
-       
-        
-        % Not valid Hexa
-        if(validAddress(hObject, eventData, arr(9).String) == 0)
-            arr(6).Visible = 'on';
-            
-            return
-        elseif(validAddress(hObject, eventData, arr(8).String) == 0)
-            arr(6).Visible = 'on';
-            return
-        else
-            arr(6).Visible = 'off';
-        end
-        
-        
-        while(channelCount > 0)
-            channelCount = channelCount - 1;
-            key = [key, arrChannel(1)];
-            arrChannel(1) = [];
-            key = [key, arr(9).String];
-            key = [key, arr(8).String];
-            
-        end
-
-        setappdata(handles.fig, 'key', key);
-
+    % check if no channel selected
+    if(isempty(arrChannel))
+        displayError(handles, 'Error: Please select a channel');
+        return
     end
+
+    % check if addr and data hex values are valid
+    if(~validAddress(handles.tableAddress.String) || ...
+       ~validAddress(handles.tableData.String))
+        handles.TBAddDataLabel.Visible = 'on';
+        return
+    end
+
+    % create key array 
+    for i = 1:length(arrChannel)
+        arr = [arr, arrChannel(i), handles.tableAddress.String, ...
+            handles.tableData.String];
+    end
+    setappdata(handles.fig, 'key', arr);
+end
 
     % Button pushed function: SendTableFileButton
     function SendTbFile(hObject, eventData)
@@ -562,11 +549,11 @@ end
     end
 
 
-    function tf = validAddress(hObject, eventData, str)
-        handles = guidata(hObject);
+    function tf = validAddress(str)
         newstr = string(str);
         
         if(strncmpi(str, "0x", 2) == 0)
+            tf = 0;
             return
         end
         str = newstr{1}(3:end);

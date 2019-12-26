@@ -9,6 +9,7 @@ function ngfmHardwareCmd()
             
     handles = guihandles(fig);
     
+    % ----- Channel Stuff -------------------------------------------
     % Create ChannelLabel
     uicontrol('Parent',fig, 'style','text', ...
         'String','Channel', 'Units','normalized', 'FontSize',16, ...
@@ -43,6 +44,9 @@ function ngfmHardwareCmd()
     handles.CheckBoxZ = uicontrol('Parent',fig, 'style','checkbox', ...
         'Units','normalized', 'tag','CheckBoxZ', ...
         'Position',[0.663 0.85 0.01 0.03]);
+    
+    
+    % ----- Send Feeback -------------------------------------------
 
     % Create ButtonGroup
     handles.ButtonGroup = uibuttongroup('Parent', fig, 'Units', 'normalized', ...
@@ -61,57 +65,66 @@ function ngfmHardwareCmd()
         'UserData', 'D', 'Position', [0.15 0.6 0.7 0.2]);
 
     % Create FeedBackLabel
-    FeedBackLabel = uicontrol('Parent', fig, 'style', 'text', ...
+    uicontrol('Parent', fig, 'style', 'text', ...
         'String', 'FeedBack', 'Units', 'normalized', 'FontSize', 16, ...
         'HorizontalAlignment', 'center', 'Position', [0.2 0.66 0.05 0.03]);
 
     % Create IncDecSpinnerLabel
-    IncDecSpinnerLabel = uicontrol('Parent', fig, 'style', 'text', ...
+    uicontrol('Parent', fig, 'style', 'text', ...
         'String', 'Inc/Dec', 'Units', 'normalized', 'FontSize', 16, ...
         'HorizontalAlignment', 'center', 'Position', [0.5 0.65 0.04 0.03]);
 
-    % Create IncDecSpinner
-    handles.IncDecSpinner = uicontrol('Parent', fig, 'style', 'edit', ...
+    % Create feedbackIncDec
+    handles.feedbackIncDec = uicontrol('Parent', fig, 'style', 'edit', ...
         'Units', 'normalized', 'tag', 'FBEdit', 'FontSize', 14, ...
         'String', '0', 'Position', [0.55 0.65 0.07 0.03]);
 
     % Create SendFeedbackButton
-    SendFeedbackButton = uicontrol('Parent', fig, 'style', 'pushbutton', ...
+    uicontrol('Parent', fig, 'style', 'pushbutton', ...
         'String', 'Send Feedback', 'CallBack', @FeedbackBtnCallback, ...
         'Units', 'normalized', 'FontSize', 13, ...
         'Position', [0.775 0.64 0.07 0.04]);
     
+    
+    % ----- Feedback Calibration -----------------------------------------
+    
     % Create FeedBackCalibrationLabel
-    FeedBackCalibrationLabel = uicontrol('Parent', fig, 'style', 'text', ...
+    uicontrol('Parent', fig, 'style', 'text', ...
         'String', 'FeedBack Calibration', 'Units', 'normalized', ...
         'HorizontalAlignment', 'center', 'FontSize', 16, ...
         'Position', [0.2 0.55 0.1 0.03]);
 
     % Create SendFBCalibButton
-    SendFBCalibButton = uicontrol('Parent', fig, 'style', 'pushbutton', ...
+    uicontrol('Parent', fig, 'style', 'pushbutton', ...
         'String', 'Send FB Calib', 'Units', 'normalized', ...
         'CallBack', @SendFBCalib, 'FontSize', 13, ...
         'Position', [0.775 0.55 0.07 0.04]);
+    
+    
+    % ----- Deadspace -----------------------------------------
 
-    % Create DeadspaceLabel
-    DeadspaceLabel = uicontrol('Parent', fig, 'style', 'text', ...
+    % Create Deadspace Label
+    uicontrol('Parent', fig, 'style', 'text', ...
         'String', 'Deadspace', 'Units', 'normalized', 'FontSize', 16, ...
         'Position', [0.2 0.45 0.055 0.03]);
 
-    % Create IncDecSpinner_2Label
-    IncDecSpinner_2Label = uicontrol('Parent', fig, 'style', 'text', ...
+    % Create Deadspace IncDec label
+    uicontrol('Parent', fig, 'style', 'text', ...
         'String', 'Inc/Dec', 'Units', 'normalized', 'FontSize', 16, ...
         'HorizontalAlignment', 'center', 'Position', [0.4 0.46 0.04 0.02]);
 
-    % Create IncDecSpinner_2
-    IncDecSpinner_2 = uicontrol('Parent', fig, 'style', 'edit', ...
+    % Create IncDec edit field
+    handles.deadspaceIncDec = uicontrol('Parent', fig, 'style', 'edit', ...
         'Units', 'normalized', 'tag', 'deadField', 'FontSize', 14, ...
         'String', '0', 'Position', [0.45 0.45 0.07 0.03]);
 
     % Create SendDeadspaceButton
-    SendDeadspaceButton = uicontrol('Parent', fig, 'style', 'pushbutton', ...
+    uicontrol('Parent', fig, 'style', 'pushbutton', ...
         'String', 'Send Deadspace', 'CallBack', @SendDeadspace, ...
         'Units', 'normalized', 'FontSize', 13, 'Position', [0.775 0.44 0.07 0.04]);
+    
+    
+    % ----- PSU Offset -----------------------------------------
 
     % Create OffsetLabel
     OffsetLabel = uicontrol('Parent', fig, 'style', 'text', ...
@@ -133,6 +146,9 @@ function ngfmHardwareCmd()
         'String', 'Send Offset', 'CallBack', @SendOffset, ...
         'Units', 'normalized', 'FontSize', 13, ...
         'Position', [0.775 0.345 0.07 0.04]);
+    
+    
+    % ----- Table Load -----------------------------------------
 
     % Create TableLoadLabel
     TableLoadLabel = uicontrol('Parent', fig, 'style', 'text', ...
@@ -149,12 +165,27 @@ function ngfmHardwareCmd()
         'String', 'Data', 'Units', 'normalized', 'tag', 'dataCmd', ...
         'FontSize', 14, 'HorizontalAlignment', 'center', ...
         'Position', [0.55 0.29 0.03 0.02]);
+    
+    % Create EditFieldAdress
+    EditFieldAddress = uicontrol('Parent', fig, 'style', 'edit', ...
+        'Units', 'normalized', 'tag', 'AddrField', 'FontSize', 14, ...
+        'String', '0x0000', 'HorizontalAlignment', 'center', ...
+        'Position', [0.385 0.25 0.07 0.03]);
+
+    % Create EditFieldData
+    EditFieldData = uicontrol('Parent', fig, 'style', 'edit', ...
+        'Units', 'normalized', 'tag', 'dataField', 'FontSize', 14, ...
+        'String', '0x0000', 'HorizontalAlignment', 'center', ...
+        'Position', [0.53 0.25 0.07 0.03]);
 
     % Create SendTableLoadButton
     SendTableLoadButton = uicontrol('Parent', fig, 'style', 'pushbutton', ...
         'String', 'Send Table Load', 'CallBack', @SendTbLoad, ...
         'Units', 'normalized', 'FontSize', 13, ...
         'Position', [0.775 0.24 0.07 0.04]);
+    
+    
+    % ----- Table File -----------------------------------------
 
     % Create TableFileLabel
     TableFileLabel = uicontrol('Parent', fig, 'style', 'text', ...
@@ -177,18 +208,9 @@ function ngfmHardwareCmd()
         'String', 'Send Table File', 'CallBack', @SendTbFile, ...
         'Units', 'normalized', 'FontSize', 13, ...
         'Position', [0.775 0.14 0.07 0.04]);
-
-    % Create EditFieldAdress
-    EditFieldAddress = uicontrol('Parent', fig, 'style', 'edit', ...
-        'Units', 'normalized', 'tag', 'AddrField', 'FontSize', 14, ...
-        'String', '0x0000', 'HorizontalAlignment', 'center', ...
-        'Position', [0.385 0.25 0.07 0.03]);
-
-    % Create EditFieldData
-    EditFieldData = uicontrol('Parent', fig, 'style', 'edit', ...
-        'Units', 'normalized', 'tag', 'dataField', 'FontSize', 14, ...
-        'String', '0x0000', 'HorizontalAlignment', 'center', ...
-        'Position', [0.53 0.25 0.07 0.03]);
+    
+    
+    % ----- Enter Command -----------------------------------------
     
     % Create EnteraCommandLabel
     EnteraCommandLabel = uicontrol('Parent', fig, 'style', 'text', ...
@@ -205,6 +227,8 @@ function ngfmHardwareCmd()
         'String', 'Send Command', 'Units', 'normalized', ...
         'CallBack', @sendCommandBtn, 'FontSize', 13, ...
         'Position', [0.775 0.04 0.07 0.04]);
+    
+    % ----- Error Text -----------------------------------------
     
     handles.errorLabel = uicontrol('Parent', fig, 'style', 'text', ...
         'Units', 'normalized', 'tag', 'ErrorChannel', ...
@@ -274,7 +298,7 @@ function FeedbackBtnCallback(hObject, ~)
         return
     end
 
-    [num] = str2double(handles.IncDecSpinner.String);
+    [num] = str2double(handles.feedbackIncDec.String);
     if(isnan(num))
         displayError(handles, 'Error: Please enter a valid number');
         return
@@ -303,81 +327,57 @@ function FeedbackBtnCallback(hObject, ~)
 
 end
 
-    % Button pushed function: SendFBCalibButton
-    function SendFBCalib(hObject, ~)
-        handles = guidata(hObject);
-        arrChannel = checkChannel(handles);
-        displayError(handles, '');
-        arr = {};
-        
-        if(isempty(arrChannel))
-            displayError(handles, 'Error: Please select a channel');
-            return
-        end
-        
-        for i = 1:length(arrChannel)
-            arr = [arr, arrChannel(i)];
-            arr = [arr, 'C'];
-        end
+% Button pushed function: SendFBCalibButton
+function SendFBCalib(hObject, ~)
+    handles = guidata(hObject);
+    arrChannel = checkChannel(handles);
+    displayError(handles, '');
+    arr = {};
 
-        setappdata(handles.fig, 'key', arr);
+    if(isempty(arrChannel))
+        displayError(handles, 'Error: Please select a channel');
+        return
     end
 
-    % Button pushed function: SendDeadspaceButton
-    function SendDeadspace(hObject, eventData)
-        handles = guidata(hObject);
-    
-        arrChannel = checkChannel(handles);
-        channelCount = length(arrChannel);
-        arr = get(handles.tab3, 'Children');
-        key = getappdata(handles.fig, 'key');
-
-        if(channelCount == 0)
-            arr(7).Visible = 'on';
-            return
-        end
-        
-        if(strcmp(arr(7).Visible, 'on'))
-            arr(7).Visible = 'off';
-        end
-        
-        [num, tf] = str2num(arr(23).String);
-        if(tf == 0)
-            arr(43).Visible = 'on';
-            return
-        else
-            arr(43).Visible = 'off';
-        end
-        
-        while(channelCount ~= 0)
-           key = [key, arrChannel(1)];
-            arrChannel(1) = [];
-        
-            if(str2num(arr(23).String) == 0)
-                key = [key, 'G'];
-
-            elseif(str2num(arr(23).String) > 0)
-                 counter = str2num(arr(23).String);
-                while(counter > 0)
-                    key = [key, 'G'];
-                    counter = counter - 1;
-                end
-
-            else
-                counter = str2num(arr(23).String);
-                if(counter < 0)
-                    counter = counter + 255;
-                    while(counter > 0)
-                        key = [key, 'G'];
-                        counter = counter - 1;
-                    end
-                end
-                
-            end
-            channelCount = channelCount - 1;
-        end
-        setappdata(handles.fig, 'key', key);
+    for i = 1:length(arrChannel)
+        arr = [arr, arrChannel(i)];
+        arr = [arr, 'C'];
     end
+
+    setappdata(handles.fig, 'key', arr);
+end
+
+% Button pushed function: SendDeadspaceButton
+function SendDeadspace(hObject, ~)
+    handles = guidata(hObject);
+    arrChannel = checkChannel(handles);
+    displayError(handles, '');
+    arr = {};
+
+    if(isempty(arrChannel))
+        displayError(handles, 'Error: Please select a channel');
+        return
+    end
+
+    [num] = str2double(handles.deadspaceIncDec.String);
+    if(isnan(num) || num == 0)
+        displayError(handles, ...
+            'Error: Please enter a positive or negative number');
+        return
+    end
+
+    if(num < 0)
+        num = num + 255;
+    end
+
+    for i = 1:length(arrChannel)
+        arr = [arr, arrChannel(i)];
+        for j = 1:num
+            arr = [arr, 'G'];
+        end
+    end
+    setappdata(handles.fig, 'key', arr);
+end
 
     % Button pushed function: SendOffsetButton
     function SendOffset(hObject, eventData)

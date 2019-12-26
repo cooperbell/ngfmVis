@@ -108,7 +108,7 @@ function ngfmHardwareCmd()
         'String', 'Deadspace', 'Units', 'normalized', 'FontSize', 16, ...
         'Position', [0.2 0.45 0.055 0.03]);
 
-    % Create Deadspace IncDec label
+    % Create Deadspace Inc/Dec label
     uicontrol('Parent', fig, 'style', 'text', ...
         'String', 'Inc/Dec', 'Units', 'normalized', 'FontSize', 16, ...
         'HorizontalAlignment', 'center', 'Position', [0.4 0.46 0.04 0.02]);
@@ -126,23 +126,23 @@ function ngfmHardwareCmd()
     
     % ----- PSU Offset -----------------------------------------
 
-    % Create OffsetLabel
-    OffsetLabel = uicontrol('Parent', fig, 'style', 'text', ...
+    % Create PSU Offset Label
+    uicontrol('Parent', fig, 'style', 'text', ...
         'String', 'PSU Offset', 'Units', 'normalized', 'FontSize', 16, ...
         'Position', [0.2 0.36 0.05 0.02]);
 
-    % Create IncDecSpinner_3Label
-    IncDecSpinner_3Label = uicontrol('Parent', fig, 'style', 'text', ...
+    % Create PSU Offset Inc/Dec Label
+    uicontrol('Parent', fig, 'style', 'text', ...
         'String', 'Inc/Dec', 'Units', 'normalized', 'FontSize', 16, ...
         'HorizontalAlignment', 'center', 'Position', [0.4 0.36 0.04 0.02]);
 
     % Create IncDecSpinner_3
-    IncDecSpinner_3 = uicontrol('Parent', fig, 'style', 'edit', ...
+    handles.offsetIncDec = uicontrol('Parent', fig, 'style', 'edit', ...
         'Units', 'normalized', 'tag', 'offsetField', 'FontSize', 14, ...
         'String', '0', 'Position', [0.45 0.35 0.07 0.03]);
 
     % Create SendOffsetButton
-    SendOffsetButton = uicontrol('Parent', fig, 'style', 'pushbutton', ...
+    uicontrol('Parent', fig, 'style', 'pushbutton', ...
         'String', 'Send Offset', 'CallBack', @SendOffset, ...
         'Units', 'normalized', 'FontSize', 13, ...
         'Position', [0.775 0.345 0.07 0.04]);
@@ -379,62 +379,37 @@ function SendDeadspace(hObject, ~)
     setappdata(handles.fig, 'key', arr);
 end
 
-    % Button pushed function: SendOffsetButton
-    function SendOffset(hObject, eventData)
-        handles = guidata(hObject);
-    
-        arrChannel = checkChannel(handles);
-        channelCount = length(arrChannel);
-        arr = get(handles.tab3, 'Children');
-        key = getappdata(handles.fig, 'key');
-        
-        if(channelCount == 0)
-            arr(7).Visible = 'on';
-            return
-        end
-        if(strcmp(arr(7).Visible, 'on'))
-            arr(7).Visible = 'off';
-        end
-        
-        [num, tf] = str2num(arr(19).String);
-        if(tf == 0)
-            arr(43).Visible = 'on';
-            return
-        else
-            arr(43).Visible = 'off';
-        end
-        
-        while(channelCount ~= 0)
-           key = [key, arrChannel(1)];
-            arrChannel(1) = [];
-        
-            if(str2num(arr(19).String) == 0)
-                return;
+% Button pushed function: SendOffsetButton
+function SendOffset(hObject, ~)
+    handles = guidata(hObject);
+    arrChannel = checkChannel(handles);
+    displayError(handles, '');
+    arr = {};
 
-            elseif(str2num(arr(19).String) > 0)
-                 counter = str2num(arr(19).String);
-                while(counter > 0)
-                    key = [key, 'P'];
-                    counter = counter - 1;
-                end
-
-            else
-                counter = str2num(arr(19).String);
-                if(counter < 0)
-                    counter = counter + 255;
-                    while(counter > 0)
-                        key = [key, 'P'];
-                        counter = counter - 1;
-                    end
-                end
-                
-            end
-            channelCount = channelCount - 1;
-        end
-        
-        setappdata(handles.fig, 'key', key);
-
+    if(isempty(arrChannel))
+        displayError(handles, 'Error: Please select a channel');
+        return
     end
+
+    [num] = str2double(handles.offsetIncDec.String);
+    if(isnan(num) || num == 0)
+        displayError(handles, ...
+            'Error: Please enter a positive or negative number');
+        return
+    end
+
+    if(num < 0)
+        num = num + 255;
+    end
+
+    for i = 1:length(arrChannel)
+        arr = [arr, arrChannel(i)];
+        for j = 1:num
+            arr = [arr, 'P'];
+        end
+    end
+    setappdata(handles.fig, 'key', arr);
+end
 
     % Button pushed function: SendTableLoadButton
     function SendTbLoad(hObject, eventData)

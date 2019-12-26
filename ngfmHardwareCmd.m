@@ -257,6 +257,7 @@ function arrChannel = checkChannel(plotHandles)
     end
 end
 
+% Display and hide error that shows at the top of the page
 function displayError(plotHandles, errorString)
     plotHandles.errorLabel.String = errorString;
 end
@@ -303,28 +304,23 @@ function FeedbackBtnCallback(hObject, ~)
 end
 
     % Button pushed function: SendFBCalibButton
-    function SendFBCalib(hObject, eventData)
+    function SendFBCalib(hObject, ~)
         handles = guidata(hObject);
         arrChannel = checkChannel(handles);
-        channelCount = length(arrChannel);
-        arr = get(handles.tab3, 'Children');
-        key = getappdata(handles.fig, 'key');
+        displayError(handles, '');
+        arr = {};
         
-        if(channelCount == 0)
-            arr(7).Visible = 'on';
+        if(isempty(arrChannel))
+            displayError(handles, 'Error: Please select a channel');
             return
         end
-        if(strcmp(arr(7).Visible, 'on'))
-            arr(7).Visible = 'off';
-        end
         
-        while(channelCount > 0)
-            key = [key, arrChannel(1)];
-            arrChannel(1) = [];
-            channelCount = channelCount - 1;
-            key = [key, 'C'];
+        for i = 1:length(arrChannel)
+            arr = [arr, arrChannel(i)];
+            arr = [arr, 'C'];
         end
-        setappdata(handles.fig, 'key', key);
+
+        setappdata(handles.fig, 'key', arr);
     end
 
     % Button pushed function: SendDeadspaceButton

@@ -6,65 +6,59 @@ function ngfmHardwareCmd()
     fig = figure('Name', 'ngfmVis', 'NumberTitle','off', ...
                 'WindowState', 'fullscreen', 'Tag', 'fig', ...
                 'KeyPressFcn', @keyPressCallback);
-    
-    % Create ErrorNum
-    ErrorNum = uicontrol('Parent',fig, 'style','text', ...
-        'String','Error: Please enter a valid number', ...
-        'Units','normalized', 'tag','ErrorNum', ...
-        'HorizontalAlignment','center', 'FontSize',16, ...
-        'ForegroundColor',[1 0 0], 'Visible','off', ...
-        'Position',[0.39 0.9 0.25 0.03]);
+            
+    handles = guihandles(fig);
     
     % Create ChannelLabel
-    ChannelLabel = uicontrol('Parent',fig, 'style','text', ...
+    uicontrol('Parent',fig, 'style','text', ...
         'String','Channel', 'Units','normalized', 'FontSize',16, ...
         'HorizontalAlignment','center', 'Position',[0.20 0.85 0.04 0.03]);
 
     % Create XLabel
-    XLabel = uicontrol('Parent',fig, 'style','text', 'String','X', ...
+    uicontrol('Parent',fig, 'style','text', 'String','X', ...
         'Units','normalized', 'HorizontalAlignment','center', ...
-        'FontSize',16, 'Position',[0.35 0.8 0.04 0.03]);
+        'FontSize',16, 'Tag', 'XLabel', 'Position',[0.35 0.8 0.04 0.03]);
 
     % Create YLabel
-    YLabel = uicontrol('Parent',fig, 'style','text', 'String','Y', ...
+    uicontrol('Parent',fig, 'style','text', 'String','Y', ...
         'Units','normalized', 'HorizontalAlignment','center', ...
         'FontSize',16, 'Position',[0.5 0.8 0.04 0.03]);
 
     % Create ZLabel
-    ZLabel = uicontrol('Parent',fig, 'style','text', 'String','Z', ...
+    uicontrol('Parent',fig, 'style','text', 'String','Z', ...
         'Units','normalized', 'HorizontalAlignment','center', ...
         'FontSize',16, 'Position',[0.65 0.8 0.04 0.03]);
     
     % Create CheckBoxX
-    CheckBoxX = uicontrol('Parent',fig, 'style','checkbox', ...
+    handles.CheckBoxX = uicontrol('Parent',fig, 'style','checkbox', ...
         'Units','normalized', 'tag','CheckBoxX', ...
         'Position',[0.363 0.85 0.01 0.03]);
 
     % Create CheckBoxY
-    CheckBoxY = uicontrol('Parent',fig, 'style', 'checkbox', ...
+    handles.CheckBoxY = uicontrol('Parent',fig, 'style', 'checkbox', ...
         'Units','normalized', 'tag','CheckBoxY', ...
         'Position',[0.513 0.85 0.01 0.03]);
 
     % Create CheckBoxZ
-    CheckBoxZ = uicontrol('Parent',fig, 'style','checkbox', ...
+    handles.CheckBoxZ = uicontrol('Parent',fig, 'style','checkbox', ...
         'Units','normalized', 'tag','CheckBoxZ', ...
         'Position',[0.663 0.85 0.01 0.03]);
 
     % Create ButtonGroup
-    ButtonGroup = uibuttongroup('Parent', fig, 'Units', 'normalized', ...
+    handles.ButtonGroup = uibuttongroup('Parent', fig, 'Units', 'normalized', ...
         'tag', 'Buttongroup', 'Position', [0.35 0.625 0.1 0.1]);
 
     % Create StaticButton
-    StaticButton = uicontrol('Parent', ButtonGroup, ...
+    handles.StaticButton = uicontrol('Parent', handles.ButtonGroup, ...
         'style', 'radiobutton', 'String', 'Static', ...
         'Units', 'normalized', 'tag', 'StaticButton', 'FontSize', 14, ...
-        'Value', true, 'Position', [0.15 0.2 0.7 0.2]);
+        'Value', true, 'UserData', 'S', 'Position', [0.15 0.2 0.7 0.2]);
     
     % Create DynamicButton
-    DynamicButton = uicontrol('Parent', ButtonGroup, ...
+    handles.DynamicButton = uicontrol('Parent', handles.ButtonGroup, ...
         'style', 'radiobutton', 'String', 'Dynamic', ...
         'Units', 'normalized', 'tag', 'DynamicButton', 'FontSize', 14, ...
-        'Position', [0.15 0.6 0.7 0.2]);
+        'UserData', 'D', 'Position', [0.15 0.6 0.7 0.2]);
 
     % Create FeedBackLabel
     FeedBackLabel = uicontrol('Parent', fig, 'style', 'text', ...
@@ -77,13 +71,13 @@ function ngfmHardwareCmd()
         'HorizontalAlignment', 'center', 'Position', [0.5 0.65 0.04 0.03]);
 
     % Create IncDecSpinner
-    IncDecSpinner = uicontrol('Parent', fig, 'style', 'edit', ...
+    handles.IncDecSpinner = uicontrol('Parent', fig, 'style', 'edit', ...
         'Units', 'normalized', 'tag', 'FBEdit', 'FontSize', 14, ...
         'String', '0', 'Position', [0.55 0.65 0.07 0.03]);
 
     % Create SendFeedbackButton
     SendFeedbackButton = uicontrol('Parent', fig, 'style', 'pushbutton', ...
-        'String', 'Send Feedback', 'CallBack', @SendFBIncDec, ...
+        'String', 'Send Feedback', 'CallBack', @FeedbackBtnCallback, ...
         'Units', 'normalized', 'FontSize', 13, ...
         'Position', [0.775 0.64 0.07 0.04]);
     
@@ -195,9 +189,25 @@ function ngfmHardwareCmd()
         'Units', 'normalized', 'tag', 'dataField', 'FontSize', 14, ...
         'String', '0x0000', 'HorizontalAlignment', 'center', ...
         'Position', [0.53 0.25 0.07 0.03]);
+    
+    % Create EnteraCommandLabel
+    EnteraCommandLabel = uicontrol('Parent', fig, 'style', 'text', ...
+        'String', 'Enter a Command', 'Units', 'normalized', ...
+        'FontSize', 16, 'Position', [0.2 0.04 0.09 0.04]);
+    
+    % Create EditField_7
+    EditField_7 = uicontrol('Parent', fig, 'style', 'edit', ...
+        'Units', 'normalized', 'FontSize', 14, ...
+        'Position', [0.325 0.05 0.1 0.03]);
 
+    % Create SendCommandButton
+    SendCommandButton = uicontrol('Parent', fig, 'style', 'pushbutton', ...
+        'String', 'Send Command', 'Units', 'normalized', ...
+        'CallBack', @sendCommandBtn, 'FontSize', 13, ...
+        'Position', [0.775 0.04 0.07 0.04]);
+    
     % Create ErrorChannelLabel
-    ErrorChannelLabel = uicontrol('Parent', fig, 'style', 'text', ...
+    handles.ErrorChannelLabel = uicontrol('Parent', fig, 'style', 'text', ...
     'String', 'Error: Please Select a Channel', 'Units', 'normalized', ...
     'tag', 'ErrorChannel', 'ForegroundColor', [1 0 0], 'Visible', 'off', ...
     'FontSize', 16, 'HorizontalAlignment', 'center', ...
@@ -224,112 +234,85 @@ function ngfmHardwareCmd()
         'ForegroundColor', [1 0 0], 'Visible', 'off', ...
         'Position', [0.4 0.19 0.2 0.03]);
     
-    % Create EnteraCommandLabel
-    EnteraCommandLabel = uicontrol('Parent', fig, 'style', 'text', ...
-        'String', 'Enter a Command', 'Units', 'normalized', ...
-        'FontSize', 16, 'Position', [0.2 0.04 0.09 0.04]);
+    % Create ErrorNum
+    handles.ErrorNum = uicontrol('Parent',fig, 'style','text', ...
+        'String','Error: Please enter a valid number', ...
+        'Units','normalized', 'tag','ErrorNum', ...
+        'HorizontalAlignment','center', 'FontSize',16, ...
+        'ForegroundColor',[1 0 0], 'Visible','off', ...
+        'Position',[0.39 0.9 0.25 0.03]);
     
-    % Create EditField_7
-    EditField_7 = uicontrol('Parent', fig, 'style', 'edit', ...
-        'Units', 'normalized', 'FontSize', 14, ...
-        'Position', [0.325 0.05 0.1 0.03]);
-
-    % Create SendCommandButton
-    SendCommandButton = uicontrol('Parent', fig, 'style', 'pushbutton', ...
-        'String', 'Send Command', 'Units', 'normalized', ...
-        'CallBack', @sendCommandBtn, 'FontSize', 13, ...
-        'Position', [0.775 0.04 0.07 0.04]);
+    % store handles for use in callbacks
+    guidata(fig, handles)
 end
 
 
-    % Check what channel is selecetd and return the value
-    function arrChannel = checkChannel(hObject, eventData)
-        handles = guidata(hObject);
-        arr = get(handles.tab3, 'Children');
-        xCheck = arr(37).Value;
-        yCheck = arr(36).Value;
-        zCheck = arr(35).Value;
-        arrChannel = {};
-        if(xCheck == 1 && yCheck == 1 && zCheck == 1)
-            arrChannel = ['A'];
-        else
-            if(xCheck ==1)
-                arrChannel = [arrChannel, 'X'];
-            end
-            if(yCheck == 1)
-                arrChannel = [arrChannel, 'Y'];
-            end
-            if(zCheck == 1)
-                arrChannel = [arrChannel, 'Z'];
-            end
+% Return selected channels
+function arrChannel = checkChannel(plotHandles)
+    arrChannel = {};
+    if(plotHandles.CheckBoxX.Value == 1 && ...
+            plotHandles.CheckBoxY.Value == 1 && ...
+            plotHandles.CheckBoxZ.Value == 1)
+        arrChannel = 'A';
+    else
+        if(plotHandles.CheckBoxX.Value == 1)
+            arrChannel = [arrChannel, 'X'];
+        end
+        if(plotHandles.CheckBoxY.Value == 1)
+            arrChannel = [arrChannel, 'Y'];
+        end
+        if(plotHandles.CheckBoxZ.Value == 1)
+            arrChannel = [arrChannel, 'Z'];
         end
     end
+end
 
     % Button pushed function: SendFeedbackButton
-    function SendFBIncDec(hObject, eventData)
+    function FeedbackBtnCallback(hObject, ~)
         handles = guidata(hObject);
-        arrChannel = checkChannel(hObject, eventData);
-        channelCount = length(arrChannel);
-        arr = get(handles.tab3, 'Children');
-        key = getappdata(handles.fig, 'key');
+        arrChannel = checkChannel(handles);
+        handles.ErrorChannelLabel.Visible = 'off';
+        handles.ErrorNum.Visible = 'off';
+        arr = {};
         
-        if(channelCount == 0)
-            arr(7).Visible = 'on';
+        if(isempty(arrChannel))
+            handles.ErrorChannelLabel.Visible = 'on';
             return
         end
-        if(strcmp(arr(7).Visible, 'on'))
-            arr(7).Visible = 'off';
+                
+        [num] = str2double(handles.IncDecSpinner.String);
+        if(isnan(num))
+            handles.ErrorNum.Visible = 'on';
+            return
         end
         
-        [num, tf] = str2num(arr(29).String);
-        if(tf == 0)
-            arr(43).Visible = 'on';
-            return
+        if(num > 0)
+            state = 'I';
         else
-            arr(43).Visible = 'off';
+            num = abs(num);
+            state = 'D';
         end
         
-        bgHandle = get(arr(34), 'Children');
-        while(channelCount ~= 0)
-           key = [key, arrChannel(1)];
-            arrChannel(1) = [];
-            
-            % Get if channel is static or dynmaic
-            if(bgHandle(2).Value == 1)
-                key = [key, 'S'];
+        for i = 1:length(arrChannel)
+            arr = [arr, arrChannel(i)];
+            arr = [arr, handles.ButtonGroup.SelectedObject.UserData];
+            if(num == 0)
+                arr = [arr, '0'];
             else
-                key = [key, 'D'];
-            end
-
-            % Check if channel is inc/dec and send command
-            if(str2num(arr(29).String) == 0)
-                key = [key, '0'];
-
-            elseif(str2num(arr(29).String) > 0)
-                 counter = str2num(arr(29).String);
-                while(counter > 0)
-                    key = [key, 'I'];
-                    counter = counter - 1;
-                end
-
-            else
-                counter = str2num(arr(29).String);
-                while(counter < 0)
-                    key = [key, 'D'];
-                    counter = counter + 1;
+                for j = 1:num
+                    arr = [arr, state];
                 end
             end
-            channelCount = channelCount - 1;
         end
         
-        setappdata(handles.fig, 'key', key);
+        setappdata(handles.fig, 'key', arr);
 
     end
 
     % Button pushed function: SendFBCalibButton
     function SendFBCalib(hObject, eventData)
         handles = guidata(hObject);
-        arrChannel = checkChannel(hObject, eventData);
+        arrChannel = checkChannel(handles);
         channelCount = length(arrChannel);
         arr = get(handles.tab3, 'Children');
         key = getappdata(handles.fig, 'key');
@@ -355,7 +338,7 @@ end
     function SendDeadspace(hObject, eventData)
         handles = guidata(hObject);
     
-        arrChannel = checkChannel(hObject, eventData);
+        arrChannel = checkChannel(handles);
         channelCount = length(arrChannel);
         arr = get(handles.tab3, 'Children');
         key = getappdata(handles.fig, 'key');
@@ -411,7 +394,7 @@ end
     function SendOffset(hObject, eventData)
         handles = guidata(hObject);
     
-        arrChannel = checkChannel(hObject, eventData);
+        arrChannel = checkChannel(handles);
         channelCount = length(arrChannel);
         arr = get(handles.tab3, 'Children');
         key = getappdata(handles.fig, 'key');
@@ -467,7 +450,7 @@ end
     % Button pushed function: SendTableLoadButton
     function SendTbLoad(hObject, eventData)
         handles = guidata(hObject);
-        arrChannel = checkChannel(hObject, eventData);
+        arrChannel = checkChannel(handles);
         channelCount = length(arrChannel);
         arr = get(handles.tab3, 'Children');
 
@@ -512,7 +495,7 @@ end
     % Button pushed function: SendTableFileButton
     function SendTbFile(hObject, eventData)
         handles = guidata(hObject);
-        arrChannel = checkChannel(hObject, eventData);
+        arrChannel = checkChannel(handles);
         channelCount = length(arrChannel);
         arr = get(handles.tab3, 'Children');
         key = getappdata(handles.fig, 'key');
@@ -582,7 +565,7 @@ end
     % Button pushed function: SendCommandButton
     function sendCommandBtn(hObject, eventData)
         handles = guidata(hObject);
-        arrChannel = checkChannel(hObject, eventData);
+        arrChannel = checkChannel(handles);
         channelCount = length(arrChannel);
         arr = get(handles.tab3, 'Children');
         key = getappdata(handles.fig, 'key');

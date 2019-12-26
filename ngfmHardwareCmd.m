@@ -188,23 +188,23 @@ function ngfmHardwareCmd()
     % ----- Table File -----------------------------------------
 
     % Create TableFileLabel
-    TableFileLabel = uicontrol('Parent', fig, 'style', 'text', ...
+    uicontrol('Parent', fig, 'style', 'text', ...
         'String', 'Table File', 'Units', 'normalized', 'FontSize', 16, ...
         'HorizontalAlignment', 'center', 'Position', [0.2 0.15 0.04 0.02]);
 
     % Create EditField_6
-    EditField_6 = uicontrol('Parent', fig, 'style', 'edit', ...
+    handles.browseField = uicontrol('Parent', fig, 'style', 'edit', ...
         'Units', 'normalized', 'tag', 'browseField', 'FontSize', 14, ...
         'Position', [0.375 0.15 0.09 0.0275]);
 
     % Create BrowseFileButton
-    BrowseFileButton = uicontrol('Parent', fig, 'style', 'pushbutton', ...
+    uicontrol('Parent', fig, 'style', 'pushbutton', ...
         'String', 'Browse File', 'CallBack', @BrowseFileBtn, ...
         'Units', 'normalized', 'FontSize', 13, ...
         'Position', [0.47 0.15 0.07 0.0275]);
 
     % Create SendTableFileButton
-    SendTableFileButton = uicontrol('Parent', fig, 'style', 'pushbutton', ...
+    uicontrol('Parent', fig, 'style', 'pushbutton', ...
         'String', 'Send Table File', 'CallBack', @SendTbFile, ...
         'Units', 'normalized', 'FontSize', 13, ...
         'Position', [0.775 0.14 0.07 0.04]);
@@ -250,7 +250,7 @@ function ngfmHardwareCmd()
         'Position', [0.35 0.19 0.3 0.03]);
 
     % Create loadTBFileLabelError
-    loadTBFileLabelError = uicontrol('Parent', fig, 'style', 'text', ...
+    handles.loadTBFileLabelError = uicontrol('Parent', fig, 'style', 'text', ...
         'String', 'Error: Incorrect file or file path', ...
         'Units', 'normalized', 'tag', 'ErrorFile', 'FontSize', 16, ...
         'ForegroundColor', [1 0 0], 'Visible', 'off', ...
@@ -286,7 +286,7 @@ function displayError(plotHandles, errorString)
     plotHandles.errorLabel.String = errorString;
 end
 
-% Button pushed function: SendFeedbackButton
+% Send Feedback Button Callback
 function FeedbackBtnCallback(hObject, ~)
     handles = guidata(hObject);
     arrChannel = checkChannel(handles);
@@ -300,7 +300,7 @@ function FeedbackBtnCallback(hObject, ~)
 
     [num] = str2double(handles.feedbackIncDec.String);
     if(isnan(num))
-        displayError(handles, 'Error: Please enter a valid number');
+        displayError(handles, 'Error: Please enter a arr number');
         return
     end
 
@@ -327,7 +327,7 @@ function FeedbackBtnCallback(hObject, ~)
 
 end
 
-% Button pushed function: SendFBCalibButton
+% Send Feedback Calibration Button Callback
 function SendFBCalib(hObject, ~)
     handles = guidata(hObject);
     arrChannel = checkChannel(handles);
@@ -348,7 +348,7 @@ function SendFBCalib(hObject, ~)
     setappdata(handles.fig, 'key', arr);
 end
 
-% Button pushed function: SendDeadspaceButton
+% Send Deadspace Button Callback
 function SendDeadspace(hObject, ~)
     handles = guidata(hObject);
     arrChannel = checkChannel(handles);
@@ -381,7 +381,7 @@ function SendDeadspace(hObject, ~)
     setappdata(handles.fig, 'key', arr);
 end
 
-% Button pushed function: SendOffsetButton
+% Send Offset Button Callback
 function SendOffset(hObject, ~)
     handles = guidata(hObject);
     arrChannel = checkChannel(handles);
@@ -414,7 +414,7 @@ function SendOffset(hObject, ~)
     setappdata(handles.fig, 'key', arr);
 end
 
-% Button pushed function: SendTableLoadButton
+% Send Table Load Button Callback
 function SendTbLoad(hObject, ~)
     handles = guidata(hObject);
     arrChannel = checkChannel(handles);
@@ -429,8 +429,8 @@ function SendTbLoad(hObject, ~)
     end
 
     % check if addr and data hex values are valid
-    if(~validAddress(handles.tableAddress.String) || ...
-       ~validAddress(handles.tableData.String))
+    if(~validHex(handles.tableAddress.String) || ...
+       ~validHex(handles.tableData.String))
         handles.TBAddDataLabel.Visible = 'on';
         return
     end
@@ -443,75 +443,55 @@ function SendTbLoad(hObject, ~)
     setappdata(handles.fig, 'key', arr);
 end
 
-    % Button pushed function: SendTableFileButton
-    function SendTbFile(hObject, eventData)
-        handles = guidata(hObject);
-        arrChannel = checkChannel(handles);
-        channelCount = length(arrChannel);
-        arr = get(handles.tab3, 'Children');
-        key = getappdata(handles.fig, 'key');
+% Send Table File Button Callback
+function SendTbFile(hObject, ~)
+    handles = guidata(hObject);
+    arrChannel = checkChannel(handles);
+    displayError(handles, '');
+    handles.loadTBFileLabelError.Visible = 'off';
+    arr = {};
 
-        if(channelCount == 0)
-            arr(7).Visible = 'on';
-            return
-        end
-        if(strcmp(arr(7).Visible, 'on'))
-            arr(7).Visible = 'off';
-        end
-        
-        if(strcmp(arr(4).Value, 'on'))
-            arr(4).Visible = 'off';
-        end
-        
-        try
-        % Open excel file
-            excelData = readtable(arr(12).String);
-        catch
-            arr(4).Visible = 'on';
-            return
-        end
-        
-        
-        while(channelCount ~= 0)
-            excelCount = 1;
-            key = [key, arrChannel(1)];
-            while(excelCount <= height(excelData))
-                if(validAddress(hObject, eventData, excelData.('Address')(excelCount, 1)) == 0)
-                    arr(4).Visible = 'on';
-                    return
-                end
-                if(validAddress(hObject, eventData, excelData.('Data')(excelCount, 1)) == 0)
-                    arr(4).Visible = 'on';
-                    return
-                end
-                
-                key = [key, excelData.('Address')(excelCount,1)];
-                key = [key, excelData.('Data')(excelCount, 1)];
-                excelCount = excelCount + 1;
+    % check if no channel selected
+    if(isempty(arrChannel))
+        displayError(handles, 'Error: Please select a channel');
+        return
+    end
 
+    % try to read excel file
+    try
+        excelData = readtable(handles.browseField.String);
+    catch
+        handles.loadTBFileLabelError.Visible = 'on';
+        return
+    end
+
+    for i = 1:length(arrChannel)
+        arr = [arr, arrChannel(i)];
+        for j = 1:height(excelData)
+            % check if addr and data hex values are valid
+            if(~validHex(excelData.('Address')(j, 1)) || ...
+               ~validHex(excelData.('Data')(j, 1)))
+                handles.loadTBFileLabelError.Visible = 'on';
+                return
             end
-            arrChannel(1) = [];
-            channelCount = channelCount - 1;
-           
+
+            % create key array 
+            arr = [arr, excelData.('Address')(j,1), ...
+                    excelData.('Data')(j, 1)];
         end
-        
-        setappdata(handles.fig, 'key', key);
+    end       
+    setappdata(handles.fig, 'key', arr);
+end
 
-    end
+% Button pushed function: BrowseFileButton
+function BrowseFileBtn(hObject, ~)
+    handles = guidata(hObject);
+    handles.loadTBFileLabelError.Visible = 'off';
 
-    % Button pushed function: BrowseFileButton
-    function BrowseFileBtn(hObject, eventData)
-        handles = guidata(hObject);
-        arr = get(handles.tab3, 'Children');
-
-        [FileName,FilePath ]= uigetfile('*.xlsx*');
-        sourceFilePath = fullfile(FilePath, FileName);
-        arr(12).String = sourceFilePath;
-        
-        if(strcmp(arr(4).Visible, 'on'))
-            arr(4).Visible = 'off';
-        end
-    end
+    a = {'*.csv;*.txt;*.dat;*.xls;*.xlsb;*.xlsm;*.xlsx;*.xltm;*.xltx;*.ods'};
+    [FileName, FilePath] = uigetfile(a);
+    handles.browseField.String = fullfile(FilePath, FileName);
+end
 
     % Button pushed function: SendCommandButton
     function sendCommandBtn(hObject, eventData)
@@ -549,26 +529,25 @@ end
     end
 
 
-    function tf = validAddress(str)
-        newstr = string(str);
-        
-        if(strncmpi(str, "0x", 2) == 0)
-            tf = 0;
-            return
-        end
-        str = newstr{1}(3:end);
-        
-        if(length(str) ~= 4)
-            tf = 0;
-            return
-        end
-        
-        t = isstrprop(str, 'xdigit');
+function valid = validHex(str)
+    newstr = string(str);
 
-        if(nnz(~t) > 0)
-            tf = 0;
-        else
-            tf = 1;
-        end
-
+    if(~strncmpi(str, "0x", 2))
+        valid = 0;
+        return
     end
+    str = newstr{1}(3:end);
+
+    if(length(str) ~= 4)
+        valid = 0;
+        return
+    end
+
+    t = isstrprop(str, 'xdigit');
+
+    if(nnz(~t) > 0)
+        valid = 0;
+    else
+        valid = 1;
+    end
+end

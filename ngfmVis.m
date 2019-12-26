@@ -22,11 +22,17 @@ function ngfmVis(varargin)
     parse(p,varargin{:});
 
     % load vars
-    loadconfigxml;
+%     loadconfigxml;
     ngfmLoadConstants;
     magData = zeros(3,numSamplesToStore);
     hkData = zeros(12,hkPacketsToDisplay);
     logFile = p.Results.saveFile;
+    
+    dataPacket = struct('dle', uint8(0), 'stx', uint8(0), 'pid', uint8(0), 'packettype', uint8(0), 'packetlength', uint16(0), 'fs', uint16(0), 'ppsoffset', uint32(0), ...
+        'hk', zeros(1,12,'int16'), 'xdac', zeros(1,100,'int16'), 'ydac', zeros(1,100,'int16'), 'zdac', zeros(1,100,'int16'), ...
+        'xadc', zeros(1,100,'int16'), 'yadc', zeros(1,100,'int16'), 'zadc', zeros(1,100,'int16'), ...
+        'boardid', uint16(0), 'sensorid', uint16(0), 'reservedA', uint8(0), 'reservedB', uint8(0), 'reservedC', uint8(0), 'reservedD', uint8(0), ...
+        'etx', uint8(0), 'crc', uint16(0) );
     
     %add subfolders to path
     addpath('lib', 'spectraPlots', 'log');
@@ -67,8 +73,7 @@ function ngfmVis(varargin)
     done = 0;
     closeRequest = 0;
     key = [];
-    workerMsgs = {'Serial port closed\n', ...
-                'Error: File not found\n', ...
+    workerMsgs = {'Serial port closed\n', 'Error: File not found\n', ...
                 'Fread returned zero\n'};
     
     % main loop
@@ -99,9 +104,9 @@ function ngfmVis(varargin)
                 [packetQueueData, packetQueueDataAvail] = poll(packetQueue, 1); 
                 if(packetQueueDataAvail && isa(packetQueueData, 'uint8'))
                     % parse packet
-                    tempPacket = getDataPacket(dataPacket, packetQueueData, inputOffset);
-                    fprintf('Packet parser PID = %d.\n', tempPacket.pid);
-                    [tempPacket, magData, hkData] = interpretData( tempPacket, magData, hkData, hk);
+                    dataPacket = parsePacket(dataPacket, packetQueueData);
+                    fprintf('Packet parser PID = %d.\n', dataPacket.pid);
+                    [dataPacket, magData, hkData] = interpretData( dataPacket, magData, hkData);
                 end
             end
 
@@ -109,7 +114,7 @@ function ngfmVis(varargin)
             % until we can put in a proper close request callback
             try
                 [fig, closeRequest, key, debugData] = ...
-                    ngfmPlotUpdate(fig, tempPacket, magData, hkData);
+                    ngfmPlotUpdate(fig, dataPacket, magData, hkData);
             catch exception
                 closeRequest = 1;
                 fprintf('Plot error: %s\n', exception.message)
@@ -198,7 +203,8 @@ function [F, packetQueue, workerDoneQueue, workerQueue] = ...
     end
 end
 
-function dataPacket = parsePacket(tempPacket, inputOffset)
+% parses the data packet according to the format
+function dataPacket = parsePacket(dataPacket, tempPacket)
     dataPacket.dle =            tempPacket(1);
     dataPacket.stx =            tempPacket(2);
     dataPacket.pid =            tempPacket(3);
@@ -219,7 +225,7 @@ function dataPacket = parsePacket(tempPacket, inputOffset)
     dataPacket.hk(11) =         swapbytes(typecast(tempPacket(33:34), 'uint16'));
     dataPacket.hk(12) =         swapbytes(typecast(tempPacket(35:36), 'uint16'));
 
-    dataOffset = inputOffset;
+    dataOffset = 36;
     for n = 1:100
         dataPacket.xdac(n) =    typecast( swapbytes( typecast( tempPacket(dataOffset + (n-1)*12 + 1:dataOffset + (n-1)*12 + 2), 'uint16') ), 'int16' );
         dataPacket.ydac(n) =    typecast( swapbytes( typecast( tempPacket(dataOffset + (n-1)*12 + 5:dataOffset + (n-1)*12 + 6), 'uint16') ), 'int16' );

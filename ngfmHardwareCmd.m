@@ -1,271 +1,244 @@
 % Author: Luke Hermann
 % Sets up command page and functionality
 
-function ngfmSimpleCmd(hObject, plotHandles)
+function ngfmHardwareCmd()
+
+    fig = figure('Name', 'ngfmVis', 'NumberTitle','off', ...
+                'WindowState', 'fullscreen', 'Tag', 'fig', ...
+                'KeyPressFcn', @keyPressCallback);
     
     % Create ErrorNum
-    ErrorNum = uicontrol('Parent', plotHandles.tab3, 'style', 'text', 'String', 'Error: Please enter a valid number', 'Units', 'normalized', 'tag', 'ErrorNum');
-    ErrorNum.HorizontalAlignment = 'center';
-    ErrorNum.FontSize = 16;
-    ErrorNum.ForegroundColor = [1 0 0];
-    ErrorNum.Visible = 'off';
-    ErrorNum.Position = [0.39 0.9 0.25 0.03];
+    ErrorNum = uicontrol('Parent',fig, 'style','text', ...
+        'String','Error: Please enter a valid number', ...
+        'Units','normalized', 'tag','ErrorNum', ...
+        'HorizontalAlignment','center', 'FontSize',16, ...
+        'ForegroundColor',[1 0 0], 'Visible','off', ...
+        'Position',[0.39 0.9 0.25 0.03]);
     
     % Create ChannelLabel
-    ChannelLabel = uicontrol('Parent', plotHandles.tab3, 'style', 'text', 'String', 'Channel', 'Units', 'normalized');
-    ChannelLabel.HorizontalAlignment = 'center';
-    ChannelLabel.FontSize = 16;
-    ChannelLabel.Position = [0.20 0.85 0.04 0.03];
-
-    % Create SimpleCommandsPageLabel
-    SimpleCommandsPageLabel = uicontrol('Parent', plotHandles.tab3, 'style', 'text', 'String', 'Hardware Commands Page', 'Units', 'normalized');
-    SimpleCommandsPageLabel.FontSize = 24;
-    SimpleCommandsPageLabel.FontWeight = 'bold';
-    SimpleCommandsPageLabel.Position = [0.415 0.95 0.2 0.04];
+    ChannelLabel = uicontrol('Parent',fig, 'style','text', ...
+        'String','Channel', 'Units','normalized', 'FontSize',16, ...
+        'HorizontalAlignment','center', 'Position',[0.20 0.85 0.04 0.03]);
 
     % Create XLabel
-    XLabel = uicontrol('Parent', plotHandles.tab3, 'style', 'text', 'String', 'X', 'Units', 'normalized');
-    XLabel.HorizontalAlignment = 'center';
-    XLabel.FontSize = 16;
-    XLabel.Position = [0.35 0.8 0.04 0.03];
+    XLabel = uicontrol('Parent',fig, 'style','text', 'String','X', ...
+        'Units','normalized', 'HorizontalAlignment','center', ...
+        'FontSize',16, 'Position',[0.35 0.8 0.04 0.03]);
 
     % Create YLabel
-    YLabel = uicontrol('Parent', plotHandles.tab3, 'style', 'text', 'String', 'Y', 'Units', 'normalized');
-    YLabel.HorizontalAlignment = 'center';
-    YLabel.FontSize = 16;
-    YLabel.Position = [0.5 0.8 0.04 0.03];
+    YLabel = uicontrol('Parent',fig, 'style','text', 'String','Y', ...
+        'Units','normalized', 'HorizontalAlignment','center', ...
+        'FontSize',16, 'Position',[0.5 0.8 0.04 0.03]);
 
     % Create ZLabel
-    ZLabel = uicontrol('Parent', plotHandles.tab3, 'style', 'text', 'String', 'Z', 'Units', 'normalized');
-    ZLabel.HorizontalAlignment = 'center';
-    ZLabel.FontSize = 16;
-    ZLabel.Position = [0.65 0.8 0.04 0.03];
+    ZLabel = uicontrol('Parent',fig, 'style','text', 'String','Z', ...
+        'Units','normalized', 'HorizontalAlignment','center', ...
+        'FontSize',16, 'Position',[0.65 0.8 0.04 0.03]);
     
     % Create CheckBoxX
-    CheckBoxX = uicontrol('Parent', plotHandles.tab3, 'style', 'checkbox', 'Units', 'normalized', 'tag', 'CheckBoxX');
-    CheckBoxX.Position = [0.363 0.85 0.01 0.03];
+    CheckBoxX = uicontrol('Parent',fig, 'style','checkbox', ...
+        'Units','normalized', 'tag','CheckBoxX', ...
+        'Position',[0.363 0.85 0.01 0.03]);
 
     % Create CheckBoxY
-    CheckBoxY = uicontrol('Parent', plotHandles.tab3, 'style', 'checkbox', 'Units', 'normalized', 'tag', 'CheckBoxY');
-    CheckBoxY.Position = [0.513 0.85 0.01 0.03];
+    CheckBoxY = uicontrol('Parent',fig, 'style', 'checkbox', ...
+        'Units','normalized', 'tag','CheckBoxY', ...
+        'Position',[0.513 0.85 0.01 0.03]);
 
     % Create CheckBoxZ
-    CheckBoxZ = uicontrol('Parent', plotHandles.tab3, 'style', 'checkbox', 'Units', 'normalized', 'tag', 'CheckBoxZ');
-    CheckBoxZ.Position = [0.663 0.85 0.01 0.03];
+    CheckBoxZ = uicontrol('Parent',fig, 'style','checkbox', ...
+        'Units','normalized', 'tag','CheckBoxZ', ...
+        'Position',[0.663 0.85 0.01 0.03]);
 
     % Create ButtonGroup
-    ButtonGroup = uibuttongroup('Parent', plotHandles.tab3, 'Units', 'normalized', 'tag', 'Buttongr');
-    ButtonGroup.Position = [0.35 0.625 0.1 0.1];
-    
-    % Create ErrorNum
-    ErrorNum2 = uicontrol('Parent', plotHandles.tab3, 'style', 'text', 'String', 'Error: Please enter a valid number', 'Units', 'normalized');
-    ErrorNum2.HorizontalAlignment = 'center';
-    ErrorNum2.FontSize = 16;
-    ErrorNum2.ForegroundColor = [1 0 0];
-    ErrorNum2.Visible = 'off';
-    ErrorNum2.Position = [0.39 0.9 0.25 0.03];
-    
-    % Create ErrorNum
-    ErrorNum3 = uicontrol('Parent', plotHandles.tab3, 'style', 'text', 'String', 'Error: Please enter a valid number', 'Units', 'normalized');
-    ErrorNum3.HorizontalAlignment = 'center';
-    ErrorNum3.FontSize = 16;
-    ErrorNum3.ForegroundColor = [1 0 0];
-    ErrorNum3.Visible = 'off';
-    ErrorNum3.Position = [0.39 0.9 0.25 0.03];
+    ButtonGroup = uibuttongroup('Parent', fig, 'Units', 'normalized', ...
+        'tag', 'Buttongroup', 'Position', [0.35 0.625 0.1 0.1]);
 
     % Create StaticButton
-    StaticButton = uicontrol('Parent', ButtonGroup, 'style', 'radiobutton', 'String', 'Static', 'Units', 'normalized', 'tag', 'StaticButton');
-    StaticButton.Position = [0.15 0.2 0.7 0.2];
-    StaticButton.FontSize = 14;
-    StaticButton.Value = true;
+    StaticButton = uicontrol('Parent', ButtonGroup, ...
+        'style', 'radiobutton', 'String', 'Static', ...
+        'Units', 'normalized', 'tag', 'StaticButton', 'FontSize', 14, ...
+        'Value', true, 'Position', [0.15 0.2 0.7 0.2]);
     
     % Create DynamicButton
-    DynamicButton = uicontrol('Parent', ButtonGroup, 'style', 'radiobutton', 'String', 'Dynamic', 'Units', 'normalized', 'tag', 'DynamicButton');
-    DynamicButton.FontSize = 14;
-    DynamicButton.Position = [0.15 0.6 0.7 0.2];
+    DynamicButton = uicontrol('Parent', ButtonGroup, ...
+        'style', 'radiobutton', 'String', 'Dynamic', ...
+        'Units', 'normalized', 'tag', 'DynamicButton', 'FontSize', 14, ...
+        'Position', [0.15 0.6 0.7 0.2]);
 
     % Create FeedBackLabel
-    FeedBackLabel = uicontrol('Parent', plotHandles.tab3, 'style', 'text', 'String', 'FeedBack', 'Units', 'normalized');
-    FeedBackLabel.HorizontalAlignment = 'center';
-    FeedBackLabel.FontSize = 16;
-    FeedBackLabel.Position = [0.2 0.66 0.05 0.03];
+    FeedBackLabel = uicontrol('Parent', fig, 'style', 'text', ...
+        'String', 'FeedBack', 'Units', 'normalized', 'FontSize', 16, ...
+        'HorizontalAlignment', 'center', 'Position', [0.2 0.66 0.05 0.03]);
 
     % Create IncDecSpinnerLabel
-    IncDecSpinnerLabel = uicontrol('Parent', plotHandles.tab3, 'style', 'text', 'String', 'Inc/Dec', 'Units', 'normalized');
-    IncDecSpinnerLabel.HorizontalAlignment = 'center';
-    IncDecSpinnerLabel.FontSize = 16;
-    IncDecSpinnerLabel.Position = [0.5 0.65 0.04 0.03];
+    IncDecSpinnerLabel = uicontrol('Parent', fig, 'style', 'text', ...
+        'String', 'Inc/Dec', 'Units', 'normalized', 'FontSize', 16, ...
+        'HorizontalAlignment', 'center', 'Position', [0.5 0.65 0.04 0.03]);
 
     % Create IncDecSpinner
-    IncDecSpinner = uicontrol('Parent', plotHandles.tab3, 'style', 'edit', 'Units', 'normalized', 'tag', 'FBEdit');
-    IncDecSpinner.Position = [0.55 0.65 0.07 0.03];
-    IncDecSpinner.FontSize = 14;
-    IncDecSpinner.String = '0';
+    IncDecSpinner = uicontrol('Parent', fig, 'style', 'edit', ...
+        'Units', 'normalized', 'tag', 'FBEdit', 'FontSize', 14, ...
+        'String', '0', 'Position', [0.55 0.65 0.07 0.03]);
 
     % Create SendFeedbackButton
-    SendFeedbackButton = uicontrol('Parent', plotHandles.tab3, 'style', 'pushbutton', 'String', 'Send Feedback', 'CallBack', @SendFBIncDec, 'Units', 'normalized');
-    SendFeedbackButton.FontSize = 13;
-    SendFeedbackButton.Position = [0.775 0.64 0.07 0.04];
+    SendFeedbackButton = uicontrol('Parent', fig, 'style', 'pushbutton', ...
+        'String', 'Send Feedback', 'CallBack', @SendFBIncDec, ...
+        'Units', 'normalized', 'FontSize', 13, ...
+        'Position', [0.775 0.64 0.07 0.04]);
     
     % Create FeedBackCalibrationLabel
-    FeedBackCalibrationLabel = uicontrol('Parent', plotHandles.tab3, 'style', 'text', 'String', 'FeedBack Calibration', 'Units', 'normalized');
-    FeedBackCalibrationLabel.HorizontalAlignment = 'center';
-    FeedBackCalibrationLabel.FontSize = 16;
-    FeedBackCalibrationLabel.Position = [0.2 0.55 0.1 0.03];
+    FeedBackCalibrationLabel = uicontrol('Parent', fig, 'style', 'text', ...
+        'String', 'FeedBack Calibration', 'Units', 'normalized', ...
+        'HorizontalAlignment', 'center', 'FontSize', 16, ...
+        'Position', [0.2 0.55 0.1 0.03]);
 
     % Create SendFBCalibButton
-    SendFBCalibButton = uicontrol('Parent', plotHandles.tab3, 'style', 'pushbutton', 'String', 'Send FB Calib', 'Units', 'normalized', 'CallBack', @SendFBCalib);
-    SendFBCalibButton.FontSize = 13;
-    SendFBCalibButton.Position = [0.775 0.55 0.07 0.04];
+    SendFBCalibButton = uicontrol('Parent', fig, 'style', 'pushbutton', ...
+        'String', 'Send FB Calib', 'Units', 'normalized', ...
+        'CallBack', @SendFBCalib, 'FontSize', 13, ...
+        'Position', [0.775 0.55 0.07 0.04]);
 
     % Create DeadspaceLabel
-    DeadspaceLabel = uicontrol('Parent', plotHandles.tab3, 'style', 'text', 'String', 'Deadspace', 'Units', 'normalized');
-    DeadspaceLabel.FontSize = 16;
-    DeadspaceLabel.Position = [0.2 0.45 0.055 0.03];
+    DeadspaceLabel = uicontrol('Parent', fig, 'style', 'text', ...
+        'String', 'Deadspace', 'Units', 'normalized', 'FontSize', 16, ...
+        'Position', [0.2 0.45 0.055 0.03]);
 
     % Create IncDecSpinner_2Label
-    IncDecSpinner_2Label = uicontrol('Parent', plotHandles.tab3, 'style', 'text', 'String', 'Inc/Dec', 'Units', 'normalized');
-    IncDecSpinner_2Label.HorizontalAlignment = 'center';
-    IncDecSpinner_2Label.FontSize = 16;
-    IncDecSpinner_2Label.Position = [0.4 0.46 0.04 0.02];
+    IncDecSpinner_2Label = uicontrol('Parent', fig, 'style', 'text', ...
+        'String', 'Inc/Dec', 'Units', 'normalized', 'FontSize', 16, ...
+        'HorizontalAlignment', 'center', 'Position', [0.4 0.46 0.04 0.02]);
 
     % Create IncDecSpinner_2
-    IncDecSpinner_2 = uicontrol('Parent', plotHandles.tab3, 'style', 'edit', 'Units', 'normalized', 'tag', 'deadField');
-    IncDecSpinner_2.Position = [0.45 0.45 0.07 0.03];
-    IncDecSpinner_2.FontSize = 14;
-    IncDecSpinner_2.String = '0';
+    IncDecSpinner_2 = uicontrol('Parent', fig, 'style', 'edit', ...
+        'Units', 'normalized', 'tag', 'deadField', 'FontSize', 14, ...
+        'String', '0', 'Position', [0.45 0.45 0.07 0.03]);
 
     % Create SendDeadspaceButton
-    SendDeadspaceButton = uicontrol('Parent', plotHandles.tab3, 'style', 'pushbutton', 'String', 'Send Deadspace', 'CallBack', @SendDeadspace, 'Units', 'normalized');
-    SendDeadspaceButton.FontSize = 13;
-    SendDeadspaceButton.Position = [0.775 0.44 0.07 0.04];
+    SendDeadspaceButton = uicontrol('Parent', fig, 'style', 'pushbutton', ...
+        'String', 'Send Deadspace', 'CallBack', @SendDeadspace, ...
+        'Units', 'normalized', 'FontSize', 13, 'Position', [0.775 0.44 0.07 0.04]);
 
     % Create OffsetLabel
-    OffsetLabel = uicontrol('Parent', plotHandles.tab3, 'style', 'text', 'String', 'PSU Offset', 'Units', 'normalized');
-    OffsetLabel.FontSize = 16;
-    OffsetLabel.Position = [0.2 0.36 0.05 0.02];
+    OffsetLabel = uicontrol('Parent', fig, 'style', 'text', ...
+        'String', 'PSU Offset', 'Units', 'normalized', 'FontSize', 16, ...
+        'Position', [0.2 0.36 0.05 0.02]);
 
     % Create IncDecSpinner_3Label
-    IncDecSpinner_3Label = uicontrol('Parent', plotHandles.tab3, 'style', 'text', 'String', 'Inc/Dec', 'Units', 'normalized');
-    IncDecSpinner_3Label.FontSize = 16;
-    IncDecSpinner_3Label.HorizontalAlignment = 'center';
-    IncDecSpinner_3Label.Position = [0.4 0.36 0.04 0.02];
+    IncDecSpinner_3Label = uicontrol('Parent', fig, 'style', 'text', ...
+        'String', 'Inc/Dec', 'Units', 'normalized', 'FontSize', 16, ...
+        'HorizontalAlignment', 'center', 'Position', [0.4 0.36 0.04 0.02]);
 
     % Create IncDecSpinner_3
-    IncDecSpinner_3 = uicontrol('Parent', plotHandles.tab3, 'style', 'edit', 'Units', 'normalized', 'tag', 'offsetField', 'tag', 'offsetField', 'FontSize', 14);
-    IncDecSpinner_3.Position = [0.45 0.35 0.07 0.03];
-    IncDecSpinner_3.String = '0';
+    IncDecSpinner_3 = uicontrol('Parent', fig, 'style', 'edit', ...
+        'Units', 'normalized', 'tag', 'offsetField', 'FontSize', 14, ...
+        'String', '0', 'Position', [0.45 0.35 0.07 0.03]);
 
     % Create SendOffsetButton
-    SendOffsetButton = uicontrol('Parent', plotHandles.tab3, 'style', 'pushbutton', 'String', 'Send Offset', 'CallBack', @SendOffset, 'Units', 'normalized');
-    SendOffsetButton.FontSize = 13;
-    SendOffsetButton.Position = [0.775 0.345 0.07 0.04];
+    SendOffsetButton = uicontrol('Parent', fig, 'style', 'pushbutton', ...
+        'String', 'Send Offset', 'CallBack', @SendOffset, ...
+        'Units', 'normalized', 'FontSize', 13, ...
+        'Position', [0.775 0.345 0.07 0.04]);
 
     % Create TableLoadLabel
-    TableLoadLabel = uicontrol('Parent', plotHandles.tab3, 'style', 'text', 'String', 'Table Load', 'Units', 'normalized');
-    TableLoadLabel.FontSize = 16;
-    TableLoadLabel.HorizontalAlignment = 'center';
-    TableLoadLabel.Position = [0.2 0.25 0.05 0.03];
+    TableLoadLabel = uicontrol('Parent', fig, 'style', 'text', ...
+        'String', 'Table Load', 'Units', 'normalized', 'FontSize', 16, ...
+        'HorizontalAlignment', 'center', 'Position', [0.2 0.25 0.05 0.03]);
 
     % Create AddressLabel
-    AddressLabel = uicontrol('Parent', plotHandles.tab3, 'style', 'text', 'String', 'Address', 'Units', 'normalized');
-    AddressLabel.FontSize = 14;
-    AddressLabel.HorizontalAlignment = 'center';
-    AddressLabel.Position = [0.4 0.29 0.04 0.02];
+    AddressLabel = uicontrol('Parent', fig, 'style', 'text', ...
+        'String', 'Address', 'Units', 'normalized', 'FontSize', 14, ...
+        'HorizontalAlignment', 'center', 'Position', [0.4 0.29 0.04 0.02]);
 
     % Create DataLabel
-    DataLabel = uicontrol('Parent', plotHandles.tab3, 'style', 'text', 'String', 'Data', 'Units', 'normalized', 'tag', 'dataCmd');
-    DataLabel.HorizontalAlignment = 'center';
-    DataLabel.FontSize = 14;
-    DataLabel.Position = [0.55 0.29 0.03 0.02];
-
+    DataLabel = uicontrol('Parent', fig, 'style', 'text', ...
+        'String', 'Data', 'Units', 'normalized', 'tag', 'dataCmd', ...
+        'FontSize', 14, 'HorizontalAlignment', 'center', ...
+        'Position', [0.55 0.29 0.03 0.02]);
 
     % Create SendTableLoadButton
-    SendTableLoadButton = uicontrol('Parent', plotHandles.tab3, 'style', 'pushbutton', 'String', 'Send Table Load', 'CallBack', @SendTbLoad, 'Units', 'normalized');
-    SendTableLoadButton.FontSize = 13;
-    SendTableLoadButton.Position = [0.775 0.24 0.07 0.04];
-
+    SendTableLoadButton = uicontrol('Parent', fig, 'style', 'pushbutton', ...
+        'String', 'Send Table Load', 'CallBack', @SendTbLoad, ...
+        'Units', 'normalized', 'FontSize', 13, ...
+        'Position', [0.775 0.24 0.07 0.04]);
 
     % Create TableFileLabel
-    TableFileLabel = uicontrol('Parent', plotHandles.tab3, 'style', 'text', 'String', 'Table File', 'Units', 'normalized');
-    TableFileLabel.HorizontalAlignment = 'center';
-    TableFileLabel.FontSize = 16;
-    TableFileLabel.Position = [0.2 0.15 0.04 0.02];
+    TableFileLabel = uicontrol('Parent', fig, 'style', 'text', ...
+        'String', 'Table File', 'Units', 'normalized', 'FontSize', 16, ...
+        'HorizontalAlignment', 'center', 'Position', [0.2 0.15 0.04 0.02]);
 
     % Create EditField_6
-    EditField_6 = uicontrol('Parent', plotHandles.tab3, 'style', 'edit', 'Units', 'normalized', 'tag', 'browseField');
-    EditField_6.FontSize = 14;
-    EditField_6.Position = [0.375 0.15 0.09 0.0275];
+    EditField_6 = uicontrol('Parent', fig, 'style', 'edit', ...
+        'Units', 'normalized', 'tag', 'browseField', 'FontSize', 14, ...
+        'Position', [0.375 0.15 0.09 0.0275]);
 
     % Create BrowseFileButton
-    BrowseFileButton = uicontrol('Parent', plotHandles.tab3, 'style', 'pushbutton', 'String', 'Browse File', 'CallBack', @BrowseFileBtn, 'Units', 'normalized');
-    BrowseFileButton.FontSize = 13;
-    BrowseFileButton.Position = [0.47 0.15 0.07 0.0275];
+    BrowseFileButton = uicontrol('Parent', fig, 'style', 'pushbutton', ...
+        'String', 'Browse File', 'CallBack', @BrowseFileBtn, ...
+        'Units', 'normalized', 'FontSize', 13, ...
+        'Position', [0.47 0.15 0.07 0.0275]);
 
     % Create SendTableFileButton
-    SendTableFileButton = uicontrol('Parent', plotHandles.tab3, 'style', 'pushbutton', 'String', 'Send Table File', 'CallBack', @SendTbFile, 'Units', 'normalized');
-    SendTableFileButton.FontSize = 13;
-    SendTableFileButton.Position = [0.775 0.14 0.07 0.04];
+    SendTableFileButton = uicontrol('Parent', fig, 'style', 'pushbutton', ...
+        'String', 'Send Table File', 'CallBack', @SendTbFile, ...
+        'Units', 'normalized', 'FontSize', 13, ...
+        'Position', [0.775 0.14 0.07 0.04]);
 
     % Create EditFieldAdress
-    EditFieldAddress = uicontrol('Parent', plotHandles.tab3, 'style', 'edit', 'Units', 'normalized', 'tag', 'AddrField');
-    EditFieldAddress.HorizontalAlignment = 'center';
-    EditFieldAddress.Position = [0.385 0.25 0.07 0.03];
-    EditFieldAddress.FontSize = 14;
-    EditFieldAddress.String = '0x0000';
+    EditFieldAddress = uicontrol('Parent', fig, 'style', 'edit', ...
+        'Units', 'normalized', 'tag', 'AddrField', 'FontSize', 14, ...
+        'String', '0x0000', 'HorizontalAlignment', 'center', ...
+        'Position', [0.385 0.25 0.07 0.03]);
 
     % Create EditFieldData
-    EditFieldData = uicontrol('Parent', plotHandles.tab3, 'style', 'edit', 'Units', 'normalized', 'tag', 'dataField');
-    EditFieldData.HorizontalAlignment = 'center';
-    EditFieldData.Position = [0.53 0.25 0.07 0.03];
-    EditFieldData.FontSize = 14;
-    EditFieldData.String = '0x0000';
+    EditFieldData = uicontrol('Parent', fig, 'style', 'edit', ...
+        'Units', 'normalized', 'tag', 'dataField', 'FontSize', 14, ...
+        'String', '0x0000', 'HorizontalAlignment', 'center', ...
+        'Position', [0.53 0.25 0.07 0.03]);
 
     % Create ErrorChannelLabel
-    ErrorChannelLabel = uicontrol('Parent', plotHandles.tab3, 'style', 'text', 'String', 'Error: Please Select a Channel', 'Units', 'normalized', 'tag', 'ErrorChannel');
-    ErrorChannelLabel.HorizontalAlignment = 'center';
-    ErrorChannelLabel.FontSize = 16;
-    ErrorChannelLabel.ForegroundColor = [1 0 0];
-    ErrorChannelLabel.Visible = 'off';
-    ErrorChannelLabel.Position = [0.39 0.9 0.25 0.03];
+    ErrorChannelLabel = uicontrol('Parent', fig, 'style', 'text', ...
+    'String', 'Error: Please Select a Channel', 'Units', 'normalized', ...
+    'tag', 'ErrorChannel', 'ForegroundColor', [1 0 0], 'Visible', 'off', ...
+    'FontSize', 16, 'HorizontalAlignment', 'center', ...
+    'Position', [0.39 0.9 0.25 0.03]);
 
     % Create TBAddDataLabel
-    TBAddDataLabel = uicontrol('Parent', plotHandles.tab3, 'style', 'text', 'String', 'Error: Incorrect address or data entry', 'Units', 'normalized', 'tag', 'ErrorLoad');
-    TBAddDataLabel.HorizontalAlignment = 'center';
-    TBAddDataLabel.FontSize = 16;
-    TBAddDataLabel.ForegroundColor = [1 0 0];
-    TBAddDataLabel.Visible = 'off';
-    TBAddDataLabel.Position = [0.35 0.31 0.3 0.03];
+    TBAddDataLabel = uicontrol('Parent', fig, 'style', 'text', ...
+        'String', 'Error: Incorrect address or data entry', ...
+        'Units', 'normalized', 'tag', 'ErrorLoad', 'FontSize', 16, ...
+        'ForegroundColor', [1 0 0], 'Visible', 'off', ...
+        'HorizontalAlignment', 'center', 'Position', [0.35 0.31 0.3 0.03]);
 
     % Create loadTBFileLabel
-    loadTBFileLabel = uicontrol('Parent', plotHandles.tab3, 'style', 'text', 'String', 'Error: File contains incorrect data or entry', 'Units', 'normalized', 'tag', 'ErrorData');
-    loadTBFileLabel.FontSize = 16;
-    loadTBFileLabel.ForegroundColor = [1 0 0];
-    loadTBFileLabel.Visible = 'off';
-    loadTBFileLabel.Position = [0.35 0.19 0.3 0.03];
+    loadTBFileLabel = uicontrol('Parent', fig, 'style', 'text', ...
+        'String', 'Error: File contains incorrect data or entry', ...
+        'Units', 'normalized', 'tag', 'ErrorData', 'FontSize', 16, ...
+        'ForegroundColor', [1 0 0], 'Visible', 'off', ...
+        'Position', [0.35 0.19 0.3 0.03]);
 
     % Create loadTBFileLabelError
-    loadTBFileLabelError = uicontrol('Parent', plotHandles.tab3, 'style', 'text', 'String', 'Error: Incorrect file or file path', 'Units', 'normalized', 'tag', 'ErrorFile');
-    loadTBFileLabelError.FontSize = 16;
-    loadTBFileLabelError.ForegroundColor = [1 0 0];
-    loadTBFileLabelError.Visible = 'off';
-    loadTBFileLabelError.Position = [0.4 0.19 0.2 0.03];
+    loadTBFileLabelError = uicontrol('Parent', fig, 'style', 'text', ...
+        'String', 'Error: Incorrect file or file path', ...
+        'Units', 'normalized', 'tag', 'ErrorFile', 'FontSize', 16, ...
+        'ForegroundColor', [1 0 0], 'Visible', 'off', ...
+        'Position', [0.4 0.19 0.2 0.03]);
     
     % Create EnteraCommandLabel
-    EnteraCommandLabel = uicontrol('Parent', plotHandles.tab3, 'style', 'text', 'String', 'Enter a Command', 'Units', 'normalized');
-    EnteraCommandLabel.FontSize = 16;
-    EnteraCommandLabel.Position = [0.2 0.04 0.09 0.04];
+    EnteraCommandLabel = uicontrol('Parent', fig, 'style', 'text', ...
+        'String', 'Enter a Command', 'Units', 'normalized', ...
+        'FontSize', 16, 'Position', [0.2 0.04 0.09 0.04]);
     
     % Create EditField_7
-    EditField_7 = uicontrol('Parent', plotHandles.tab3, 'style', 'edit', 'Units', 'normalized');
-    EditField_7.Position = [0.325 0.05 0.1 0.03];
-    EditField_7.FontSize = 14;
+    EditField_7 = uicontrol('Parent', fig, 'style', 'edit', ...
+        'Units', 'normalized', 'FontSize', 14, ...
+        'Position', [0.325 0.05 0.1 0.03]);
 
     % Create SendCommandButton
-    SendCommandButton = uicontrol('Parent', plotHandles.tab3, 'style', 'pushbutton', 'String', 'Send Command', 'Units', 'normalized', 'CallBack', @sendCommandBtn);
-    SendCommandButton.FontSize = 13;
-    SendCommandButton.Position = [0.775 0.04 0.07 0.04];
-        
+    SendCommandButton = uicontrol('Parent', fig, 'style', 'pushbutton', ...
+        'String', 'Send Command', 'Units', 'normalized', ...
+        'CallBack', @sendCommandBtn, 'FontSize', 13, ...
+        'Position', [0.775 0.04 0.07 0.04]);
 end
 
 

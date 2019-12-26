@@ -206,12 +206,10 @@ function ngfmHardwareCmd()
         'CallBack', @sendCommandBtn, 'FontSize', 13, ...
         'Position', [0.775 0.04 0.07 0.04]);
     
-    % Create ErrorChannelLabel
-    handles.ErrorChannelLabel = uicontrol('Parent', fig, 'style', 'text', ...
-    'String', 'Error: Please Select a Channel', 'Units', 'normalized', ...
-    'tag', 'ErrorChannel', 'ForegroundColor', [1 0 0], 'Visible', 'off', ...
-    'FontSize', 16, 'HorizontalAlignment', 'center', ...
-    'Position', [0.39 0.9 0.25 0.03]);
+    handles.errorLabel = uicontrol('Parent', fig, 'style', 'text', ...
+        'Units', 'normalized', 'tag', 'ErrorChannel', ...
+        'ForegroundColor', [1 0 0], 'FontSize', 16, ...
+        'HorizontalAlignment', 'center', 'Position', [0.39 0.9 0.25 0.03]);
 
     % Create TBAddDataLabel
     TBAddDataLabel = uicontrol('Parent', fig, 'style', 'text', ...
@@ -233,14 +231,6 @@ function ngfmHardwareCmd()
         'Units', 'normalized', 'tag', 'ErrorFile', 'FontSize', 16, ...
         'ForegroundColor', [1 0 0], 'Visible', 'off', ...
         'Position', [0.4 0.19 0.2 0.03]);
-    
-    % Create ErrorNum
-    handles.ErrorNum = uicontrol('Parent',fig, 'style','text', ...
-        'String','Error: Please enter a valid number', ...
-        'Units','normalized', 'tag','ErrorNum', ...
-        'HorizontalAlignment','center', 'FontSize',16, ...
-        'ForegroundColor',[1 0 0], 'Visible','off', ...
-        'Position',[0.39 0.9 0.25 0.03]);
     
     % store handles for use in callbacks
     guidata(fig, handles)
@@ -267,47 +257,50 @@ function arrChannel = checkChannel(plotHandles)
     end
 end
 
-    % Button pushed function: SendFeedbackButton
-    function FeedbackBtnCallback(hObject, ~)
-        handles = guidata(hObject);
-        arrChannel = checkChannel(handles);
-        handles.ErrorChannelLabel.Visible = 'off';
-        handles.ErrorNum.Visible = 'off';
-        arr = {};
-        
-        if(isempty(arrChannel))
-            handles.ErrorChannelLabel.Visible = 'on';
-            return
-        end
-                
-        [num] = str2double(handles.IncDecSpinner.String);
-        if(isnan(num))
-            handles.ErrorNum.Visible = 'on';
-            return
-        end
-        
-        if(num > 0)
-            state = 'I';
+function displayError(plotHandles, errorString)
+    plotHandles.errorLabel.String = errorString;
+end
+
+% Button pushed function: SendFeedbackButton
+function FeedbackBtnCallback(hObject, ~)
+    handles = guidata(hObject);
+    arrChannel = checkChannel(handles);
+    displayError(handles, '');
+    arr = {};
+
+    if(isempty(arrChannel))
+        displayError(handles, 'Error: Please select a channel');
+        return
+    end
+
+    [num] = str2double(handles.IncDecSpinner.String);
+    if(isnan(num))
+        displayError(handles, 'Error: Please enter a valid number');
+        return
+    end
+
+    if(num > 0)
+        state = 'I';
+    else
+        num = abs(num);
+        state = 'D';
+    end
+
+    for i = 1:length(arrChannel)
+        arr = [arr, arrChannel(i)];
+        arr = [arr, handles.ButtonGroup.SelectedObject.UserData];
+        if(num == 0)
+            arr = [arr, '0'];
         else
-            num = abs(num);
-            state = 'D';
-        end
-        
-        for i = 1:length(arrChannel)
-            arr = [arr, arrChannel(i)];
-            arr = [arr, handles.ButtonGroup.SelectedObject.UserData];
-            if(num == 0)
-                arr = [arr, '0'];
-            else
-                for j = 1:num
-                    arr = [arr, state];
-                end
+            for j = 1:num
+                arr = [arr, state];
             end
         end
-        
-        setappdata(handles.fig, 'key', arr);
-
     end
+
+    setappdata(handles.fig, 'key', arr);
+
+end
 
     % Button pushed function: SendFBCalibButton
     function SendFBCalib(hObject, eventData)

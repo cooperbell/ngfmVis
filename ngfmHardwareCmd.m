@@ -179,7 +179,7 @@ function ngfmHardwareCmd()
         'Position', [0.53 0.25 0.07 0.03]);
 
     % Create SendTableLoadButton
-    SendTableLoadButton = uicontrol('Parent', fig, 'style', 'pushbutton', ...
+    uicontrol('Parent', fig, 'style', 'pushbutton', ...
         'String', 'Send Table Load', 'CallBack', @SendTbLoad, ...
         'Units', 'normalized', 'FontSize', 13, ...
         'Position', [0.775 0.24 0.07 0.04]);
@@ -213,17 +213,17 @@ function ngfmHardwareCmd()
     % ----- Enter Command -----------------------------------------
     
     % Create EnteraCommandLabel
-    EnteraCommandLabel = uicontrol('Parent', fig, 'style', 'text', ...
+    uicontrol('Parent', fig, 'style', 'text', ...
         'String', 'Enter a Command', 'Units', 'normalized', ...
         'FontSize', 16, 'Position', [0.2 0.04 0.09 0.04]);
     
-    % Create EditField_7
-    EditField_7 = uicontrol('Parent', fig, 'style', 'edit', ...
+    % Create Command EditField
+    handles.commandEditField = uicontrol('Parent', fig, 'style', 'edit', ...
         'Units', 'normalized', 'FontSize', 14, ...
         'Position', [0.325 0.05 0.1 0.03]);
 
     % Create SendCommandButton
-    SendCommandButton = uicontrol('Parent', fig, 'style', 'pushbutton', ...
+    uicontrol('Parent', fig, 'style', 'pushbutton', ...
         'String', 'Send Command', 'Units', 'normalized', ...
         'CallBack', @sendCommandBtn, 'FontSize', 13, ...
         'Position', [0.775 0.04 0.07 0.04]);
@@ -260,32 +260,6 @@ function ngfmHardwareCmd()
     guidata(fig, handles)
 end
 
-
-% Return selected channels
-function arrChannel = checkChannel(plotHandles)
-    arrChannel = {};
-    if(plotHandles.CheckBoxX.Value == 1 && ...
-            plotHandles.CheckBoxY.Value == 1 && ...
-            plotHandles.CheckBoxZ.Value == 1)
-        arrChannel = 'A';
-    else
-        if(plotHandles.CheckBoxX.Value == 1)
-            arrChannel = [arrChannel, 'X'];
-        end
-        if(plotHandles.CheckBoxY.Value == 1)
-            arrChannel = [arrChannel, 'Y'];
-        end
-        if(plotHandles.CheckBoxZ.Value == 1)
-            arrChannel = [arrChannel, 'Z'];
-        end
-    end
-end
-
-% Display and hide error that shows at the top of the page
-function displayError(plotHandles, errorString)
-    plotHandles.errorLabel.String = errorString;
-end
-
 % Send Feedback Button Callback
 function FeedbackBtnCallback(hObject, ~)
     handles = guidata(hObject);
@@ -300,7 +274,7 @@ function FeedbackBtnCallback(hObject, ~)
 
     [num] = str2double(handles.feedbackIncDec.String);
     if(isnan(num))
-        displayError(handles, 'Error: Please enter a arr number');
+        displayError(handles, 'Error: Please enter a number');
         return
     end
 
@@ -483,7 +457,7 @@ function SendTbFile(hObject, ~)
     setappdata(handles.fig, 'key', arr);
 end
 
-% Button pushed function: BrowseFileButton
+% Browse File Callback
 function BrowseFileBtn(hObject, ~)
     handles = guidata(hObject);
     handles.loadTBFileLabelError.Visible = 'off';
@@ -493,42 +467,57 @@ function BrowseFileBtn(hObject, ~)
     handles.browseField.String = fullfile(FilePath, FileName);
 end
 
-    % Button pushed function: SendCommandButton
-    function sendCommandBtn(hObject, eventData)
-        handles = guidata(hObject);
-        arrChannel = checkChannel(handles);
-        channelCount = length(arrChannel);
-        arr = get(handles.tab3, 'Children');
-        key = getappdata(handles.fig, 'key');
+% Send Command Button Callback
+function sendCommandBtn(hObject, ~)
+    handles = guidata(hObject);
+    arrChannel = checkChannel(handles);
+    displayError(handles, '');
+    arr = {};
 
-        if(channelCount == 0)
-            arr(7).Visible = 'on';
-            return
-        end
-        if(strcmp(arr(7).Visible, 'on'))
-            arr(7).Visible = 'off';
-        end
-        
-        commands = num2cell(arr(2).String);
-        
-        while(channelCount ~= 0)
-            key = [key, arrChannel(1)];
-            arrChannel(1) = [];
-            commandCounter = 1;
-            while(commandCounter <= length(commands))
-                key = [key, commands(commandCounter)];
-                commandCounter = commandCounter + 1;
-            end
-            
-            channelCount = channelCount - 1;
-        end
-        
-        setappdata(handles.fig, 'key', key);
-        
-        
+    % check if no channel selected
+    if(isempty(arrChannel))
+        displayError(handles, 'Error: Please select a channel');
+        return
     end
 
+    commands = num2cell(handles.commandEditField.String);
 
+    % create key array 
+    for i = 1:length(arrChannel)
+        arr = [arr, arrChannel(i)];
+        for j = 1:length(commands)
+            arr = [arr, commands(j)];
+        end
+    end      
+    setappdata(handles.fig, 'key', arr);
+end
+
+% Return selected channels
+function arrChannel = checkChannel(plotHandles)
+    arrChannel = {};
+    if(plotHandles.CheckBoxX.Value == 1 && ...
+            plotHandles.CheckBoxY.Value == 1 && ...
+            plotHandles.CheckBoxZ.Value == 1)
+        arrChannel = 'A';
+    else
+        if(plotHandles.CheckBoxX.Value == 1)
+            arrChannel = [arrChannel, 'X'];
+        end
+        if(plotHandles.CheckBoxY.Value == 1)
+            arrChannel = [arrChannel, 'Y'];
+        end
+        if(plotHandles.CheckBoxZ.Value == 1)
+            arrChannel = [arrChannel, 'Z'];
+        end
+    end
+end
+
+% Display and hide error that shows at the top of the page
+function displayError(plotHandles, errorString)
+    plotHandles.errorLabel.String = errorString;
+end
+
+% Check if str is a valid 4-digit hexadecimal value
 function valid = validHex(str)
     newstr = string(str);
 

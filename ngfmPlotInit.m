@@ -134,7 +134,7 @@ function [fig] = ngfmPlotInit()
     handles = setupHKData(handles, hkX, ytmp);
    
     % Hardware Command Tab
-    ngfmHardwareCmd(handles);
+    handles = ngfmHardwareCmd(handles);
     
     % store handles for use in callbacks
     guidata(fig, handles)

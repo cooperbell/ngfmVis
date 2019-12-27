@@ -108,6 +108,9 @@ function ngfmVis(varargin)
                     fprintf('Packet parser PID = %d.\n', dataPacket.pid);
                     [dataPacket, magData, hkData] = interpretData( dataPacket, magData, hkData);
                 end
+%                 if(packetQueueDataAvail) % CWB debug
+%                     disp(packetQueueData)
+%                 end
             end
 
             % put a try catch in for now to handle the window being closed

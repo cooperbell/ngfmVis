@@ -3,11 +3,11 @@
 % It's purpose is to capture data from the source (serial port or file)
 % unencumbered from the rest of the program and send that data back to the
 % main thread.
-function sourceMonitor(workerQueueConstant, dataQueue, workerDoneQueue, device, devicePath, serialBufferLen, dle, stx, etx)
+function sourceMonitor(workerQueueConstant, packetQueue, workerDoneQueue, device, devicePath, serialBufferLen, dle, stx, etx)
     % construct queue that main can use to talk to this worker
     % and send it back for it to use
     workerQueue = workerQueueConstant.Value;
-    send(dataQueue, workerQueue);
+    send(packetQueue, workerQueue);
     
     finished = 0;
     serialBuffer = zeros(serialBufferLen);
@@ -37,6 +37,7 @@ function sourceMonitor(workerQueueConstant, dataQueue, workerDoneQueue, device, 
         end
     end
     
+    tic % CWB debug
     while (~finished)
         % Check for a message from main thread, close everything up
         [data, dataAvail] = poll(workerQueue);
@@ -58,7 +59,9 @@ function sourceMonitor(workerQueueConstant, dataQueue, workerDoneQueue, device, 
         end
         
         % read port
+        timeElapsed = toc;
         [A,count] = fread(s,32,'uint8');
+        tic
 
         if (count == 0)
             pause(0.01);
@@ -88,13 +91,12 @@ function sourceMonitor(workerQueueConstant, dataQueue, workerDoneQueue, device, 
                 serialBuffer(1:serialCounter-1248) = serialBuffer(1249:serialCounter);
                 serialCounter = serialCounter - 1248;
                 % send to data queue
-                send(dataQueue, tempPacket); 
+                send(packetQueue, tempPacket); 
             else
                 serialBuffer(1:serialBufferLen-1)=serialBuffer(2:serialBufferLen);
                 serialCounter = serialCounter - 1;
             end
         end
-        pause(0.005); % This sets fread to ~175hz on my machine
-%             pause(0.01);
+        pause(0.005);
     end
 end

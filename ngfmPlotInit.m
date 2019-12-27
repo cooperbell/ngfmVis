@@ -133,8 +133,8 @@ function [fig] = ngfmPlotInit()
     ytmp = zeros(1,hkPacketsToDisplay);
     handles = setupHKData(handles, hkX, ytmp);
    
-    %Hardware Command
-    ngfmHardwareCmd(fig, handles);
+    % Hardware Command Tab
+    handles = ngfmHardwareCmd(handles);
     
     % store handles for use in callbacks
     guidata(fig, handles)
@@ -158,7 +158,7 @@ function QuitButtonCallback(hObject,~)
 end
 
 % Callback for when a key is pressed on the figure
-% If 'q', quit the program through the 'closereq' route
+% If 'q', quit the program through the 'closeRequest' route
 % If '`', flip debug flag and titles respective to that change
 % Else, send that key back so it can be sent over serial
 function keyPressCallback(hObject, event)
@@ -392,13 +392,18 @@ function [plotHandles] = setupMiscdata(plotHandles)
                 'zavg', 'zstddev', 'xamp', 'xfreq', 'yamp', 'yfreq', ...
                 'zamp', 'zfreq',};
     
-    leftJustify = 340;
+    left = 0.13; up = 0.035; width = 0.038;  height = 0.02;
     for i = 1:19
+        % name
         uicontrol('Parent', plotHandles.tab1, 'style','text', ...
                   'String',names{i}, 'FontWeight', 'bold', ...
-                  'Position', [leftJustify 35 50 20]);
+                  'Units', 'Normalized', ...
+                  'Position', [left up width height]);
+        % value
         plotHandles.(miscData{i}) = uicontrol('Parent', plotHandles.tab1, ...
-            'style','text','String','NaN','Position', [leftJustify 10 50 20]);
-        leftJustify = leftJustify+50;
+            'style','text','String','NaN', 'Units', 'Normalized', ...
+            'Position', [left (up-0.025) width height]);
+        
+        left = left+width;
     end
 end

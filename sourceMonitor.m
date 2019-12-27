@@ -32,7 +32,7 @@ function sourceMonitor(workerQueueConstant, dataQueue, workerDoneQueue, device, 
             s = fopen(devicePath);
         else
             % Send error code 1, 'File not found'
-            send(workerDoneQueue, 1);
+            send(workerDoneQueue, 2);
             return;
         end
     end
@@ -48,7 +48,7 @@ function sourceMonitor(workerQueueConstant, dataQueue, workerDoneQueue, device, 
                 clear s
 
                 % send termination value
-                send(workerDoneQueue, 0);
+                send(workerDoneQueue, 1);
                 finished = 1;
                 continue;
             elseif(ischar(data))
@@ -67,7 +67,7 @@ function sourceMonitor(workerQueueConstant, dataQueue, workerDoneQueue, device, 
             delete(s);
             clear s
             % Send error code 2, 'Fread returned zero'
-            send(workerDoneQueue, 2);
+            send(workerDoneQueue, 3);
         elseif (serialCounter+count > serialBufferLen)
             fprintf('Serial buffer overfilled');
         else

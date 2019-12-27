@@ -22,18 +22,24 @@ function ngfmVis(varargin)
     parse(p,varargin{:});
 
     % load vars
-    loadconfigxml;
+%     loadconfigxml;
     ngfmLoadConstants;
     magData = zeros(3,numSamplesToStore);
     hkData = zeros(12,hkPacketsToDisplay);
     logFile = p.Results.saveFile;
+    
+    dataPacket = struct('dle', uint8(0), 'stx', uint8(0), 'pid', uint8(0), 'packettype', uint8(0), 'packetlength', uint16(0), 'fs', uint16(0), 'ppsoffset', uint32(0), ...
+        'hk', zeros(1,12,'int16'), 'xdac', zeros(1,100,'int16'), 'ydac', zeros(1,100,'int16'), 'zdac', zeros(1,100,'int16'), ...
+        'xadc', zeros(1,100,'int16'), 'yadc', zeros(1,100,'int16'), 'zadc', zeros(1,100,'int16'), ...
+        'boardid', uint16(0), 'sensorid', uint16(0), 'reservedA', uint8(0), 'reservedB', uint8(0), 'reservedC', uint8(0), 'reservedD', uint8(0), ...
+        'etx', uint8(0), 'crc', uint16(0) );
     
     %add subfolders to path
     addpath('lib', 'spectraPlots', 'log');
     
     % Print whether the mode is serial or file
     if strcmp(p.Results.device, 'serial')
-        fprintf('Running is SERIAL mode on %s.\n', p.Results.devicePath);
+        fprintf('Running in SERIAL mode on %s.\n', p.Results.devicePath);
     else
         fprintf('Running in FILE replay mode from %s.\n', p.Results.devicePath);
     end
@@ -41,88 +47,48 @@ function ngfmVis(varargin)
     % enable logging to a specified file or don't
     if (strcmp(logFile, 'null'))
         loggingEnabled = 0;
+         fprintf('Logging data DISABLED.\n');
     else
         loggingEnabled = 1;
         if(strcmp(logFile, ''))
             logFile = strcat('log_', datestr(now,'yyyymmdd-HHMMSS'), '.txt');
         end
         logFileHandle = fopen(strcat('log/',logFile), 'w+');
-    end
-
-    if (loggingEnabled == 1)
         fprintf('Logging data to: %s\n', logFile);
-    else
-        fprintf('Logging data DISABLED.\n');
     end
 
+    % give user time to read the console
     pause(2);
     
     % set up GUI
     fig = ngfmPlotInit();
-
-    % Create a parallel pool if necessary
-    if isempty(gcp())
-        parpool(1);
-    end
     
-    % https://www.mathworks.com/matlabcentral/answers/ ...
-    % 424145-how-can-i-send-data-on-the-fly-to-a-worker-when-using-parfeval
-    
-    % Get the worker to construct a data queue on which it can receive
-    % messages from the main thread
-    workerQueueConstant = parallel.pool.Constant(@parallel.pool.PollableDataQueue);
-
-    % Pollable data queue that the worker will use to send raw data over
-    % for the main thread to use
-    packetQueue = parallel.pool.PollableDataQueue;
-    
-    % Pollable data queue that the worker will use to send data over
-    % that tells the main thread it is done executing
-    workerDoneQueue = parallel.pool.PollableDataQueue;
-    
-    % call sourceMonitor asynchronously
-    F = parfeval(@sourceMonitor, 0, workerQueueConstant, packetQueue, ...
-                 workerDoneQueue, p.Results.device, p.Results.devicePath, ...
-                 serialBufferLen, dle, stx, etx);
-    
-    % get the worker's queue back for main to use
-    % This queue is for main to send data over to allow the async worker
-    % to terminate gracefully, avoiding serial port and thread lockups
-    [packetQueueData, packetQueueDataAvail] = poll(packetQueue, 1);
-    if(packetQueueDataAvail)
-        workerQueue = packetQueueData;
-    end
+    % setup the parallel stuff. Construct queues and call sourceMonitor
+    % asynchronously
+    [F, packetQueue, workerDoneQueue, workerQueue] = ...
+        setupSourceMonitorWorker(p.Results.device, p.Results.devicePath, ...
+                                 serialBufferLen, dle, stx, etx);
 
     % main loop vars
     done = 0;
     closeRequest = 0;
     key = [];
+    workerMsgs = {'Serial port closed\n', 'Error: File not found\n', ...
+                'Fread returned zero\n'};
     
     % main loop
     while (~done)
         % If there is anything in this queue then the worker is done
-        % Print the associated code's message
+        % Print the error or associated code's message, begin program exit process
         [workerDoneQueueData, workerDoneQueueDataAvail] = poll(workerDoneQueue);
         if(workerDoneQueueDataAvail)
             if(isa(workerDoneQueueData,'cell'))
                 fprintf('%s\n', char(workerDoneQueueData));
-                done = 1;
-                break;
-            elseif(workerDoneQueueData == 0)
-                fprintf('Serial Port or File closed\n');
-                done = 1;
-                continue;
-            elseif(workerDoneQueueData == 1)
-                fprintf('Error: File not found\n');
-                done = 1;
-                continue;
-            elseif(workerDoneQueueData == 2)
-                fprintf('Fread returned zero\n');
-                done = 1;
-                continue;
-            elseif(ischar(workerDoneQueueData))
-                fprintf('received character %c\n', workerDoneQueueData);
+            elseif(ismember(workerDoneQueueData, [1 2 3]))
+                fprintf(string(workerMsgs(workerDoneQueueData)))
             end
+            done = 1;
+            continue;
         end
         
         % check if there's data to read
@@ -132,18 +98,15 @@ function ngfmVis(varargin)
             else
                 numToRead = 1;
             end
+            
             % process all available packets at once
             for i = 1:numToRead
                 [packetQueueData, packetQueueDataAvail] = poll(packetQueue, 1); 
-                if(packetQueueDataAvail)
-                    if(isa(packetQueueData, 'uint8'))
-                        % parse packet
-                        tempPacket = getDataPacket(dataPacket, packetQueueData, inputOffset);
-
-                        fprintf('Packet parser PID = %d.\n', tempPacket.pid);
-
-                        [tempPacket, magData, hkData] = interpretData( tempPacket, magData, hkData, hk);
-                    end
+                if(packetQueueDataAvail && isa(packetQueueData, 'uint8'))
+                    % parse packet
+                    dataPacket = parsePacket(dataPacket, packetQueueData);
+                    fprintf('Packet parser PID = %d.\n', dataPacket.pid);
+                    [dataPacket, magData, hkData] = interpretData( dataPacket, magData, hkData);
                 end
             end
 
@@ -151,12 +114,13 @@ function ngfmVis(varargin)
             % until we can put in a proper close request callback
             try
                 [fig, closeRequest, key, debugData] = ...
-                    ngfmPlotUpdate(fig, tempPacket, magData, hkData);
+                    ngfmPlotUpdate(fig, dataPacket, magData, hkData);
             catch exception
                 closeRequest = 1;
                 fprintf('Plot error: %s\n', exception.message)
             end
 
+            % log
             if (loggingEnabled)
                 if (~debugData)
                     logData( logFileHandle, magData, hkData );
@@ -182,8 +146,9 @@ function ngfmVis(varargin)
             end
         end
 
+        % Check if there is a hardware command to send
         if(~isempty(key) && strcmp(p.Results.device, 'serial'))
-            % send the commands to the async source monitor
+            % send the commands to the async worker's queue
             for i = 1:length(key)
                 send(workerQueue, char(key(i)));
             end
@@ -191,7 +156,6 @@ function ngfmVis(varargin)
     end
     
     % close up
-    
     disp('Terminating program')
     
     if(isvalid(fig))
@@ -203,7 +167,44 @@ function ngfmVis(varargin)
     end
 end
 
-function dataPacket = parsePacket(tempPacket, inputOffset)
+% Construct queues for communicating back and forth with the async worker
+% Call sourceMonitor asynchronously
+function [F, packetQueue, workerDoneQueue, workerQueue] = ...
+    setupSourceMonitorWorker(device, devicePath, serialBufferLen, dle, stx, etx)
+
+    % Create a parallel pool if necessary
+    if isempty(gcp())
+        parpool(1);
+    end
+
+    % Get the worker to construct a data queue on which it can receive
+    % messages from the main thread
+    workerQueueConstant = parallel.pool.Constant(@parallel.pool.PollableDataQueue);
+
+    % Pollable data queue that the worker will use to send raw data over
+    % for the main thread to use
+    packetQueue = parallel.pool.PollableDataQueue;
+    
+    % Pollable data queue that the worker will use to send data over
+    % that tells the main thread it is done executing
+    workerDoneQueue = parallel.pool.PollableDataQueue;
+    
+    % call sourceMonitor asynchronously
+    F = parfeval(@sourceMonitor, 0, workerQueueConstant, packetQueue, ...
+                 workerDoneQueue, device, devicePath, serialBufferLen, ...
+                 dle, stx, etx);
+    
+    % get the worker's queue back for main to use
+    % This queue is for main to send data over to allow the async worker
+    % to terminate gracefully, avoiding serial port and thread lockups
+    [packetQueueData, packetQueueDataAvail] = poll(packetQueue, 1);
+    if(packetQueueDataAvail)
+        workerQueue = packetQueueData;
+    end
+end
+
+% parses the data packet according to the format
+function dataPacket = parsePacket(dataPacket, tempPacket)
     dataPacket.dle =            tempPacket(1);
     dataPacket.stx =            tempPacket(2);
     dataPacket.pid =            tempPacket(3);
@@ -224,7 +225,7 @@ function dataPacket = parsePacket(tempPacket, inputOffset)
     dataPacket.hk(11) =         swapbytes(typecast(tempPacket(33:34), 'uint16'));
     dataPacket.hk(12) =         swapbytes(typecast(tempPacket(35:36), 'uint16'));
 
-    dataOffset = inputOffset;
+    dataOffset = 36;
     for n = 1:100
         dataPacket.xdac(n) =    typecast( swapbytes( typecast( tempPacket(dataOffset + (n-1)*12 + 1:dataOffset + (n-1)*12 + 2), 'uint16') ), 'int16' );
         dataPacket.ydac(n) =    typecast( swapbytes( typecast( tempPacket(dataOffset + (n-1)*12 + 5:dataOffset + (n-1)*12 + 6), 'uint16') ), 'int16' );

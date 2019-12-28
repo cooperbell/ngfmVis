@@ -3,6 +3,7 @@ assumedSamplingRate = 100;
 secondsToDisplay = 10;
 secondsToWelch = 60*60;
 hkPacketsToDisplay = 100;
+targetSamplingHz = 150;
 
 nfft = 8*2048;
 

@@ -62,12 +62,13 @@ function ngfmVis(varargin)
     
     % set up GUI
     fig = ngfmPlotInit();
+    drawnow();
     
     % setup the parallel stuff. Construct queues and call sourceMonitor
     % asynchronously
     [F, packetQueue, workerDoneQueue, workerQueue] = ...
         setupSourceMonitorWorker(p.Results.device, p.Results.devicePath, ...
-                                 serialBufferLen, dle, stx, etx);
+            serialBufferLen, targetSamplingHz, dle, stx, etx);
 
     % main loop vars
     done = 0;
@@ -106,10 +107,10 @@ function ngfmVis(varargin)
                     % parse packet
                     dataPacket = parsePacket(dataPacket, packetQueueData);
                     fprintf('Packet parser PID = %d.\n', dataPacket.pid);
-                    [dataPacket, magData, hkData] = interpretData( dataPacket, magData, hkData);
+                    [dataPacket, magData, hkData] = interpretData(dataPacket, magData, hkData);
                 end
 %                 if(packetQueueDataAvail) % CWB debug
-%                     disp(packetQueueData)
+%                     fprintf('%3.7f\n', packetQueueData)
 %                 end
             end
 
@@ -173,7 +174,8 @@ end
 % Construct queues for communicating back and forth with the async worker
 % Call sourceMonitor asynchronously
 function [F, packetQueue, workerDoneQueue, workerQueue] = ...
-    setupSourceMonitorWorker(device, devicePath, serialBufferLen, dle, stx, etx)
+    setupSourceMonitorWorker(device, devicePath, serialBufferLen, ...
+        targetSamplingHz ,dle, stx, etx)
 
     % Create a parallel pool if necessary
     if isempty(gcp())
@@ -195,14 +197,14 @@ function [F, packetQueue, workerDoneQueue, workerQueue] = ...
     % call sourceMonitor asynchronously
     F = parfeval(@sourceMonitor, 0, workerQueueConstant, packetQueue, ...
                  workerDoneQueue, device, devicePath, serialBufferLen, ...
-                 dle, stx, etx);
+                 targetSamplingHz, dle, stx, etx);
     
     % get the worker's queue back for main to use
     % This queue is for main to send data over to allow the async worker
     % to terminate gracefully, avoiding serial port and thread lockups
-    [packetQueueData, packetQueueDataAvail] = poll(packetQueue, 1);
-    if(packetQueueDataAvail)
-        workerQueue = packetQueueData;
+    [workerDoneQueueData, workerDoneQueueDataAvail] = poll(workerDoneQueue, 1);
+    if(workerDoneQueueDataAvail)
+        workerQueue = workerDoneQueueData;
     end
 end
 

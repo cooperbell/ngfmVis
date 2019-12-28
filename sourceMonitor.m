@@ -3,15 +3,20 @@
 % It's purpose is to capture data from the source (serial port or file)
 % unencumbered from the rest of the program and send that data back to the
 % main thread.
-function sourceMonitor(workerQueueConstant, packetQueue, workerDoneQueue, device, devicePath, serialBufferLen, dle, stx, etx)
+function sourceMonitor(workerQueueConstant, packetQueue, workerDoneQueue, ...
+    device, devicePath, serialBufferLen, targetSamplingHz, dle, stx, etx)
     % construct queue that main can use to talk to this worker
     % and send it back for it to use
     workerQueue = workerQueueConstant.Value;
-    send(packetQueue, workerQueue);
+    send(workerDoneQueue, workerQueue);
     
     finished = 0;
     serialBuffer = zeros(serialBufferLen);
     serialCounter = 1;
+    numSampleRates = 100;
+    samplingRates = zeros(1, numSampleRates);
+    tolerance = 0.05;
+    pauseTime = 0.005;
     
     % open serial port or file 
     if(strcmp(device, 'serial'))
@@ -37,7 +42,7 @@ function sourceMonitor(workerQueueConstant, packetQueue, workerDoneQueue, device
         end
     end
     
-    tic % CWB debug
+    tic
     while (~finished)
         % Check for a message from main thread, close everything up
         [data, dataAvail] = poll(workerQueue);
@@ -97,6 +102,39 @@ function sourceMonitor(workerQueueConstant, packetQueue, workerDoneQueue, device
                 serialCounter = serialCounter - 1;
             end
         end
-        pause(0.005);
+        
+        % get current average sampling rate
+        [avgSamplingHz, samplingRates] = getAvgSamplingHz(samplingRates, timeElapsed);
+        
+        % wait until samplingRates is full
+        if(~ismember(samplingRates, 0))
+            [pauseTime, samplingRates] = changeSamplingRate(avgSamplingHz, ...
+                targetSamplingHz, tolerance, pauseTime, numSampleRates);
+%             send(packetQueue,avgSamplingHz); % debug
+        end
+        pause(pauseTime);
     end
+end
+
+% Adds most recent timeElapsed to the array, computes new mean
+function [avgSamplingHz, samplingRates] = getAvgSamplingHz(samplingRates, timeElapsed)
+    samplingRates(1,2:length(samplingRates)) = ...
+        samplingRates(1,1:(length(samplingRates)-1));
+    samplingRates(1) = timeElapsed;
+    avgSamplingHz = 1/mean(samplingRates);
+end
+
+% change the sampling rate if it needs to be changed
+% otherwise return same rate
+function [pauseTime, samplingRates] = changeSamplingRate(avgSamplingHz, ...
+    targetSamplingHz, tolerance, pauseTime, numSampleRates)
+    rateDifference = 1 - (avgSamplingHz/targetSamplingHz);
+    if(abs(rateDifference) > tolerance)
+        if(rateDifference < 0)
+            pauseTime = pauseTime + (pauseTime*abs(rateDifference));
+        else
+            pauseTime = pauseTime - (pauseTime*rateDifference);
+        end
+    end
+    samplingRates = zeros(1, numSampleRates);
 end

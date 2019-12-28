@@ -3,12 +3,12 @@
 % It's purpose is to capture data from the source (serial port or file)
 % unencumbered from the rest of the program and send that data back to the
 % main thread.
-function sourceMonitor(workerQueueConstant, packetQueue, workerDoneQueue, ...
+function sourceMonitor(workerQueueConstant, packetQueue, workerCommQueue, ...
     device, devicePath, serialBufferLen, targetSamplingHz, dle, stx, etx)
     % construct queue that main can use to talk to this worker
     % and send it back for it to use
     workerQueue = workerQueueConstant.Value;
-    send(workerDoneQueue, workerQueue);
+    send(workerCommQueue, workerQueue);
     
     finished = 0;
     serialBuffer = zeros(serialBufferLen);
@@ -29,7 +29,7 @@ function sourceMonitor(workerQueueConstant, packetQueue, workerDoneQueue, ...
         catch exception
             % Send serial port error with message
             errorMsg = {exception.message};
-            send(workerDoneQueue, errorMsg);
+            send(workerCommQueue, errorMsg);
             return;
         end
     else
@@ -37,14 +37,23 @@ function sourceMonitor(workerQueueConstant, packetQueue, workerDoneQueue, ...
             s = fopen(devicePath);
         else
             % Send error code 1, 'File not found'
-            send(workerDoneQueue, 2);
+            send(workerCommQueue, 2);
             return;
         end
     end
     
+    % start timer
+    % This will send current sampling rate over the workerCommQueue for the
+    % main program to use every 1 second.
+    t = timer('ExecutionMode', 'fixedRate', ...
+              'TimerFcn', @timerCallback, ...
+              'Period', 1, 'StartDelay', 2);
+    start(t);
+
+    
     tic
     while (~finished)
-        % Check for a message from main thread, close everything up
+        % Check for a message from main thread
         [data, dataAvail] = poll(workerQueue);
         if(dataAvail)
             if(data == 0)
@@ -52,9 +61,14 @@ function sourceMonitor(workerQueueConstant, packetQueue, workerDoneQueue, ...
                 fclose(s);
                 delete(s);
                 clear s
+                
+                % properly close up timer
+                stop(t);
+                delete(t);
+                clear t
 
                 % send termination value
-                send(workerDoneQueue, 1);
+                send(workerCommQueue, 1);
                 finished = 1;
                 continue;
             elseif(ischar(data))
@@ -74,8 +88,14 @@ function sourceMonitor(workerQueueConstant, packetQueue, workerDoneQueue, ...
             fclose(s);
             delete(s);
             clear s
+            
+            % properly close up timer
+            stop(t);
+            delete(t);
+            clear t
+                
             % Send error code 2, 'Fread returned zero'
-            send(workerDoneQueue, 3);
+            send(workerCommQueue, 3);
         elseif (serialCounter+count > serialBufferLen)
             fprintf('Serial buffer overfilled');
         else
@@ -110,9 +130,14 @@ function sourceMonitor(workerQueueConstant, packetQueue, workerDoneQueue, ...
         if(~ismember(samplingRates, 0))
             [pauseTime, samplingRates] = changeSamplingRate(avgSamplingHz, ...
                 targetSamplingHz, tolerance, pauseTime, numSampleRates);
-%             send(packetQueue,avgSamplingHz); % debug
+            avgSamplingHzToSend = avgSamplingHz;
+%             send(workerCommQueue,avgSamplingHz); % debug
         end
         pause(pauseTime);
+    end
+    
+    function timerCallback(~, ~)
+         send(workerCommQueue,avgSamplingHzToSend);
     end
 end
 

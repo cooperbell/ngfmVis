@@ -66,7 +66,7 @@ function ngfmVis(varargin)
     
     % setup the parallel stuff. Construct queues and call sourceMonitor
     % asynchronously
-    [F, packetQueue, workerDoneQueue, workerQueue] = ...
+    [F, packetQueue, workerCommQueue, workerQueue] = ...
         setupSourceMonitorWorker(p.Results.device, p.Results.devicePath, ...
             serialBufferLen, targetSamplingHz, dle, stx, etx);
 
@@ -81,15 +81,20 @@ function ngfmVis(varargin)
     while (~done)
         % If there is anything in this queue then the worker is done
         % Print the error or associated code's message, begin program exit process
-        [workerDoneQueueData, workerDoneQueueDataAvail] = poll(workerDoneQueue);
+        [workerDoneQueueData, workerDoneQueueDataAvail] = poll(workerCommQueue);
         if(workerDoneQueueDataAvail)
             if(isa(workerDoneQueueData,'cell'))
                 fprintf('%s\n', char(workerDoneQueueData));
+                done = 1;
+                continue;
             elseif(ismember(workerDoneQueueData, [1 2 3]))
                 fprintf(string(workerMsgs(workerDoneQueueData)))
+                done = 1;
+                continue;
+            elseif(isa(workerDoneQueueData,'double'))
+                fprintf('Sampling Rate: %3.2f\n', workerDoneQueueData);
             end
-            done = 1;
-            continue;
+            
         end
         
         % check if there's data to read
@@ -173,7 +178,7 @@ end
 
 % Construct queues for communicating back and forth with the async worker
 % Call sourceMonitor asynchronously
-function [F, packetQueue, workerDoneQueue, workerQueue] = ...
+function [F, packetQueue, workerCommQueue, workerQueue] = ...
     setupSourceMonitorWorker(device, devicePath, serialBufferLen, ...
         targetSamplingHz ,dle, stx, etx)
 
@@ -192,17 +197,17 @@ function [F, packetQueue, workerDoneQueue, workerQueue] = ...
     
     % Pollable data queue that the worker will use to send data over
     % that tells the main thread it is done executing
-    workerDoneQueue = parallel.pool.PollableDataQueue;
+    workerCommQueue = parallel.pool.PollableDataQueue;
     
     % call sourceMonitor asynchronously
     F = parfeval(@sourceMonitor, 0, workerQueueConstant, packetQueue, ...
-                 workerDoneQueue, device, devicePath, serialBufferLen, ...
+                 workerCommQueue, device, devicePath, serialBufferLen, ...
                  targetSamplingHz, dle, stx, etx);
     
     % get the worker's queue back for main to use
     % This queue is for main to send data over to allow the async worker
     % to terminate gracefully, avoiding serial port and thread lockups
-    [workerDoneQueueData, workerDoneQueueDataAvail] = poll(workerDoneQueue, 1);
+    [workerDoneQueueData, workerDoneQueueDataAvail] = poll(workerCommQueue, 1);
     if(workerDoneQueueDataAvail)
         workerQueue = workerDoneQueueData;
     end

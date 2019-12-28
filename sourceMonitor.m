@@ -7,6 +7,10 @@
 %   user-specified rate in Hz and sends that rate back to the main thread 
 %   every 1 second. 
 %
+%   It runs in a continuous loop, terminating only on errors, EOFs, or if
+%   the main program tells it to stop executing. It does not have any
+%   output arguments.
+%
 %   Input Arguments:
 %   - workerQueueConstant: A Parallel Pool Constant containing a reference to
 %   a Pollable Data Queue for this worker to set up (workerQueue), allowing
@@ -15,7 +19,7 @@
 %   data over
 %   - workerCommQueue: A Pollable Data Queue that this worker sends error
 %   messages, error codes, termination codes, and the current sampling rate
-%   back to the main thread.
+%   over
 %   - device: file or serial
 %   - devicePath: file path or serial port
 %   - serialBufferLen: constant to set up size of serial buffer
@@ -73,7 +77,7 @@ function sourceMonitor(workerQueueConstant, packetQueue, workerCommQueue, ...
     start(t);
 
     
-    tic
+    tic % start stopwatch timer for monitoring sample rate 
     while (~finished)
         % Check for a message from main thread
         [data, dataAvail] = poll(workerQueue);
@@ -100,9 +104,9 @@ function sourceMonitor(workerQueueConstant, packetQueue, workerCommQueue, ...
         end
         
         % read port
-        timeElapsed = toc;
+        timeElapsed = toc; % get elapsed time
         [A,count] = fread(s,32,'uint8');
-        tic
+        tic % restart stopwatch timer
 
         if (count == 0)
             pause(0.01);

@@ -1,8 +1,30 @@
-% Author: Cooper Bell
-% This function runs as an async worker called from ngfmVis(). 
-% It's purpose is to capture data from the source (serial port or file)
-% unencumbered from the rest of the program and send that data back to the
-% main thread.
+% SOURCEMONITOR Read in data from source, send it to main thread
+%   This function runs as an async worker called from ngfmVis(). 
+%   It's purpose is to capture data from the source (serial port or file)
+%   unencumbered from the rest of the program and send that data back to the
+%   main thread. The data that is sent back is unformatted, raw data but
+%   contains only the data in one individual packet. It calls fread() at a 
+%   user-specified rate in Hz and sends that rate back to the main thread 
+%   every 1 second. 
+%
+%   Input Arguments:
+%   - workerQueueConstant: A Parallel Pool Constant containing a reference to
+%   a Pollable Data Queue for this worker to set up (workerQueue), allowing
+%   for communication from the main thread to this thread
+%   - packetQueue: A Pollable Data Queue that this worker sends packet
+%   data over
+%   - workerCommQueue: A Pollable Data Queue that this worker sends error
+%   messages, error codes, termination codes, and the current sampling rate
+%   back to the main thread.
+%   - device: file or serial
+%   - devicePath: file path or serial port
+%   - serialBufferLen: constant to set up size of serial buffer
+%   - targetSamplingHz: Rate in Hz at which the source should be sampled
+%   - dle: first byte in the packet
+%   - stx: second to last byte in packet
+%   - etx: last byte in the packet
+%
+%   See also parfeval parallel.pool.Constant parallel.pool.PollableDataQueue
 function sourceMonitor(workerQueueConstant, packetQueue, workerCommQueue, ...
     device, devicePath, serialBufferLen, targetSamplingHz, dle, stx, etx)
     % construct queue that main can use to talk to this worker

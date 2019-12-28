@@ -166,18 +166,19 @@ function sourceMonitor(workerQueueConstant, packetQueue, workerCommQueue, ...
     end
 end
 
-% Adds most recent timeElapsed to the array, compute new mean
 function [avgSamplingHz, samplingRates] = getAvgSamplingHz(samplingRates, timeElapsed)
+% GETAVGSAMPLINGHZ Adds most recent timeElapsed to the array, compute new mean
+
     samplingRates(1,2:length(samplingRates)) = ...
         samplingRates(1,1:(length(samplingRates)-1));
     samplingRates(1) = timeElapsed;
     avgSamplingHz = 1/mean(samplingRates);
 end
 
-% change the sampling rate if it needs to be changed
-% otherwise return same rate
 function [pauseTime, samplingRates] = changeSamplingRate(avgSamplingHz, ...
     targetSamplingHz, tolerance, pauseTime, numSampleRates)
+% CHANGESAMPLINGRATE change the sampling rate if it needs to be changed
+% otherwise return same rate
 
     rateDifference = 1 - (avgSamplingHz/targetSamplingHz);
     if(abs(rateDifference) > tolerance)

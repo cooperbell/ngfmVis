@@ -143,28 +143,34 @@ function [fig] = ngfmPlotInit()
     guidata(fig, handles)
 end
 
-% dropdown menu callback
-% Changes what the modular plot will show
 function DropdownCallback(hObject, ~)
+% DROPDOWNCALLBACK dropdown menu callback
+% Changes what the modular plot will show
+%
+% See also NGFMPLOTINIT
     handles = guidata(hObject);
     spectra = string(hObject.String(hObject.Value));
     handles = setupSpectraPlot(spectra, handles); % should I be calling this here?
     guidata(hObject,handles)
 end
 
-% Callback for when the quit button is pressed
+function QuitButtonCallback(hObject,~)
+% QUITBUTTONCALLBACK Callback for when the quit button is pressed
 % Sets a flag 'closereq' to 1 so the main program can catch it
 % and quit the program gracefully
-function QuitButtonCallback(hObject,~)
+%
+% See also NGFMPLOTINIT
     handles = guidata(hObject);
     setappdata(handles.fig, 'closereq', 1);
 end
 
-% Callback for when a key is pressed on the figure
+function keyPressCallback(hObject, event)
+% KEYPRESSCALLBACK Callback for when a key is pressed on the figure
 % If 'q', quit the program through the 'closeRequest' route
 % If '`', flip debug flag and titles respective to that change
 % Else, send that key back so it can be sent over serial
-function keyPressCallback(hObject, event)
+%
+% See also NGFMPLOTINIT
     handles = guidata(hObject);
     key = event.Character;
     if(key == 'q')
@@ -192,8 +198,13 @@ function keyPressCallback(hObject, event)
     end
 end
 
-% Add button callback
 function AddPlotButtonCallback(hObject, ~)
+% ADDPLOTBUTTONCALLBACK Callback for when the add plot button is pressed
+% Brings up a file browser and upon clicking 'OK' queues that script to be 
+% added to the dropdown, permanently or not. Brings up a warning on 
+% duplicate script names
+%
+% See also NGFMPLOTINIT
     [FileName,FilePath ]= uigetfile('*.m');
     if (FileName ~= 0 & FileName ~= "")
         handles = guidata(hObject);
@@ -249,8 +260,13 @@ function AddPlotButtonCallback(hObject, ~)
     end
 end
 
-% Delete button callback
 function DeletePlotButtonCallback(hObject, ~)
+% DELETEBUTTONCALLBACK Callback for when the delete plot button is pressed
+% Brings up a small GUI window displaying the plots currently in the
+% dropdown. if 'Delete' is pressed on any of them and subsequently 'OK', it
+% queues that plot to be deleted at the end of ngfmPlotUpdate().
+%
+% See also NGFMPLOTINIT NGFMPLOTUPDATE
     handles = guidata(hObject);
     plotsToDeleteList = {};
     popUpFig = figure('Name','Manage Spectra Plots', ...
@@ -327,7 +343,9 @@ function DeletePlotButtonCallback(hObject, ~)
 end
 
 function [plotHandles] = setupHKData(plotHandles, xtmp, ytmp)
-
+% SETUPHKDATA Sets up the house keeping data graphs on the second tab
+%
+% See also NGFMPLOTINIT
     hkAxes = getappdata(plotHandles.fig, 'hkAxes');
     hkTitles = getappdata(plotHandles.fig, 'hkTitles');
     hkLines = getappdata(plotHandles.fig, 'hkLines');
@@ -386,6 +404,10 @@ function [plotHandles] = setupHKData(plotHandles, xtmp, ytmp)
 end
 
 function [plotHandles] = setupMiscdata(plotHandles)
+% SETUPMISCDATA Initalizes the GUI elements for the bottom row of
+% miscellaneous data
+%
+% See also NGFMPLOTINIT
     names = {'PID', 'PktLen', 'FS', 'PPS', 'Board ID', 'Sensor ID', ...
              'CRC', 'X Avg', 'X stddev', 'Y Avg', 'Y stddev', 'Z Avg' ...
              'Z stddev', 'X RMS', 'X Hz', 'Y RMS', 'Y Hz', 'Z RMS', 'Z Hz'};

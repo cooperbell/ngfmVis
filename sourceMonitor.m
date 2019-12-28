@@ -12,23 +12,23 @@
 %   output arguments.
 %
 %   Input Arguments:
-%   - workerQueueConstant: A Parallel Pool Constant containing a reference to
-%   a Pollable Data Queue for this worker to set up (workerQueue), allowing
-%   for communication from the main thread to this thread
-%   - packetQueue: A Pollable Data Queue that this worker sends packet
-%   data over
-%   - workerCommQueue: A Pollable Data Queue that this worker sends error
-%   messages, error codes, termination codes, and the current sampling rate
-%   over
-%   - device: file or serial
-%   - devicePath: file path or serial port
-%   - serialBufferLen: constant to set up size of serial buffer
-%   - targetSamplingHz: Rate in Hz at which the source should be sampled
-%   - dle: first byte in the packet
-%   - stx: second to last byte in packet
-%   - etx: last byte in the packet
+%       - workerQueueConstant: A Parallel Pool Constant containing a reference to
+%       a Pollable Data Queue for this worker to set up (workerQueue), allowing
+%       for communication from the main thread to this thread
+%       - packetQueue: A Pollable Data Queue that this worker sends packet
+%       data over
+%       - workerCommQueue: A Pollable Data Queue that this worker sends error
+%       messages, error codes, termination codes, and the current sampling rate
+%       over
+%       - device: file or serial
+%       - devicePath: file path or serial port
+%       - serialBufferLen: constant to set up size of serial buffer
+%       - targetSamplingHz: Rate in Hz at which the source should be sampled
+%       - dle: first byte in the packet
+%       - stx: second to last byte in packet
+%       - etx: last byte in the packet
 %
-%   See also parfeval parallel.pool.Constant parallel.pool.PollableDataQueue
+%   See also ngfmVis parfeval parallel.pool.Constant parallel.pool.PollableDataQueue
 function sourceMonitor(workerQueueConstant, packetQueue, workerCommQueue, ...
     device, devicePath, serialBufferLen, targetSamplingHz, dle, stx, etx)
     % construct queue that main can use to talk to this worker

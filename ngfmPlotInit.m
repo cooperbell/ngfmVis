@@ -1,6 +1,9 @@
-% Author: David Miles
-% Modified by: Cooper Bell 11/27/2019
-% Sets up GUI. Contains all callbacks
+% NGFMPLOTINIT Sets up the GUI
+%   Sets up the entire GUI and contains all the callbacks except for the hardware
+%   commands, which is in ngfmHardCmd(). Utilizes guidata() and the
+%   internally maintained structure handles to manipulate elements.
+%
+%   See also GUIDATA NGFMHARDWARECMD
 function [fig] = ngfmPlotInit()
     ngfmLoadConstants;
     

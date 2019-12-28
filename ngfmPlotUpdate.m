@@ -1,3 +1,24 @@
+% NGFMPLOTUPDATE Updates the GUI elements.
+%   By using the internally managed handles structure, the GUI elements are
+%   updated by way of manipulating the data for a specific GUI element in
+%   the handles structure. It does this for all the graphs, misc data,
+%   dropdowns, and hardware commands. Once all the new data has been set,
+%   guidata() is called again to save it to the handles struct to be used
+%   later on and in callbacks.
+%
+%   Input arguments:
+%       - fig: The GUI figure object
+%       - dataPacket: Strcuture of the data packet
+%       - magData: Array to update the X, Y, Z graphs
+%       - hkData: Array of housekeeping data
+%
+%   Output arguments:
+%       - fig: The GUI figure object
+%       - closereq: Flag indicating if the program needs to close
+%       - key: Character or cell array of hardware commands to send, if any
+%       - debugData: Flag
+%
+% See also GUIDATA, PLOTAMPLITUDE, PLOTPSD
 function [fig, closereq, key, debugData] = ngfmPlotUpdate(fig, dataPacket, magData, hkData)
     ngfmLoadConstants;
     handles = guidata(fig);

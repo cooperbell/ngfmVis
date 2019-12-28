@@ -18,7 +18,10 @@
 %       - key: Character or cell array of hardware commands to send, if any
 %       - debugData: Flag
 %
-% See also GUIDATA, PLOTAMPLITUDE, PLOTPSD
+%   Subfunctions: updateHKData updateMiscData deletePlots addPlot
+%
+% See also NGFMPLOTUPDATE>UPDATEHKDATA NGFMPLOTUPDATE>UPDATEMISCDATA 
+% NGFMPLOTUPDATE>DELETEPLOTS NGFMPLOTUPDATE>ADDPLOT GUIDATA, PLOTAMPLITUDE, PLOTPSD
 function [fig, closereq, key, debugData] = ngfmPlotUpdate(fig, dataPacket, magData, hkData)
     ngfmLoadConstants;
     handles = guidata(fig);
@@ -101,8 +104,12 @@ function [fig, closereq, key, debugData] = ngfmPlotUpdate(fig, dataPacket, magDa
     debugData = getappdata(handles.fig, 'debugData');
 end
 
-% update hk data
 function [plotHandles] = updateHKData(plotHandles, hkX, hkData, hkPacketsToDisplay)
+% UPDATEHKDATA update the hk line handles
+% Scale Y Axis bounds by 5% of it's max and min values for easier viewing
+%
+% See also NGFMPLOTUPDATE
+
     hkLines = getappdata(plotHandles.fig, 'hkLines');
     hkAxes = getappdata(plotHandles.fig, 'hkAxes');
     
@@ -111,7 +118,7 @@ function [plotHandles] = updateHKData(plotHandles, hkX, hkData, hkPacketsToDispl
         set(plotHandles.(hkLines{i}),'XData',hkX,'YData', hkData(i,1:hkPacketsToDisplay));
     end
     
-    % apply Y Axis label scaling for easier viewing
+    % apply Y Axis label scaling
     for i = 1:length(hkAxes)
         [S, L] = bounds(hkData(i,:));
         if(L > S)
@@ -121,6 +128,11 @@ function [plotHandles] = updateHKData(plotHandles, hkX, hkData, hkPacketsToDispl
 end
 
 function [plotHandles] = updateMiscData(plotHandles,magData,dataPacket,debugData,numSamplesToStore,numSamplesToDisplay)
+% UPDATEMISCDATA Update the values of the miscellaneous data
+% Print some elements based on the debug data flag
+%
+% See also NGFMPLOTUPDATE
+
     plotHandles.xavg.String = sprintf('%5.3f',mean(magData(1,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore)));
     plotHandles.yavg.String = sprintf('%5.3f',mean(magData(2,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore)));
     plotHandles.zavg.String = sprintf('%5.3f',mean(magData(3,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore)));
@@ -148,6 +160,11 @@ function [plotHandles] = updateMiscData(plotHandles,magData,dataPacket,debugData
 end
 
 function [plotHandles] = deletePlots(plotHandles, plots)
+% DELETEPLOTS Remove the plotting script file from the dropdown and 
+% spectraPlots folder
+%
+% See also NGFMPLOTUPDATE
+
     for idx = 1:length(plots)
         plotFilePath = fullfile('spectraPlots', string(plots(idx)));
         delete(plotFilePath);
@@ -163,6 +180,12 @@ function [plotHandles] = deletePlots(plotHandles, plots)
 end
  
 function [plotHandles] = addPlot(plotHandles, file, permanenceFlag)
+% ADDPLOT Add plotting script to dropdown
+% If permanenceFlag == false, add to temp dir to be used only this session
+% Else, add to spectraPlots folder
+%
+% See also NGFMPLOTUPDATE
+
         % break up file into componenets to use
         [~,name,ext] = fileparts(file);
         FileName = strcat(name,ext);

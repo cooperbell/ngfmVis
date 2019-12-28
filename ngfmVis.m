@@ -218,8 +218,10 @@ function [F, packetQueue, workerCommQueue, workerQueue] = ...
     end
 end
 
-% parses the data packet according to the format
 function dataPacket = parsePacket(dataPacket, tempPacket)
+% PARSEPACKET parses the data packet according to the format
+%
+% See also NGFMVIS
     dataPacket.dle =            tempPacket(1);
     dataPacket.stx =            tempPacket(2);
     dataPacket.pid =            tempPacket(3);

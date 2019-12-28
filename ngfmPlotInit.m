@@ -3,7 +3,14 @@
 %   commands, which is in ngfmHardCmd(). Utilizes guidata() and the
 %   internally maintained structure handles to manipulate elements.
 %
-%   See also GUIDATA NGFMHARDWARECMD
+%   Subfunctions: DropdownCallback QuitButtonCallback keyPressCallback
+%                 AddPlotButtonCallback DeletePlotButtonCallback
+%                 setupHKData setupMiscdata
+%
+%   See also GUIDATA NGFMHARDWARECMD NGFMPLOTINIT>DROPDOWNCALLBACK
+%   NGFMPLOTINIT>QUITBUTTONCALLBACK NGFMPLOTINIT>KEYPRESSCALLBACK 
+%   NGFMPLOTINIT>ADDPLOTBUTTONCALLBACK NGFMPLOTINIT>DELETEPLOTBUTTONCALLBACK 
+%   NGFMPLOTINIT>SETUPHKDATA NGFMPLOTINIT>SETUPMISCDATA
 function [fig] = ngfmPlotInit()
     ngfmLoadConstants;
     
@@ -261,7 +268,7 @@ function AddPlotButtonCallback(hObject, ~)
 end
 
 function DeletePlotButtonCallback(hObject, ~)
-% DELETEBUTTONCALLBACK Callback for when the delete plot button is pressed
+% DELETEPLOTBUTTONCALLBACK Callback for when the delete plot button is pressed
 % Brings up a small GUI window displaying the plots currently in the
 % dropdown. if 'Delete' is pressed on any of them and subsequently 'OK', it
 % queues that plot to be deleted at the end of ngfmPlotUpdate().

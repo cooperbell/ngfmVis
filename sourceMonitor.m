@@ -29,6 +29,7 @@
 %       - etx: last byte in the packet
 %
 %   See also ngfmVis parfeval parallel.pool.Constant parallel.pool.PollableDataQueue
+%   sourceMonitor>getAvgSamplingHz sourceMonitor>changeSamplingRate
 function sourceMonitor(workerQueueConstant, packetQueue, workerCommQueue, ...
     device, devicePath, serialBufferLen, targetSamplingHz, dle, stx, etx)
     % construct queue that main can use to talk to this worker

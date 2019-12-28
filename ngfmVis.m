@@ -22,7 +22,6 @@ function ngfmVis(varargin)
     parse(p,varargin{:});
 
     % load vars
-%     loadconfigxml;
     ngfmLoadConstants;
     magData = zeros(3,numSamplesToStore);
     hkData = zeros(12,hkPacketsToDisplay);
@@ -62,7 +61,6 @@ function ngfmVis(varargin)
     
     % set up GUI
     fig = ngfmPlotInit();
-    drawnow();
     
     % setup the parallel stuff. Construct queues and call sourceMonitor
     % asynchronously

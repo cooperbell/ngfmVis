@@ -43,8 +43,8 @@ function sourceMonitor(workerQueueConstant, packetQueue, workerCommQueue, ...
     end
     
     % start timer
-    % This will send current sampling rate over the workerCommQueue for the
-    % main program to use every 1 second.
+    % Its callback will send the current sampling rate over the
+    % workerCommQueue every 1 second.
     t = timer('ExecutionMode', 'fixedRate', ...
               'TimerFcn', @timerCallback, ...
               'Period', 1, 'StartDelay', 2);
@@ -140,7 +140,7 @@ function sourceMonitor(workerQueueConstant, packetQueue, workerCommQueue, ...
     end
 end
 
-% Adds most recent timeElapsed to the array, computes new mean
+% Adds most recent timeElapsed to the array, compute new mean
 function [avgSamplingHz, samplingRates] = getAvgSamplingHz(samplingRates, timeElapsed)
     samplingRates(1,2:length(samplingRates)) = ...
         samplingRates(1,1:(length(samplingRates)-1));
@@ -152,6 +152,7 @@ end
 % otherwise return same rate
 function [pauseTime, samplingRates] = changeSamplingRate(avgSamplingHz, ...
     targetSamplingHz, tolerance, pauseTime, numSampleRates)
+
     rateDifference = 1 - (avgSamplingHz/targetSamplingHz);
     if(abs(rateDifference) > tolerance)
         if(rateDifference < 0)
@@ -160,5 +161,6 @@ function [pauseTime, samplingRates] = changeSamplingRate(avgSamplingHz, ...
             pauseTime = pauseTime - (pauseTime*rateDifference);
         end
     end
+    % clear sampling rates array
     samplingRates = zeros(1, numSampleRates);
 end

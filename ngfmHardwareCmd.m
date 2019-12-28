@@ -286,9 +286,7 @@ function FeedbackBtnCallback(hObject, ~)
             end
         end
     end
-
     setappdata(handles.fig, 'key', arr);
-
 end
 
 % Send Feedback Calibration Button Callback

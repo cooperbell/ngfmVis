@@ -1,4 +1,4 @@
-% NGFMVIS Main function for ngfmVis
+% NGFMVIS Main function
 %   ngfmVis(varargin) reads in data from either a file or a serial source, 
 %   parses it according to the packet format in /resources, sends it to
 %   ngfmPlotUpdate to be visualized, and logs it if necessary. This

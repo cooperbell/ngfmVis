@@ -79,9 +79,10 @@ function ngfmVis(varargin)
     
     % main loop
     while (~done)
-        % If there is anything in this queue then the worker is done
-        % Print the error or associated code's message, begin program exit process
-        [workerDoneQueueData, workerDoneQueueDataAvail] = poll(workerCommQueue);
+        % If the worker is done, the print the error or associated code's
+        %   message, begin program exit process
+        % Else it is the current sampling rate
+        [workerDoneQueueData, workerDoneQueueDataAvail] = poll(workerCommQueue, 0.01);
         if(workerDoneQueueDataAvail)
             if(isa(workerDoneQueueData,'cell'))
                 fprintf('%s\n', char(workerDoneQueueData));
@@ -94,7 +95,6 @@ function ngfmVis(varargin)
             elseif(isa(workerDoneQueueData,'double'))
                 fprintf('Sampling Rate: %3.2f\n', workerDoneQueueData);
             end
-            
         end
         
         % check if there's data to read
@@ -114,9 +114,6 @@ function ngfmVis(varargin)
                     fprintf('Packet parser PID = %d.\n', dataPacket.pid);
                     [dataPacket, magData, hkData] = interpretData(dataPacket, magData, hkData);
                 end
-%                 if(packetQueueDataAvail) % CWB debug
-%                     fprintf('%3.7f\n', packetQueueData)
-%                 end
             end
 
             % put a try catch in for now to handle the window being closed
@@ -197,6 +194,7 @@ function [F, packetQueue, workerCommQueue, workerQueue] = ...
     
     % Pollable data queue that the worker will use to send data over
     % that tells the main thread it is done executing
+    % and sends the sampling rate over
     workerCommQueue = parallel.pool.PollableDataQueue;
     
     % call sourceMonitor asynchronously

@@ -131,7 +131,6 @@ function sourceMonitor(workerQueueConstant, packetQueue, workerCommQueue, ...
             [pauseTime, samplingRates] = changeSamplingRate(avgSamplingHz, ...
                 targetSamplingHz, tolerance, pauseTime, numSampleRates);
             avgSamplingHzToSend = avgSamplingHz;
-%             send(workerCommQueue,avgSamplingHz); % debug
         end
         pause(pauseTime);
     end

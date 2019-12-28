@@ -1,6 +1,15 @@
-% main function
-% To read from file: ngfmVis('file','capture09102019.txt','log.txt')
-% To read from serial: ngfmVis('serial','/dev/tty.usbserial-6961_0_0080','log.txt')
+% NGFMVIS Main function for ngfmVis
+%   ngfmVis(varargin) reads in data from either a file or a serial source, 
+%   parses it according to the packet format in /resources, sends it to
+%   ngfmPlotUpdate to be visualized, and logs it if necessary. This
+%   function is the focal point for the whole program, handling program 
+%   set up, thread management, and tear down.
+% 
+%   Example Input Arguments:
+%   To read from file: ngfmVis('file','capture09102019.txt','log.txt')
+%   To read from serial: ngfmVis('serial','/dev/tty.usbserial-6961_0_0080','log.txt')
+%
+%   See also SOURCEMONITOR, INTERPRETDATA, NGFMPLOTUPDATE
 function ngfmVis(varargin)
     % if no args, run input params GUI
     if nargin == 0

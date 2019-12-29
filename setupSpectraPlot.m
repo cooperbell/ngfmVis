@@ -1,3 +1,8 @@
+% SETUPSPECTRAPLOT Prepare the big plot's axes and line properties for what
+% it's about to plot
+%
+% See also ngfmPlotUpdate, ngfmPlotUpdate>deletePlots, ngfmPlotUpdate>addPlot
+%          ngfmPlotInit, ngfmPlotInit>DropdownCallback
 function [plotHandles] = setupSpectraPlot(spectra,plotHandles)
     set(plotHandles.fig, 'currentaxes', plotHandles.aw);
     ngfmLoadConstants;

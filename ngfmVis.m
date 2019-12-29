@@ -9,7 +9,9 @@
 %   To read from file: ngfmVis('file','capture09102019.txt','log.txt')
 %   To read from serial: ngfmVis('serial','/dev/tty.usbserial-6961_0_0080','log.txt')
 %
-%   See also SOURCEMONITOR, INTERPRETDATA, NGFMPLOTUPDATE
+%   Subfunctions: parsePacket setupSourceMonitorWorker
+%
+%   See also sourceMonitor, interpretData, ngfmPlotInit, ngfmPlotUpdate
 function ngfmVis(varargin)
     % if no args, run input params GUI
     if nargin == 0
@@ -36,13 +38,17 @@ function ngfmVis(varargin)
     hkData = zeros(12,hkPacketsToDisplay);
     logFile = p.Results.saveFile;
     
-    dataPacket = struct('dle', uint8(0), 'stx', uint8(0), 'pid', uint8(0), 'packettype', uint8(0), 'packetlength', uint16(0), 'fs', uint16(0), 'ppsoffset', uint32(0), ...
-        'hk', zeros(1,12,'int16'), 'xdac', zeros(1,100,'int16'), 'ydac', zeros(1,100,'int16'), 'zdac', zeros(1,100,'int16'), ...
-        'xadc', zeros(1,100,'int16'), 'yadc', zeros(1,100,'int16'), 'zadc', zeros(1,100,'int16'), ...
-        'boardid', uint16(0), 'sensorid', uint16(0), 'reservedA', uint8(0), 'reservedB', uint8(0), 'reservedC', uint8(0), 'reservedD', uint8(0), ...
+    dataPacket = struct('dle', uint8(0), 'stx', uint8(0), 'pid', uint8(0),...
+        'packettype', uint8(0), 'packetlength', uint16(0), ...
+        'fs', uint16(0), 'ppsoffset', uint32(0), 'hk', zeros(1,12,'int16'),...
+        'xdac', zeros(1,100,'int16'), 'ydac', zeros(1,100,'int16'), ...
+        'zdac', zeros(1,100,'int16'), 'xadc', zeros(1,100,'int16'), ...
+        'yadc', zeros(1,100,'int16'), 'zadc', zeros(1,100,'int16'), ...
+        'boardid', uint16(0), 'sensorid', uint16(0), 'reservedA', uint8(0),...
+        'reservedB', uint8(0), 'reservedC', uint8(0), 'reservedD', uint8(0), ...
         'etx', uint8(0), 'crc', uint16(0) );
     
-    %add subfolders to path
+    % add subfolders to path
     addpath('lib', 'spectraPlots', 'log');
     
     % Print whether the mode is serial or file
@@ -89,18 +95,18 @@ function ngfmVis(varargin)
         % If the worker is done, the print the error or associated code's
         %   message, begin program exit process
         % Else it is the current sampling rate
-        [workerDoneQueueData, workerDoneQueueDataAvail] = poll(workerCommQueue, 0.01);
-        if(workerDoneQueueDataAvail)
-            if(isa(workerDoneQueueData,'cell'))
-                fprintf('%s\n', char(workerDoneQueueData));
+        [workerCommQueueData, workerCommQueueDataAvail] = poll(workerCommQueue, 0.01);
+        if(workerCommQueueDataAvail)
+            if(isa(workerCommQueueData,'cell'))
+                fprintf('%s\n', char(workerCommQueueData));
                 done = 1;
                 continue;
-            elseif(ismember(workerDoneQueueData, [1 2 3]))
-                fprintf(string(workerMsgs(workerDoneQueueData)))
+            elseif(ismember(workerCommQueueData, [1 2 3]))
+                fprintf(string(workerMsgs(workerCommQueueData)))
                 done = 1;
                 continue;
-            elseif(isa(workerDoneQueueData,'double'))
-                fprintf('Sampling Rate: %3.2f\n', workerDoneQueueData);
+            elseif(isa(workerCommQueueData,'double'))
+                fprintf('Sampling Rate: %3.2f\n', workerCommQueueData);
             end
         end
         
@@ -212,9 +218,9 @@ function [F, packetQueue, workerCommQueue, workerQueue] = ...
     % get the worker's queue back for main to use
     % This queue is for main to send data over to allow the async worker
     % to terminate gracefully, avoiding serial port and thread lockups
-    [workerDoneQueueData, workerDoneQueueDataAvail] = poll(workerCommQueue, 1);
-    if(workerDoneQueueDataAvail)
-        workerQueue = workerDoneQueueData;
+    [workerCommQueueData, workerCommQueueDataAvail] = poll(workerCommQueue, 1);
+    if(workerCommQueueDataAvail)
+        workerQueue = workerCommQueueData;
     end
 end
 

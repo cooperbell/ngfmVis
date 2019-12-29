@@ -7,10 +7,7 @@
 %                 AddPlotButtonCallback DeletePlotButtonCallback
 %                 setupHKData setupMiscdata
 %
-%   See also GUIDATA NGFMHARDWARECMD NGFMPLOTINIT>DROPDOWNCALLBACK
-%   NGFMPLOTINIT>QUITBUTTONCALLBACK NGFMPLOTINIT>KEYPRESSCALLBACK 
-%   NGFMPLOTINIT>ADDPLOTBUTTONCALLBACK NGFMPLOTINIT>DELETEPLOTBUTTONCALLBACK 
-%   NGFMPLOTINIT>SETUPHKDATA NGFMPLOTINIT>SETUPMISCDATA
+%   See also guidata ngfmHardwareCmd ngfmVis
 function [fig] = ngfmPlotInit()
     ngfmLoadConstants;
     

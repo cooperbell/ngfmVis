@@ -1,8 +1,5 @@
 % NGFMHARDWARECMD Sets up hardware command GUI elements and its callbacks
-%   Input Arguments:
-%     - plotHandles: the handles struct for the GUI
-%
-%   Output Arguments:
+%   Input/Output Arguments:
 %     - plotHandles: the handles struct for the GUI
 %
 %   Subfunctions: FeedbackBtnCallback SendFBCalib SendDeadspace SendOffset 

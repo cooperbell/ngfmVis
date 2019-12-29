@@ -1,6 +1,17 @@
-% main function
-% To read from file: ngfmVis('file','capture09102019.txt','log.txt')
-% To read from serial: ngfmVis('serial','/dev/tty.usbserial-6961_0_0080','log.txt')
+% NGFMVIS Main function
+%   ngfmVis(varargin) reads in data from either a file or a serial source, 
+%   parses it according to the packet format in /resources, sends it to
+%   ngfmPlotUpdate to be visualized, and logs it if necessary. This
+%   function is the focal point for the whole program, handling program 
+%   set up, thread management, and tear down.
+% 
+%   Example Input Arguments:
+%   To read from file: ngfmVis('file','capture09102019.txt','log.txt')
+%   To read from serial: ngfmVis('serial','/dev/tty.usbserial-6961_0_0080','log.txt')
+%
+%   Subfunctions: parsePacket setupSourceMonitorWorker
+%
+%   See also sourceMonitor, interpretData, ngfmPlotInit, ngfmPlotUpdate
 function ngfmVis(varargin)
     % if no args, run input params GUI
     if nargin == 0
@@ -27,13 +38,17 @@ function ngfmVis(varargin)
     hkData = zeros(12,hkPacketsToDisplay);
     logFile = p.Results.saveFile;
     
-    dataPacket = struct('dle', uint8(0), 'stx', uint8(0), 'pid', uint8(0), 'packettype', uint8(0), 'packetlength', uint16(0), 'fs', uint16(0), 'ppsoffset', uint32(0), ...
-        'hk', zeros(1,12,'int16'), 'xdac', zeros(1,100,'int16'), 'ydac', zeros(1,100,'int16'), 'zdac', zeros(1,100,'int16'), ...
-        'xadc', zeros(1,100,'int16'), 'yadc', zeros(1,100,'int16'), 'zadc', zeros(1,100,'int16'), ...
-        'boardid', uint16(0), 'sensorid', uint16(0), 'reservedA', uint8(0), 'reservedB', uint8(0), 'reservedC', uint8(0), 'reservedD', uint8(0), ...
+    dataPacket = struct('dle', uint8(0), 'stx', uint8(0), 'pid', uint8(0),...
+        'packettype', uint8(0), 'packetlength', uint16(0), ...
+        'fs', uint16(0), 'ppsoffset', uint32(0), 'hk', zeros(1,12,'int16'),...
+        'xdac', zeros(1,100,'int16'), 'ydac', zeros(1,100,'int16'), ...
+        'zdac', zeros(1,100,'int16'), 'xadc', zeros(1,100,'int16'), ...
+        'yadc', zeros(1,100,'int16'), 'zadc', zeros(1,100,'int16'), ...
+        'boardid', uint16(0), 'sensorid', uint16(0), 'reservedA', uint8(0),...
+        'reservedB', uint8(0), 'reservedC', uint8(0), 'reservedD', uint8(0), ...
         'etx', uint8(0), 'crc', uint16(0) );
     
-    %add subfolders to path
+    % add subfolders to path
     addpath('lib', 'spectraPlots', 'log');
     
     % Print whether the mode is serial or file
@@ -80,18 +95,18 @@ function ngfmVis(varargin)
         % If the worker is done, the print the error or associated code's
         %   message, begin program exit process
         % Else it is the current sampling rate
-        [workerDoneQueueData, workerDoneQueueDataAvail] = poll(workerCommQueue, 0.01);
-        if(workerDoneQueueDataAvail)
-            if(isa(workerDoneQueueData,'cell'))
-                fprintf('%s\n', char(workerDoneQueueData));
+        [workerCommQueueData, workerCommQueueDataAvail] = poll(workerCommQueue, 0.01);
+        if(workerCommQueueDataAvail)
+            if(isa(workerCommQueueData,'cell'))
+                fprintf('%s\n', char(workerCommQueueData));
                 done = 1;
                 continue;
-            elseif(ismember(workerDoneQueueData, [1 2 3]))
-                fprintf(string(workerMsgs(workerDoneQueueData)))
+            elseif(ismember(workerCommQueueData, [1 2 3]))
+                fprintf(string(workerMsgs(workerCommQueueData)))
                 done = 1;
                 continue;
-            elseif(isa(workerDoneQueueData,'double'))
-                fprintf('Sampling Rate: %3.2f\n', workerDoneQueueData);
+            elseif(isa(workerCommQueueData,'double'))
+                fprintf('Sampling Rate: %3.2f\n', workerCommQueueData);
             end
         end
         
@@ -175,7 +190,7 @@ end
 % Call sourceMonitor asynchronously
 function [F, packetQueue, workerCommQueue, workerQueue] = ...
     setupSourceMonitorWorker(device, devicePath, serialBufferLen, ...
-        targetSamplingHz ,dle, stx, etx)
+        targetSamplingHz, dle, stx, etx)
 
     % Create a parallel pool if necessary
     if isempty(gcp())
@@ -203,14 +218,16 @@ function [F, packetQueue, workerCommQueue, workerQueue] = ...
     % get the worker's queue back for main to use
     % This queue is for main to send data over to allow the async worker
     % to terminate gracefully, avoiding serial port and thread lockups
-    [workerDoneQueueData, workerDoneQueueDataAvail] = poll(workerCommQueue, 1);
-    if(workerDoneQueueDataAvail)
-        workerQueue = workerDoneQueueData;
+    [workerCommQueueData, workerCommQueueDataAvail] = poll(workerCommQueue, 1);
+    if(workerCommQueueDataAvail)
+        workerQueue = workerCommQueueData;
     end
 end
 
-% parses the data packet according to the format
 function dataPacket = parsePacket(dataPacket, tempPacket)
+% PARSEPACKET parses the data packet according to the format
+%
+% See also ngfmVis
     dataPacket.dle =            tempPacket(1);
     dataPacket.stx =            tempPacket(2);
     dataPacket.pid =            tempPacket(3);
@@ -254,4 +271,40 @@ function dataPacket = parsePacket(dataPacket, tempPacket)
     dataPacket.reservedE =      typecast(tempPacket(dataOffset+9), 'uint8');
     dataPacket.etx =            typecast(tempPacket(dataOffset+10), 'uint8');
     dataPacket.crc =            swapbytes(typecast(tempPacket(dataOffset+11:dataOffset+12), 'uint16'));
+end
+
+function [dataPacket, magData, hkData] = interpretData(dataPacket, magData, hkData)
+% INTERPRETDATA Add scaling and offset to the mag and house keeping data
+%
+% See also ngfmVis
+    ngfmLoadConstants;
+
+    % shift mag data left
+    magData(1,1:numSamplesToStore-assumedSamplingRate) = magData(1,assumedSamplingRate+1:numSamplesToStore);
+    magData(2,1:numSamplesToStore-assumedSamplingRate) = magData(2,assumedSamplingRate+1:numSamplesToStore);
+    magData(3,1:numSamplesToStore-assumedSamplingRate) = magData(3,assumedSamplingRate+1:numSamplesToStore);
+
+    % store new mag data at the end
+    magData(1,numSamplesToStore-assumedSamplingRate+1:numSamplesToStore) = XDACScale*double(dataPacket.xdac) + XADCScale*double(dataPacket.xadc) + XOffset;
+    magData(2,numSamplesToStore-assumedSamplingRate+1:numSamplesToStore) = YDACScale*double(dataPacket.ydac) + YADCScale*double(dataPacket.yadc) + YOffset;
+    magData(3,numSamplesToStore-assumedSamplingRate+1:numSamplesToStore) = ZDACScale*double(dataPacket.zdac) + ZADCScale*double(dataPacket.zadc) + ZOffset;
+
+    % shift hk data right
+    for i = 1:12
+        hkData(i,2:hkPacketsToDisplay) = hkData(i,1:hkPacketsToDisplay-1);
+    end
+
+    % store new hk data at the beginning
+    hkData(1,1) = HK0Scale*double(dataPacket.hk(1))+HK0Offset; 
+    hkData(2,1) = HK1Scale*double(dataPacket.hk(2))+HK1Offset; 
+    hkData(3,1) = HK2Scale*double(dataPacket.hk(3))+HK2Offset;
+    hkData(4,1) = HK3Scale*double(dataPacket.hk(4))+HK3Offset;
+    hkData(5,1) = HK4Scale*double(dataPacket.hk(5))+HK4Offset;
+    hkData(6,1) = HK5Scale*double(dataPacket.hk(6))+HK5Offset;
+    hkData(7,1) = HK6Scale*double(dataPacket.hk(7))+HK6Offset;
+    hkData(8,1) = HK7Scale*double(dataPacket.hk(8))+HK7Offset;
+    hkData(9,1) = HK8Scale*double(dataPacket.hk(9))+HK8Offset;
+    hkData(10,1) = HK9Scale*double(dataPacket.hk(10))+HK9Offset;
+    hkData(11,1) = HK10Scale*double(dataPacket.hk(11))+HK10Offset;
+    hkData(12,1) = HK11Scale*double(dataPacket.hk(12))+HK11Offset;
 end

@@ -1,8 +1,35 @@
-% Author: Cooper Bell
-% This function runs as an async worker called from ngfmVis(). 
-% It's purpose is to capture data from the source (serial port or file)
-% unencumbered from the rest of the program and send that data back to the
-% main thread.
+% SOURCEMONITOR Read in data from source, send it to main thread
+%   This function runs as an async worker called from ngfmVis(). 
+%   It's purpose is to capture data from the source (serial port or file)
+%   unencumbered from the rest of the program and send that data back to the
+%   main thread. The data that is sent back is unformatted, raw data but
+%   contains only the data in one individual packet. It calls fread() at a 
+%   user-specified rate in Hz and sends that rate back to the main thread 
+%   every 1 second. 
+%
+%   It runs in a continuous loop, terminating only on errors, EOFs, or if
+%   the main program tells it to stop executing. It does not have any
+%   output arguments.
+%
+%   Input Arguments:
+%       - workerQueueConstant: A Parallel Pool Constant containing a reference to
+%       a Pollable Data Queue for this worker to set up (workerQueue), allowing
+%       for communication from the main thread to this thread
+%       - packetQueue: A Pollable Data Queue that this worker sends packet
+%       data over
+%       - workerCommQueue: A Pollable Data Queue that this worker sends error
+%       messages, error codes, termination codes, and the current sampling rate
+%       over
+%       - device: file or serial
+%       - devicePath: file path or serial port
+%       - serialBufferLen: constant to set up size of serial buffer
+%       - targetSamplingHz: Rate in Hz at which the source should be sampled
+%       - dle: first byte in the packet
+%       - stx: second to last byte in packet
+%       - etx: last byte in the packet
+%
+%   See also ngfmVis parfeval parallel.pool.Constant parallel.pool.PollableDataQueue
+%   sourceMonitor>getAvgSamplingHz sourceMonitor>changeSamplingRate
 function sourceMonitor(workerQueueConstant, packetQueue, workerCommQueue, ...
     device, devicePath, serialBufferLen, targetSamplingHz, dle, stx, etx)
     % construct queue that main can use to talk to this worker
@@ -51,7 +78,7 @@ function sourceMonitor(workerQueueConstant, packetQueue, workerCommQueue, ...
     start(t);
 
     
-    tic
+    tic % start stopwatch timer for monitoring sample rate 
     while (~finished)
         % Check for a message from main thread
         [data, dataAvail] = poll(workerQueue);
@@ -78,9 +105,9 @@ function sourceMonitor(workerQueueConstant, packetQueue, workerCommQueue, ...
         end
         
         % read port
-        timeElapsed = toc;
+        timeElapsed = toc; % get elapsed time
         [A,count] = fread(s,32,'uint8');
-        tic
+        tic % restart stopwatch timer
 
         if (count == 0)
             pause(0.01);
@@ -140,18 +167,19 @@ function sourceMonitor(workerQueueConstant, packetQueue, workerCommQueue, ...
     end
 end
 
-% Adds most recent timeElapsed to the array, compute new mean
 function [avgSamplingHz, samplingRates] = getAvgSamplingHz(samplingRates, timeElapsed)
+% GETAVGSAMPLINGHZ Adds most recent timeElapsed to the array, compute new mean
+
     samplingRates(1,2:length(samplingRates)) = ...
         samplingRates(1,1:(length(samplingRates)-1));
     samplingRates(1) = timeElapsed;
     avgSamplingHz = 1/mean(samplingRates);
 end
 
-% change the sampling rate if it needs to be changed
-% otherwise return same rate
 function [pauseTime, samplingRates] = changeSamplingRate(avgSamplingHz, ...
     targetSamplingHz, tolerance, pauseTime, numSampleRates)
+% CHANGESAMPLINGRATE change the sampling rate if it needs to be changed
+% otherwise return same rate
 
     rateDifference = 1 - (avgSamplingHz/targetSamplingHz);
     if(abs(rateDifference) > tolerance)

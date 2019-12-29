@@ -1,5 +1,11 @@
-% Author: Luke Hermann
-% Sets up command page and functionality
+% NGFMHARDWARECMD Sets up hardware command GUI elements and its callbacks
+%   Input/Output Arguments:
+%     - plotHandles: the handles struct for the GUI
+%
+%   Subfunctions: FeedbackBtnCallback SendFBCalib SendDeadspace SendOffset 
+%                 SendTbLoad SendTbFile BrowseFileBtn
+%
+%   See also ngfmPlotInit
 function plotHandles = ngfmHardwareCmd(plotHandles)
     % ----- Channels -------------------------------------------
     
@@ -218,7 +224,7 @@ function plotHandles = ngfmHardwareCmd(plotHandles)
     % Create SendCommandButton
     uicontrol('Parent', plotHandles.tab3, 'style', 'pushbutton', ...
         'String', 'Send Command', 'Units', 'normalized', ...
-        'CallBack', @sendCommandBtn, 'FontSize', 13, ...
+        'CallBack', @SendCommandBtn, 'FontSize', 13, ...
         'Position', [0.775 0.04 0.07 0.04]);
     
     % ----- Error Text -----------------------------------------
@@ -250,8 +256,10 @@ function plotHandles = ngfmHardwareCmd(plotHandles)
         'Position', [0.4 0.19 0.2 0.03]);
 end
 
-% Send Feedback Button Callback
 function FeedbackBtnCallback(hObject, ~)
+% FEEDBACKBTNCALLBACK Send Feedback Button Callback
+%
+% See also ngfmHardwareCmd
     handles = guidata(hObject);
     arrChannel = checkChannel(handles);
     displayError(handles, '');
@@ -289,8 +297,10 @@ function FeedbackBtnCallback(hObject, ~)
     setappdata(handles.fig, 'key', arr);
 end
 
-% Send Feedback Calibration Button Callback
 function SendFBCalib(hObject, ~)
+% SENDFBCALIB Send Feedback Calibration Button Callback
+%
+% See also ngfmHardwareCmd
     handles = guidata(hObject);
     arrChannel = checkChannel(handles);
     displayError(handles, '');
@@ -310,8 +320,10 @@ function SendFBCalib(hObject, ~)
     setappdata(handles.fig, 'key', arr);
 end
 
-% Send Deadspace Button Callback
 function SendDeadspace(hObject, ~)
+% SENDDEADSPACE Send Deadspace Button Callback
+%
+% See also ngfmHardwareCmd
     handles = guidata(hObject);
     arrChannel = checkChannel(handles);
     displayError(handles, '');
@@ -343,8 +355,10 @@ function SendDeadspace(hObject, ~)
     setappdata(handles.fig, 'key', arr);
 end
 
-% Send Offset Button Callback
 function SendOffset(hObject, ~)
+% SENDOFFSET Send Offset Button Callback
+%
+% See also ngfmHardwareCmd
     handles = guidata(hObject);
     arrChannel = checkChannel(handles);
     displayError(handles, '');
@@ -376,8 +390,10 @@ function SendOffset(hObject, ~)
     setappdata(handles.fig, 'key', arr);
 end
 
-% Send Table Load Button Callback
 function SendTbLoad(hObject, ~)
+% SENDTBLOAD Send Table Load Button Callback
+%
+% See also ngfmHardwareCmd
     handles = guidata(hObject);
     arrChannel = checkChannel(handles);
     displayError(handles, '');
@@ -405,8 +421,10 @@ function SendTbLoad(hObject, ~)
     setappdata(handles.fig, 'key', arr);
 end
 
-% Send Table File Button Callback
 function SendTbFile(hObject, ~)
+% SENDTBFILE Send Table File Button Callback
+%
+% See also ngfmHardwareCmd
     handles = guidata(hObject);
     arrChannel = checkChannel(handles);
     displayError(handles, '');
@@ -445,8 +463,10 @@ function SendTbFile(hObject, ~)
     setappdata(handles.fig, 'key', arr);
 end
 
-% Browse File Callback
 function BrowseFileBtn(hObject, ~)
+% BROWSEFILEBTN Browse File Callback
+%
+% See also ngfmHardwareCmd
     handles = guidata(hObject);
     handles.loadTBFileLabelError.Visible = 'off';
 
@@ -455,8 +475,10 @@ function BrowseFileBtn(hObject, ~)
     handles.browseField.String = fullfile(FilePath, FileName);
 end
 
-% Send Command Button Callback
-function sendCommandBtn(hObject, ~)
+function SendCommandBtn(hObject, ~)
+% SENDCOMMANDBTN Send Command Button Callback
+%
+% See also ngfmHardwareCmd
     handles = guidata(hObject);
     arrChannel = checkChannel(handles);
     displayError(handles, '');
@@ -480,8 +502,10 @@ function sendCommandBtn(hObject, ~)
     setappdata(handles.fig, 'key', arr);
 end
 
-% Return selected channels
 function arrChannel = checkChannel(plotHandles)
+% CHECKCHANNEL Return selected channels
+%
+% See also ngfmHardwareCmd
     arrChannel = {};
     if(plotHandles.CheckBoxX.Value == 1 && ...
             plotHandles.CheckBoxY.Value == 1 && ...
@@ -500,13 +524,17 @@ function arrChannel = checkChannel(plotHandles)
     end
 end
 
-% Display and hide error that shows at the top of the page
 function displayError(plotHandles, errorString)
+% DISPLAYERROR Display and hide error that shows at the top of the page
+%
+% See also ngfmHardwareCmd
     plotHandles.errorLabel.String = errorString;
 end
 
-% Check if str is a valid 4-digit hexadecimal value
 function valid = validHex(str)
+% VALIDHEX Check if str is a valid 4-digit hexadecimal value
+%
+% See also ngfmHardwareCmd
     newstr = string(str);
 
     if(~strncmpi(str, "0x", 2))

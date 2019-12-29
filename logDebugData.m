@@ -1,4 +1,5 @@
-function  retVal = logDebugData( file, dataPacket, hkData )
+% LOGDEBUGDATA log data packet data to file 
+function  retVal = logDebugData(file, dataPacket, hkData)
 
 ngfmLoadConstants;
 

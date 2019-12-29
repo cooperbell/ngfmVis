@@ -1,4 +1,5 @@
-function  retVal = logData( file, magData, hkData )
+% LOGDATA log mag and hk data to file
+function retVal = logData(file, magData, hkData)
 
 ngfmLoadConstants;
 

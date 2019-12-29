@@ -1,3 +1,4 @@
+% NGFMVISPARAM A GUI for providing input arguments to ngfmVis
 function UIFigure = ngfmVisParam()
 
     % create figure

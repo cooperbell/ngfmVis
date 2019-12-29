@@ -190,7 +190,7 @@ end
 % Call sourceMonitor asynchronously
 function [F, packetQueue, workerCommQueue, workerQueue] = ...
     setupSourceMonitorWorker(device, devicePath, serialBufferLen, ...
-        targetSamplingHz ,dle, stx, etx)
+        targetSamplingHz, dle, stx, etx)
 
     % Create a parallel pool if necessary
     if isempty(gcp())

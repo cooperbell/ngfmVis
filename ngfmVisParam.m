@@ -59,6 +59,11 @@ function UIFigure = ngfmVisParam()
     % Create button for not logging
     uibutton('Parent', leftPanel, 'ButtonPushedFcn', @noLogButtonCallback, ...
         'Text', "Don't Log", 'Position', [209 203 100 22]);
+    
+    % Create serial dropdown
+    DropDown = uidropdown('Parent', leftPanel, 'Visible', 'off', ...
+        'Position', [35 281 130 22]);
+    S.DropDown = DropDown;
 
     % Create StartButton
     uibutton('Parent', leftPanel, 'ButtonPushedFcn', @StartButtonPushed, ...
@@ -68,57 +73,54 @@ function UIFigure = ngfmVisParam()
     guidata(S.figure, S)
     
     drawnow;
+end
 
+function SourceBrowseButton(hObject, ~)
+% SOURCEBROWSEBUTTON Callback function for browse button
+    handles = guidata(hObject);
+    handles.figure.Visible = 'off'; 
 
-    % Callback function: browseButton, sourceEditField
-    function SourceBrowseButton(hObject, ~)
-        handles = guidata(hObject);
-        handles.figure.Visible = 'off'; 
-        
-        [FileName,FilePath]= uigetfile('*.txt*');
+    [FileName,FilePath]= uigetfile('*.txt*');
+    if (FileName ~= 0 & FileName ~= "")
         sourceFilePath = fullfile(FilePath, FileName);
         handles.sourceEditField.Value = sourceFilePath;
-        handles.figure.Visible = 'on';
     end
+    handles.figure.Visible = 'on';
+end
 
-    % Button pushed function: noLogButton
-    function noLogButtonCallback(hObject, ~)
-        handles = guidata(hObject);
-        handles.logToEditField.Value = 'null';
+function noLogButtonCallback(hObject, ~)
+% NOLOGBUTTONCALLBACK don't log button pressed
+    handles = guidata(hObject);
+    handles.logToEditField.Value = 'null';
+end
+
+function CheckValue(hObject, ~)
+% CHECKVALUE Value changed function: inputDropDown
+    handles = guidata(hObject);
+
+    if(strcmp(handles.inputDropDown.Value, 'Serial'))
+        handles.sourceEditField.Visible = false;
+        handles.browseButton.Visible = false;
+        handles.DropDown.Visible = true;
+        handles.DropDown.Items = seriallist;
+    else
+        handles.DropDown.Visible = false;
+        handles.sourceEditField.Visible = true;
+        handles.browseButton.Visible = true;
     end
+end
 
-    % Value changed function: inputDropDown
-    function CheckValue(hObject, ~)
-        handles = guidata(hObject);
-
-        value = handles.inputDropDown.Value;
-        if(strcmp(value, 'Serial'))
-            handles.DropDown.Visible = true;
-            handles.sourceEditField.Visible = false;
-            handles.browseButton.Visible = false;
-            serialPorts = seriallist;
-            handles.DropDown.Items = serialPorts;
-        end
-
-        if(strcmp(value, 'File'))
-            handles.DropDown.Visible = false;
-            handles.sourceEditField.Visible = true;
-            handles.browseButton.Visible = true;
-        end
-    end
-
-    % Button pushed function: StartButton
-    function StartButtonPushed(hObject, ~)
-        handles = guidata(hObject);
-        source = handles.sourceEditField.Value;
-        if (~isempty(source))
-            inputSelect = handles.inputDropDown.Value;
-            logTo = handles.logToEditField.Value;
-            setappdata(handles.figure, 'params', {lower(inputSelect), source, logTo});
-            handles.figure.Visible = 'off';
-        else
-            uialert(handles.figure, "You must select a source", "Error");
-        end
-       
+function StartButtonPushed(hObject, ~)
+% STARTBUTTONPUSHED Button pushed function: StartButton
+    handles = guidata(hObject);
+    source = handles.sourceEditField.Value;
+    if (~isempty(source))
+        inputSelect = handles.inputDropDown.Value;
+        logTo = handles.logToEditField.Value;
+        setappdata(handles.figure, 'params', ...
+            {lower(inputSelect), source, logTo});
+        handles.figure.Visible = 'off';
+    else
+        uialert(handles.figure, "You must select a source", "Error");
     end
 end

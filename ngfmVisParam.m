@@ -1,12 +1,12 @@
 % NGFMVISPARAM A GUI for providing input arguments to ngfmVis
-function UIFigure = ngfmVisParam()
+function fig = ngfmVisParam()
     % create figure
-    UIFigure = uifigure('AutoResizeChildren', 'off', 'Resize', 'off', ...
+    fig = uifigure('AutoResizeChildren', 'off', 'Resize', 'off', ...
         'Name', 'NgfmVis Input Parameters', 'Position', [100 100 640 480]);
-    S.figure = UIFigure;
+    S.figure = fig;
 
     % Add grid layout to figure
-    GridLayout = uigridlayout('Parent', UIFigure, 'RowHeight', {'1x'}, ...
+    GridLayout = uigridlayout('Parent', fig, 'RowHeight', {'1x'}, ...
         'ColumnWidth', {12, '1x'}, 'ColumnSpacing', 0, 'RowSpacing', 0, ...
         'Padding', [0 0 0 0]);
 
@@ -22,7 +22,7 @@ function UIFigure = ngfmVisParam()
     uilabel('Parent', leftPanel, 'Text', {'Input: '; ''}, ...
         'Position', [35 385 40 22]);
     
-    % Create Input DropDown
+    % Create Input serialDropdown
     inputDropDown = uidropdown('Parent', leftPanel, ...
         'Items', {'Serial', 'File'}, 'ValueChangedFcn', @CheckValue, ...
         'Value', 'File', 'Position', [35 364 100 22]);
@@ -61,9 +61,9 @@ function UIFigure = ngfmVisParam()
         'Text', "Don't Log", 'Position', [209 203 100 22]);
     
     % Create serial dropdown
-    DropDown = uidropdown('Parent', leftPanel, 'Visible', 'off', ...
+    serialDropdown = uidropdown('Parent', leftPanel, 'Visible', 'off', ...
         'Position', [35 281 130 22]);
-    S.DropDown = DropDown;
+    S.serialDropdown = serialDropdown;
 
     % Create StartButton
     uibutton('Parent', leftPanel, 'ButtonPushedFcn', @StartButtonPushed, ...
@@ -101,10 +101,10 @@ function CheckValue(hObject, ~)
     if(strcmp(handles.inputDropDown.Value, 'Serial'))
         handles.sourceEditField.Visible = false;
         handles.browseButton.Visible = false;
-        handles.DropDown.Visible = true;
-        handles.DropDown.Items = seriallist;
+        handles.serialDropdown.Visible = true;
+        handles.serialDropdown.Items = seriallist;
     else
-        handles.DropDown.Visible = false;
+        handles.serialDropdown.Visible = false;
         handles.sourceEditField.Visible = true;
         handles.browseButton.Visible = true;
     end
@@ -113,9 +113,14 @@ end
 function StartButtonPushed(hObject, ~)
 % STARTBUTTONPUSHED Button pushed function: StartButton
     handles = guidata(hObject);
-    source = handles.sourceEditField.Value;
+    inputSelect = handles.inputDropDown.Value;
+    if(strcmp(inputSelect, 'Serial'))
+        source = handles.serialDropdown.Value;
+    else
+        source = handles.sourceEditField.Value;
+    end
+    
     if (~isempty(source))
-        inputSelect = handles.inputDropDown.Value;
         logTo = handles.logToEditField.Value;
         setappdata(handles.figure, 'params', ...
             {lower(inputSelect), source, logTo});

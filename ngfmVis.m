@@ -14,7 +14,7 @@
 %   See also sourceMonitor, interpretData, ngfmPlotInit, ngfmPlotUpdate
 function ngfmVis(varargin)
     % if no args, run input params GUI
-    if nargin == 0
+    if(nargin == 0)
         fig = ngfmVisParam;
         waitfor(fig, 'Visible', 'off');
         if(~isvalid(fig))

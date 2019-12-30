@@ -2,7 +2,7 @@
 function fig = ngfmVisParam()
     % create figure
     fig = uifigure('AutoResizeChildren', 'off', 'Resize', 'off', ...
-        'Name', 'NgfmVis Input Parameters', 'Position', [100 100 640 480]);
+        'Name', 'NgfmVis Input Parameters', 'Position', [500 300 640 480]);
     S.figure = fig;
 
     % Add grid layout to figure

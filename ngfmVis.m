@@ -87,6 +87,7 @@ function ngfmVis(varargin)
     done = 0;
     closeRequest = 0;
     key = [];
+    heartbeatTimer = NaN;
     workerMsgs = {'Serial port closed\n', 'Error: File not found\n', ...
                 'Fread returned zero\n'};
     
@@ -95,18 +96,24 @@ function ngfmVis(varargin)
         % If the worker is done, the print the error or associated code's
         %   message, begin program exit process
         % Else it is the current sampling rate
-        [workerCommQueueData, workerCommQueueDataAvail] = poll(workerCommQueue, 0.01);
-        if(workerCommQueueDataAvail)
-            if(isa(workerCommQueueData,'cell'))
-                fprintf('%s\n', char(workerCommQueueData));
-                done = 1;
-                continue;
-            elseif(ismember(workerCommQueueData, [1 2 3]))
-                fprintf(string(workerMsgs(workerCommQueueData)))
-                done = 1;
-                continue;
-            elseif(isa(workerCommQueueData,'double'))
-                fprintf('Sampling Rate: %3.2f\n', workerCommQueueData);
+        if (workerCommQueue.QueueLength > 0)
+            % process all available packets at once
+            for i = 1:workerCommQueue.QueueLength
+            [workerCommQueueData, workerCommQueueDataAvail] = poll(workerCommQueue, 0.01);
+                if(workerCommQueueDataAvail)
+                    if(isa(workerCommQueueData,'cell'))
+                        fprintf('%s\n', char(workerCommQueueData));
+                        done = 1;
+                        continue;
+                    elseif(ismember(workerCommQueueData, [1 2 3]))
+                        fprintf(string(workerMsgs(workerCommQueueData)))
+                        done = 1;
+                        continue;
+                    elseif(isa(workerCommQueueData,'double'))
+                        fprintf('Sampling Rate: %3.2f\n', workerCommQueueData);
+                        heartbeatTimer = tic;
+                    end
+                end
             end
         end
         
@@ -120,7 +127,7 @@ function ngfmVis(varargin)
             
             % process all available packets at once
             for i = 1:numToRead
-                [packetQueueData, packetQueueDataAvail] = poll(packetQueue, 1); 
+                [packetQueueData, packetQueueDataAvail] = poll(packetQueue, 0.1); 
                 if(packetQueueDataAvail && isa(packetQueueData, 'uint8'))
                     % parse packet
                     dataPacket = parsePacket(dataPacket, packetQueueData);
@@ -172,6 +179,9 @@ function ngfmVis(varargin)
                 send(workerQueue, char(key(i)));
             end
         end
+        
+        % update hearbeat GUI label
+        updateHeartbeat(fig, heartbeatTimer);
     end
     
     % close up
@@ -184,6 +194,17 @@ function ngfmVis(varargin)
     if (loggingEnabled)
         fclose(logFileHandle);
     end
+end
+
+% update hearbeat GUI label
+function updateHeartbeat(fig, heartbeatTimer)
+    handles = guidata(fig);
+    if(isnan(heartbeatTimer))
+        val = 'NaN';
+    else
+        val = sprintf('%.2fs',toc(heartbeatTimer));
+    end
+    handles.hbeat.String = val;
 end
 
 % Construct queues for communicating back and forth with the async worker
@@ -308,3 +329,5 @@ function [dataPacket, magData, hkData] = interpretData(dataPacket, magData, hkDa
     hkData(11,1) = HK10Scale*double(dataPacket.hk(11))+HK10Offset;
     hkData(12,1) = HK11Scale*double(dataPacket.hk(12))+HK11Offset;
 end
+
+

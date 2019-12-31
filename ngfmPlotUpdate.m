@@ -22,7 +22,7 @@
 %
 % See also NGFMPLOTUPDATE>UPDATEHKDATA NGFMPLOTUPDATE>UPDATEMISCDATA 
 % NGFMPLOTUPDATE>DELETEPLOTS NGFMPLOTUPDATE>ADDPLOT GUIDATA, PLOTAMPLITUDE, PLOTPSD
-function [fig, closereq, key, debugData] = ngfmPlotUpdate(fig, dataPacket, magData, hkData)
+function [fig, closereq, key, debugData] = ngfmPlotUpdate(fig, dataPacket, magData, hkData, samplingRate)
     ngfmLoadConstants;
     handles = guidata(fig);
     
@@ -60,7 +60,7 @@ function [fig, closereq, key, debugData] = ngfmPlotUpdate(fig, dataPacket, magDa
     % update misc data
     handles = updateMiscData(handles, magData, dataPacket, ...
         getappdata(handles.fig,'debugData'), numSamplesToStore, ...
-        numSamplesToDisplay);
+        numSamplesToDisplay,samplingRate);
     
     % save handles struct changes
     guidata(handles.fig, handles);
@@ -127,12 +127,13 @@ function [plotHandles] = updateHKData(plotHandles, hkX, hkData, hkPacketsToDispl
     end
 end
 
-function [plotHandles] = updateMiscData(plotHandles,magData,dataPacket,debugData,numSamplesToStore,numSamplesToDisplay)
+function [plotHandles] = updateMiscData(plotHandles,magData,dataPacket,debugData,numSamplesToStore,numSamplesToDisplay,samplingRate)
 % UPDATEMISCDATA Update the values of the miscellaneous data
 % Print some elements based on the debug data flag
 %
 % See also NGFMPLOTUPDATE
-
+    
+    plotHandles.sourceHz.String = sprintf('%3.2f',samplingRate);
     plotHandles.xavg.String = sprintf('%5.3f',mean(magData(1,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore)));
     plotHandles.yavg.String = sprintf('%5.3f',mean(magData(2,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore)));
     plotHandles.zavg.String = sprintf('%5.3f',mean(magData(3,numSamplesToStore-numSamplesToDisplay+1:numSamplesToStore)));

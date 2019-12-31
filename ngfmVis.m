@@ -88,6 +88,7 @@ function ngfmVis(varargin)
     closeRequest = 0;
     key = [];
     heartbeatTimer = NaN;
+    samplingRate = 0.0;
     workerMsgs = {'Serial port closed\n', 'Error: File not found\n', ...
                 'Fread returned zero\n'};
     
@@ -110,7 +111,7 @@ function ngfmVis(varargin)
                         done = 1;
                         continue;
                     elseif(isa(workerCommQueueData,'double'))
-                        fprintf('Sampling Rate: %3.2f\n', workerCommQueueData);
+                        samplingRate = workerCommQueueData;
                     elseif(isa(workerCommQueueData,'uint64'))
                         heartbeatTimer = workerCommQueueData;
                     end
@@ -141,7 +142,7 @@ function ngfmVis(varargin)
             % until we can put in a proper close request callback
             try
                 [fig, closeRequest, key, debugData] = ...
-                    ngfmPlotUpdate(fig, dataPacket, magData, hkData);
+                    ngfmPlotUpdate(fig, dataPacket, magData, hkData, samplingRate);
             catch exception
                 closeRequest = 1;
                 fprintf('Plot error: %s\n', exception.message)

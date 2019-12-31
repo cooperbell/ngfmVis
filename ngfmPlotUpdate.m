@@ -11,6 +11,7 @@
 %       - dataPacket: Strcuture of the data packet
 %       - magData: Array to update the X, Y, Z graphs
 %       - hkData: Array of housekeeping data
+%       - samplingRate: The current Hz rate sourceMonitor is reading at
 %
 %   Output arguments:
 %       - fig: The GUI figure object
@@ -44,10 +45,16 @@ function [fig, closereq, key, debugData] = ngfmPlotUpdate(fig, dataPacket, magDa
         % display error
         warndlg(sprintf('Unable to load plot, %s', exception.message), 'Warning', 'modal');
         
-        % don't delete, just remove from dropdown
-        plotsIdx = find(strcmp(handles.currentPlotMenu.String, spectra));
-        handles.currentPlotMenu.String(plotsIdx) = [];
         
+        plotsIdx = find(strcmp(handles.currentPlotMenu.String, spectra));
+        if(handles.currentPlotMenu.UserData(plotsIdx) == 0)
+            % 0 means it was added this session as permanent, 
+            % so delete from the folder
+            handles = deletePlots(handles, handles.currentPlotMenu.String(plotsIdx));
+        else
+            % don't delete, just remove from dropdown
+            handles.currentPlotMenu.String(plotsIdx) = [];
+        end
         
         handles.currentPlotMenu.Value = 1;
         spectra = string(handles.currentPlotMenu.String(handles.currentPlotMenu.Value));
@@ -166,6 +173,7 @@ function [plotHandles] = deletePlots(plotHandles, plots)
 %
 % See also NGFMPLOTUPDATE
 
+    % remove from folder and dropdown
     for idx = 1:length(plots)
         plotFilePath = fullfile('spectraPlots', string(plots(idx)));
         delete(plotFilePath);
@@ -173,8 +181,10 @@ function [plotHandles] = deletePlots(plotHandles, plots)
         % remove from dropdown
         plotsIdx = find(strcmp(plotHandles.currentPlotMenu.String, plots(idx)));
         plotHandles.currentPlotMenu.String(plotsIdx) = [];
+        plotHandles.currentPlotMenu.UserData(plotsIdx) = [];
     end
-     
+    
+    % reset dropdown, spectra plot
     plotHandles.currentPlotMenu.Value = 1;
     spectra = string(plotHandles.currentPlotMenu.String(plotHandles.currentPlotMenu.Value));
     plotHandles = setupSpectraPlot(spectra,plotHandles);
@@ -211,6 +221,8 @@ function [plotHandles] = addPlot(plotHandles, file, permanenceFlag)
         % Add option to the dropdown, first in list
         plotHandles.currentPlotMenu.String = {FileName, ...
             plotHandles.currentPlotMenu.String{1:end}};
+        
+        plotHandles.currentPlotMenu.UserData = [0 plotHandles.currentPlotMenu.UserData];
         
         % Have dropdown show it as the selected option
         plotHandles.currentPlotMenu.Value = 1;

@@ -203,7 +203,12 @@ end
 % update hearbeat GUI label
 function updateHeartbeat(fig, heartbeatTimer)
     handles = guidata(fig);
-    handles.hbeat.String = sprintf('%.2fs',toc(heartbeatTimer));
+    if(toc(heartbeatTimer) < 1)
+        handles.hbeat.String = '<1s';
+    else
+        handles.hbeat.String = sprintf('%1.0fs',toc(heartbeatTimer));
+        drawnow();
+    end
 end
 
 % Construct queues for communicating back and forth with the async worker

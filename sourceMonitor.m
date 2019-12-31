@@ -44,6 +44,7 @@ function sourceMonitor(workerQueueConstant, packetQueue, workerCommQueue, ...
     samplingRates = zeros(1, numSampleRates);
     tolerance = 0.05;
     pauseTime = 0.005;
+    avgSamplingHzToSend = 0;
     
     % open serial port or file 
     if(strcmp(device, 'serial'))
@@ -68,17 +69,10 @@ function sourceMonitor(workerQueueConstant, packetQueue, workerCommQueue, ...
             return;
         end
     end
-    
-    % start timer
-    % Its callback will send the current sampling rate over the
-    % workerCommQueue every 1 second.
-    t = timer('ExecutionMode', 'fixedRate', ...
-              'TimerFcn', @timerCallback, ...
-              'Period', 1, 'StartDelay', 2);
-    start(t);
 
-    
-    tic % start stopwatch timer for monitoring sample rate 
+    % start stopwatch timers
+    hearbeatTimer = tic;
+    sampleRateTimer = tic;
     while (~finished)
         % Check for a message from main thread
         [data, dataAvail] = poll(workerQueue);
@@ -88,11 +82,6 @@ function sourceMonitor(workerQueueConstant, packetQueue, workerCommQueue, ...
                 fclose(s);
                 delete(s);
                 clear s
-                
-                % properly close up timer
-                stop(t);
-                delete(t);
-                clear t
 
                 % send termination value
                 send(workerCommQueue, 1);
@@ -105,9 +94,9 @@ function sourceMonitor(workerQueueConstant, packetQueue, workerCommQueue, ...
         end
         
         % read port
-        timeElapsed = toc; % get elapsed time
+        timeElapsed = toc(sampleRateTimer); % get elapsed time
         [A,count] = fread(s,32,'uint8');
-        tic % restart stopwatch timer
+        sampleRateTimer = tic; % restart stopwatch timer
 
         if (count == 0)
             pause(0.01);
@@ -115,11 +104,6 @@ function sourceMonitor(workerQueueConstant, packetQueue, workerCommQueue, ...
             fclose(s);
             delete(s);
             clear s
-            
-            % properly close up timer
-            stop(t);
-            delete(t);
-            clear t
                 
             % Send error code 2, 'Fread returned zero'
             send(workerCommQueue, 3);
@@ -159,11 +143,12 @@ function sourceMonitor(workerQueueConstant, packetQueue, workerCommQueue, ...
                 targetSamplingHz, tolerance, pauseTime, numSampleRates);
             avgSamplingHzToSend = avgSamplingHz;
         end
+        
+        if(toc(hearbeatTimer) > 1)
+            send(workerCommQueue,tic);
+            send(workerCommQueue,avgSamplingHzToSend);
+        end
         pause(pauseTime);
-    end
-    
-    function timerCallback(~, ~)
-         send(workerCommQueue,avgSamplingHzToSend);
     end
 end
 

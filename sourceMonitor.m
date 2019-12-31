@@ -44,6 +44,7 @@ function sourceMonitor(workerQueueConstant, packetQueue, workerCommQueue, ...
     samplingRates = zeros(1, numSampleRates);
     tolerance = 0.05;
     pauseTime = 0.005;
+    avgSamplingHzToSend = 0;
     
     % open serial port or file 
     if(strcmp(device, 'serial'))
@@ -99,6 +100,11 @@ function sourceMonitor(workerQueueConstant, packetQueue, workerCommQueue, ...
                 finished = 1;
                 continue;
             elseif(ischar(data))
+                if(data == 'n')
+                    stop(t);
+                elseif(data == 'h')
+                    start(t);
+                end
                 % send hardware command
                 fwrite(s,data,'char')
             end
@@ -163,7 +169,10 @@ function sourceMonitor(workerQueueConstant, packetQueue, workerCommQueue, ...
     end
     
     function timerCallback(~, ~)
+        % heartbeat message
         send(workerCommQueue,tic);
+        
+        % current sampling rate
         send(workerCommQueue,avgSamplingHzToSend);
     end
 end

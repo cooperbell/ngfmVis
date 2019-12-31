@@ -111,7 +111,8 @@ function ngfmVis(varargin)
                         continue;
                     elseif(isa(workerCommQueueData,'double'))
                         fprintf('Sampling Rate: %3.2f\n', workerCommQueueData);
-                        heartbeatTimer = tic;
+                    elseif(isa(workerCommQueueData,'uint64'))
+                        heartbeatTimer = workerCommQueueData;
                     end
                 end
             end
@@ -181,7 +182,9 @@ function ngfmVis(varargin)
         end
         
         % update hearbeat GUI label
-        updateHeartbeat(fig, heartbeatTimer);
+        if(~isnan(heartbeatTimer))
+            updateHeartbeat(fig, heartbeatTimer);
+        end
     end
     
     % close up
@@ -199,12 +202,7 @@ end
 % update hearbeat GUI label
 function updateHeartbeat(fig, heartbeatTimer)
     handles = guidata(fig);
-    if(isnan(heartbeatTimer))
-        val = 'NaN';
-    else
-        val = sprintf('%.2fs',toc(heartbeatTimer));
-    end
-    handles.hbeat.String = val;
+    handles.hbeat.String = sprintf('%.2fs',toc(heartbeatTimer));
 end
 
 % Construct queues for communicating back and forth with the async worker

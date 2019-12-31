@@ -74,7 +74,7 @@ function sourceMonitor(workerQueueConstant, packetQueue, workerCommQueue, ...
     % workerCommQueue every 1 second.
     t = timer('ExecutionMode', 'fixedRate', ...
               'TimerFcn', @timerCallback, ...
-              'Period', 1, 'StartDelay', 2);
+              'Period', 1, 'StartDelay', 1);
     start(t);
 
     
@@ -163,7 +163,8 @@ function sourceMonitor(workerQueueConstant, packetQueue, workerCommQueue, ...
     end
     
     function timerCallback(~, ~)
-         send(workerCommQueue,avgSamplingHzToSend);
+        send(workerCommQueue,tic);
+        send(workerCommQueue,avgSamplingHzToSend);
     end
 end
 

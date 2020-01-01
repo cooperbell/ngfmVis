@@ -150,11 +150,7 @@ function ngfmVis(varargin)
 
             % log
             if (loggingEnabled)
-                if (~debugData)
-                    logData( logFileHandle, magData, hkData );
-                else
-                    logDebugData( logFileHandle, dataPacket );
-                end
+                logData(logFileHandle, dataPacket, magData, hkData, debugData);
             end
         end
         

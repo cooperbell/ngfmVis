@@ -249,7 +249,7 @@ function AddPlotButtonCallback(hObject, ~)
             uicontrol('Parent', popUpFig, ...
                                      'String', 'Cancel', ...
                                      'Units', 'normalized', ...
-                                     'Callback', @cancelButtonCallback, ...
+                                     'Callback', @(~,~) delete(popUpFig), ...
                                      'Position', [.28 0.095 0.2 0.1]);
         else
             warndlg('Cannot have duplicate script names', 'Warning', ...
@@ -260,10 +260,6 @@ function AddPlotButtonCallback(hObject, ~)
     function okButtonCallback(~, ~)
         setappdata(handles.fig, 'addPlot', fullfile(FilePath, FileName));
         setappdata(handles.fig, 'permanenceFlag', permanenceToggle.Value);
-        delete(popUpFig);
-    end
-
-    function cancelButtonCallback(~, ~)
         delete(popUpFig);
     end
 end

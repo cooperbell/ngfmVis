@@ -176,7 +176,9 @@ function [plotHandles] = deletePlots(plotHandles, plots)
     % remove from folder and dropdown
     for idx = 1:length(plots)
         plotFilePath = fullfile('spectraPlots', string(plots(idx)));
-        delete(plotFilePath);
+        if(isfile(plotFilePath))
+            delete(plotFilePath);
+        end
 
         % remove from dropdown
         plotsIdx = find(strcmp(plotHandles.currentPlotMenu.String, plots(idx)));

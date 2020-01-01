@@ -300,7 +300,7 @@ function DeletePlotButtonCallback(hObject, ~)
     uicontrol('Parent', popUpFig, ...
                              'String', 'Cancel', ...
                              'Units', 'normalized', ...
-                             'Callback', @CancelButtonCallback, ...
+                             'Callback', @(~,~) delete(popUpFig), ...
                              'Position', [.28 0.095 0.2 0.1]);
                          
     function DeleteButtonCallback(~, ~)
@@ -311,10 +311,6 @@ function DeletePlotButtonCallback(hObject, ~)
                 string(plotsDropdown.String(plotsDropdown.Value)));
             delete(popUpFig);
         end
-    end
-
-    function CancelButtonCallback(~, ~)
-        delete(popUpFig);
     end
 end
 

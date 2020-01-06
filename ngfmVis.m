@@ -6,8 +6,8 @@
 %   set up, thread management, and tear down.
 % 
 %   Example Input Arguments:
-%   To read from file: ngfmVis('file','capture09102019.txt','log.txt')
-%   To read from serial: ngfmVis('serial','/dev/tty.usbserial-6961_0_0080','log.txt')
+%   To read from file: ngfmVis('file','capture09102019.txt','')
+%   To read from serial: ngfmVis('serial','/dev/tty.usbserial-6961_0_0080','')
 %
 %   Subfunctions: parsePacket setupSourceMonitorWorker
 %

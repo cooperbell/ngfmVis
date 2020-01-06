@@ -218,8 +218,8 @@ function AddPlotButtonCallback(hObject, ~)
             pos = handles.fig.Position;
             width = 300;
             height = 200;
-            left = (pos(3)/2) - (width/2);
-            up = (pos(4)/2) + (height/2);
+            left = (pos(3)/2) - (width/2) + pos(1);
+            up = (pos(4)/2) + (height/2) + pos(2);
             popUpFig = figure('Name','Add a plot', ...
                           'NumberTitle', 'off', ...
                           'Resize', 'off', ...
@@ -277,10 +277,11 @@ function DeletePlotButtonCallback(hObject, ~)
 %
 % See also NGFMPLOTINIT NGFMPLOTUPDATE
     handles = guidata(hObject);
+    pos = handles.fig.Position;
     width = 300;
     height = 200;
-    left = (pos(3)/2) - (width/2);
-    up = (pos(4)/2) + (height/2);
+    left = (pos(3)/2) - (width/2) + pos(1);
+    up = (pos(4)/2) + (height/2) + pos(2);
     popUpFig = figure('Name','Delete a plot', ...
                           'NumberTitle', 'off', ...
                           'Resize', 'off', ...
